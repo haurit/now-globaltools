@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_app">
+    <sys_app action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <can_edit_in_studio>true</can_edit_in_studio>
+        <enforce_license>none</enforce_license>
+        <guided_setup_guid/>
+        <hide_on_ui>false</hide_on_ui>
+        <installed_as_dependency>false</installed_as_dependency>
+        <js_level>helsinki_es5</js_level>
+        <licensable>true</licensable>
+        <license/>
+        <license_category>none</license_category>
+        <license_definition/>
+        <license_model>none</license_model>
+        <logo>739b8f3697816110b434f5f3a253af2a</logo>
+        <menu/>
+        <name>Global Tools</name>
+        <private>false</private>
+        <restrict_table_access>false</restrict_table_access>
+        <runtime_access_tracking>permissive</runtime_access_tracking>
+        <scope>global</scope>
+        <scoped_administration>false</scoped_administration>
+        <short_description>Tools to support (scoped) app development</short_description>
+        <source>a39b8f3697816110b434f5f3a253af25</source>
+        <store_correlation_id/>
+        <store_url/>
+        <sys_class_name>sys_app</sys_class_name>
+        <sys_code/>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-02-20 09:01:05</sys_created_on>
+        <sys_id>a39b8f3697816110b434f5f3a253af25</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-02-20 09:01:06</sys_updated_on>
+        <template/>
+        <trackable>true</trackable>
+        <uninstall_blocked>false</uninstall_blocked>
+        <user_role/>
+        <vendor/>
+        <vendor_prefix/>
+        <version>1.0.0</version>
+        <x_snc_devtools_documentation_url/>
+        <x_snc_devtools_maintainer/>
+        <x_snc_devtools_maintainer_email/>
+        <x_snc_devtools_repo_url/>
+    </sys_app>
+    <sys_attachment action="INSERT_OR_UPDATE">
+        <average_image_color/>
+        <chunk_size_bytes>700000</chunk_size_bytes>
+        <compressed>true</compressed>
+        <content_type>image/png</content_type>
+        <file_name>global_tools_icon.png</file_name>
+        <hash>c16f49351c599fc198e07e4af1cb124d60bf7dd3f089e0ed8b16e7a3c8ba4cd0</hash>
+        <image_height/>
+        <image_width/>
+        <size_bytes>1568</size_bytes>
+        <size_compressed>1591</size_compressed>
+        <state>available</state>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-02-20 09:01:06</sys_created_on>
+        <sys_id>739b8f3697816110b434f5f3a253af2a</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_updated_by>system</sys_updated_by>
+        <sys_updated_on>2023-02-20 09:01:07</sys_updated_on>
+        <table_name>sys_app</table_name>
+        <table_sys_id>a39b8f3697816110b434f5f3a253af25</table_sys_id>
+    </sys_attachment>
+    <sys_attachment_doc action="INSERT_OR_UPDATE">
+        <data>H4sIAAAAAAAAAA==</data>
+        <length>16</length>
+        <position>0</position>
+        <sys_attachment display_value="global_tools_icon.png" sys_id="739b8f3697816110b434f5f3a253af2a">739b8f3697816110b434f5f3a253af2a</sys_attachment>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-02-20 09:01:06</sys_created_on>
+        <sys_id>b39b8f3697816110b434f5f3a253af2a</sys_id>
+    </sys_attachment_doc>
+    <sys_attachment_doc action="INSERT_OR_UPDATE">
+        <data>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</data>
+        <length>2108</length>
+        <position>1</position>
+        <sys_attachment display_value="global_tools_icon.png" sys_id="739b8f3697816110b434f5f3a253af2a">739b8f3697816110b434f5f3a253af2a</sys_attachment>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-02-20 09:01:06</sys_created_on>
+        <sys_id>379b8f3697816110b434f5f3a253af2a</sys_id>
+    </sys_attachment_doc>
+</record_update>
