@@ -1,0 +1,762 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.GlobalToolsRecordWriteValidate</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description>Tools to support (scoped) app development&#13;
+Some functions are only available for specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom".</description>
+        <name>GlobalToolsRecordWriteValidate</name>
+        <script><![CDATA[var GlobalToolsRecordWriteValidate = Class.create();
+GlobalToolsRecordWriteValidate.prototype = {
+    initialize: function() {
+        if (!this.checkAccess()) {
+            return;
+        }
+        this._gtObject = new global.GlobalToolsObject();
+        this._getValue = this._gtObject.getValue;
+        this._setValue = this._gtObject.setValue;
+        this._gt = new global.GlobalTools();
+        this._gtRead = new global.GlobalToolsRecordRead();
+        this._gtTable = new global.GlobalToolsTable();
+        this._unique = new global.GlobalToolsArray().unique;
+        this._isValidArray = new global.GlobalToolsArray().isValidArray;
+    },
+
+    checkAccess: function() {
+        var sCallerScope = gs.getCallerScopeName();
+        var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
+        var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
+        if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
+            return true;
+        } // if scope is allowed
+    }, // function checkAccess
+
+    _validateAndSetReferenceField: function(sField, oField, oValue, geElement, edElementDescriptor, sInternalType, sValueType) {
+		var sRefTable = this._getValue('sRefTable', '', oField);
+		var aKeys = this._getValue('aKeys', [], oField);
+		var aValuesInput = (sValueType == 'array') ? oValue : [oValue];
+        if (!this._isValidArray(aKeys)) {
+			this._getValue('aKeysDefaultFields', [], this.oRecordConfig).forEach(function(sKeysDefaultField){
+				aKeys.push({'sField': sField, 'sInputField': sField, 'sTargetField': sKeysDefaultField});
+			}, this); // each default field
+		} // if no keys
+        sRefTable = (sRefTable) ? sRefTable : this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'reference');
+        var aValues = [];
+        var sRefValue = '';
+        aValuesInput.forEach(function(sRefInput, iIndex) {
+			var aRecordByKeysError = [];
+			iIndex = (sValueType == 'array') ? iIndex : null;
+			sRefValue = this._gtRead.getRecordByKeys(this.oRecordConfig, this.oRecordValues, aRecordByKeysError, oField, sRefTable, aKeys, iIndex);
+            if ((!sRefValue) || (aRecordByKeysError.length > 0)) {
+                this._errorHandler('400_008', 'Field ' + sField + ' value ' + sRefInput + ' in array cannot be found in reference table: ' + sRefTable + ' with error ' + aRecordByKeysError.join(', '), '', [sField, sRefTable, sRefInput, aRecordByKeysError.join(', ')], true, false);
+            } else {
+                if (this._validateReferenceEntry(sField, sRefValue, sRefTable, geElement, edElementDescriptor, sInternalType)) {
+                    aValues.push(sRefValue);
+                } // if invalid reference
+            } // if not found by key
+        }, this); // each ref value
+        return aValues.join(',');
+    }, // function _validateAndSetReferenceField
+
+    _validateReferenceEntry: function(sField, sValue, sRefTable, geElement, edElementDescriptor, sInternalType) {
+		var sDependentField = this._gtTable._getDictOrOverrideValue(this.sTargetTable, sField, 'dependent');
+        var bMatch = true,
+            grRefRecord,
+            sReferenceQualifier = '';
+        if (sInternalType == 'reference') {
+            this.grRecord.setValue(sField, sValue);
+			sReferenceQualifier = edElementDescriptor.getReferenceQualifier();
+            grRefRecord = geElement.getRefRecord();
+        } else if (sInternalType == 'glide_list') {
+            sReferenceQualifier = this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'reference_qual');
+            if (sRefTable) {
+                grRefRecord = new GlideRecord(sRefTable);
+                grRefRecord.get(sValue);
+            } // if value
+        } // if ref
+		gs.info('tomtom sField: ' + sField + ' sValue: ' + sValue + ' sRefTable: ' + sRefTable + ' sInternalType: ' + sInternalType + ' sReferenceQualifier: ' + sReferenceQualifier + ' grRefRecord: ' + this._gt.getType(grRefRecord) + ' valid refrec: ' + grRefRecord.isValidRecord());
+        if (grRefRecord.isValidRecord()) {
+            if ((sReferenceQualifier) && (!sReferenceQualifier.startsWith('javascript:'))) {
+                var gfQueryCondition = new GlideFilter(sReferenceQualifier, '');
+                gfQueryCondition.setCaseSensitive(false);
+                bMatch = (gfQueryCondition.match(grRefRecord, true));
+            } else if ((sReferenceQualifier) && (sReferenceQualifier.startsWith('javascript:'))) {
+                var sAdvRefQualifierResult = this._evaluateAdvRefQualifier(sField);
+                if (sAdvRefQualifierResult != undefined || sAdvRefQualifierResult != '') {
+                    var gfQueryCondition = new GlideFilter(sAdvRefQualifierResult, '');
+                    gfQueryCondition.setCaseSensitive(false);
+                    bMatch = (gfQueryCondition.match(grRefRecord, true));
+                } // if adv ref qualifier result
+            } // if ref qualifier
+            if (this.bLog) {
+                gs.info(this.bLogPrefix + '_validateReferenceEntry sTargetTable: ' + this.sTargetTable + ' sField: ' + sField + ' sValue: ' + sValue + ' bMatch: ' + bMatch + ' sDependentField: ' + sDependentField);
+            } // if log
+            if ((bMatch) && (sDependentField)) {
+                var sDependentOnField = '';
+                var bIsDependentGroup = false;
+                var grDict = new GlideRecord('sys_dictionary');
+                if (grDict.get(edElementDescriptor.getUniqueID())) {
+                    sDependentOnField = grDict.getValue('dependent_on_field');
+                } // if dict
+                if (this.grRecord.isValidField(sDependentOnField)) {
+                    var geDependentElement = this.grRecord.getElement(sDependentField);
+                    var edDependentElementDescriptor = geDependentElement.getED();
+                    var sDependentInternalType = String(edDependentElementDescriptor.getInternalType());
+                    if (sDependentInternalType == 'reference') {
+                        var sDependentTable = geDependentElement.getReferenceTable();
+                        if ((sDependentTable == 'sys_user_group') && (this._getAbsoluteBase(grRefRecord.getTableName()) == 'sys_user')) {
+                            bIsDependentGroup = true;
+                            var grGroupMember = new GlideRecord('sys_user_grmember');
+                            grGroupMember.addEncodedQuery('group=' + this.grRecord.getValue(sDependentField) + '^user=' + grRefRecord.getUniqueValue());
+                            grGroupMember.query();
+                            if (!grGroupMember.next()) {
+                                this._errorHandler('400_013', 'User ' + grRefRecord.getDisplayValue() + ' is not a member of the depend field group: ' + this.grRecord[sDependentField].getDisplayValue(), '', [grRefRecord.getDisplayValue(), this.grRecord[sDependentField].getDisplayValue()], true, false);
+                                return false;
+                            } // if user is member												
+                        } // if user group
+                    } // if reference
+                } else {
+                    this._errorHandler('400_999', '_validateReferenceEntry dependent field name is not valid sTargetTable: ' + this.sTargetTable + ' sField: ' + sField + ' sDependentOnField: ' + sDependentOnField, '', [sDependentOnField], true, false);
+                    return false;
+                } // if dependent element is valid
+                if ((!bIsDependentGroup) && (grRefRecord.getValue(sDependentOnField) != this.grRecord.getValue(sDependentField))) {
+                    bMatch = false;
+                } // if value in dependent record is not value in dependent field
+            } // if match
+        } // if valid ref record
+        if (this.bLog) {
+            gs.info(this.bLogPrefix + '_validateReferenceEntry sTargetTable: ' + this.sTargetTable + ' sField: ' + sField + ' sValue: ' + sValue + ' bMatch: ' + bMatch + ' isValidRecord: ' + grRefRecord.isValidRecord());
+        } // if log
+        if ((!grRefRecord.isValidRecord()) || (!bMatch)) {
+            this._errorHandler('400_008', 'Reference value is not valid for field: ' + sField, '', [sField], true, false);
+            return false;
+        } // if ref not valid
+    }, // function _validateReferenceEntry
+
+    _evaluateAdvRefQualifier: function(sField) {
+        var oVars = {
+            'current': this.grRecord
+        }; // vars object
+        var gsEvaluator = new GlideScopedEvaluator();
+        var grDictOrOverride = this._gtTable._getDictOrOverrideValue(this.sTargetTable, sField, 'reference_qual', true, '^use_reference_qualifier=advanced');
+        return gsEvaluator.evaluateScript(grDictOrOverride, 'reference_qual', oVars);
+    }, // function _evaluateAdvRefQualifier
+
+    validateAndWrite: function(oRecordConfig, oRecordValues, oError) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        this._errorHandlerInit(oError);
+        this._validate(oRecordConfig, oRecordValues);
+        this._apply(oRecordConfig, oRecordValues);
+        this._runBusinessLogic();
+        if ((this._canDoAction()) && (this._getValue('bDoAction', true, this.oRecordConfig))) {
+            this._writeRecord();
+        } // if can write
+        this._runImpersonate(true); // end impersonation
+        return this.sRecordId;
+    }, // function validateAndWrite
+
+    _validate: function(oRecordConfig, oRecordValues) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        if (!this._validateInput(oRecordConfig, oRecordValues)) {
+            return;
+        } // if invalid input
+        var aRecordByKeysError = [];
+        var grRecord = this._gtRead.getRecordByKeys(oRecordConfig, oRecordValues, aRecordByKeysError);
+        if (aRecordByKeysError.length > 0) {
+            this._errorHandler('400_999', 'Error getting record by keys: ' + aRecordByKeysError.join(', '), '', '', false, true);
+            return;
+        } // if error
+        this.bIsValidRecord = ((grRecord) && (String(grRecord).indexOf('GlideRecord') != -1) && (grRecord.isValidRecord()) && (grRecord.getValue('sys_id'))) ? true : false;
+        if (!this._validateRecordAction()) {
+            return;
+        } // if validate record action
+        if (!this.bIsValidRecord) {
+            this.sRecordId = '-1';
+            this.grRecord = new GlideRecord(this.sTargetTable);
+            this.grRecord.initialize();
+            if ((this.grRecord.isValidField('sys_class_name')) && (!this.grRecord.getValue('sys_class_name'))) {
+                this.grRecord.setValue('sys_class_name', this.sTargetTable);
+            } // if sys class name is empty on glide record --> workaround for reference qualifiers looking for the class name
+        } else {
+            this.sRecordId = grRecord.getUniqueValue();
+            this.grRecord = grRecord;
+            this.grRecordOld = new GlideRecord(this.sTargetTable);
+            this.grRecordOld.get(this.sRecordId);
+            this.bUpdateValidRecord = this.grRecord.isValidRecord();
+        } // if insert
+        this._validateApplyTemplate();
+        this._validateImpersonate();
+        this._runImpersonate(); // impersonate before checking ACLs
+        if (this._getValue('bUseGlideRecordSecure', false, this.oRecordConfig)) {
+            this._validateRecordSecurity();
+        } // if glide record secure
+        this._validateFields();
+    }, // function _validate
+
+    _apply: function(oRecordConfig, oRecordValues) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var aRecordValueFields = Object.keys(this.oRecordValues);
+        var aFields = this._getValue('aFields', [], this.oRecordConfig);
+        var aAllFields = this._unique([].concat(aRecordValueFields, aFields));
+        aAllFields.forEach(function(oField) {
+            var sField = this._getValue('sField', String(oField), oField);
+            var sValue = this._getValue(sField, '', this.oRecordValues);
+            var aValues = [];
+            var sValueType = this._gt.getType(sValue);
+            var sInternalType = 'NA';
+            var bFieldDone = false;
+            if (this.grRecord.isValidField(sField)) {
+                geElement = this.grRecord.getElement(sField);
+                edElementDescriptor = geElement.getED();
+                sInternalType = String(edElementDescriptor.getInternalType());
+                if (!gs.nil(sInternalType)) {
+                    if (sInternalType == 'field_list') {
+                        if (sValueType == 'array') {
+                            grRecord.setValue(sField, sValue.join(','));
+                            bFieldDone = true;
+                        } // if array
+                    } // if field list
+                    if ((sInternalType == 'journal_input') && (!gs.nil(sValue))) {
+                        if (sValueType == 'array') {
+                            grRecord[sField].setJournalEntry(sValue.join('\n'));
+                        } else {
+                            grRecord[sField].setJournalEntry(sValue);
+                        } // if array
+                        bFieldDone = true;
+                    } // if journal
+                    if (sInternalType == 'boolean') {
+                        if (!(sValue == 0 || sValue == 1 || sValue == 'true' || sValue == 'false' || sValue == '0' || sValue == '1' || sValue == true || sValue == false || sValue == '') || (sValueType == 'boolean')) {
+                            this._errorHandler('400_012', 'Field ' + sField + ' value is not a boolean: ' + sValue, '', [sField, sValue], true, false);
+                        } // if value is not boolean
+                    } // if type is bool
+                    if (sInternalType == 'reference') {
+                        sValue = this._validateAndSetReferenceField(sField, oField, sValue, geElement, edElementDescriptor, sInternalType, sValueType);
+                        this.grRecord.setValue(sField, sValue);
+                        bFieldDone = true;
+                    } else if (sInternalType == 'glide_list') {
+                        aValues.length = 0;
+                        sValue = (sValueType == 'array') ? sValue : sValue.split(',');
+                        if ((this.bUpdateValidRecord) && (this.grRecord.getValue(sField)) && (this._getValue('bAddValues'), false, oField) == true) {
+                            aValues = this._unique([].concat(sValue, this.grRecord.getValue(sField).split(',')));
+                        } else {
+                            aValues = sValue;
+                        } // if add value
+                        sValue = this._validateAndSetReferenceField(sField, oField, aValues, geElement, edElementDescriptor, sInternalType, sValueType);
+                        this.grRecord.setValue(sField, sValue);
+                        bFieldDone = true;
+                    } else if ((edElementDescriptor.isChoiceTable()) && (this._getValue('aIgnoreChoiceFields', ['short_description'], this.oRecordConfig).indexOf(sField) == -1)) {
+                        var sDependentField = this._gtTable._getDictOrOverrideValue(this.sTargetTable, sField, 'dependent');
+                        var sDependentFieldValue = '';
+                        if (sDependentField) {
+                            sDependentFieldValue = this._getValue(sDependentField, this.grRecord.getValue(sDependentField), this.oRecordValues);
+                        } // if dependent field
+                        aChoicesRetVal = this._gtTable.getFieldChoices(this.sTargetTable, sField, sDependentFieldValue);
+                        aDependentValues = aChoicesRetVal[1];
+                        aChoices = aChoicesRetVal[0];
+                        bMatch = false;
+                        if (this._isValidArray(aChoices)) {
+                            bMatch = aChoices.some(function(sChoiceValue, iIndex) {
+                                if ((String(sValue)) == String(sChoiceValue)) {
+                                    if ((sDependentField) && (!sDependentFieldValue) && (this._isValidArray(aDependentValues)) && (aDependentValues.length >= iIndex)) {
+                                        this.grRecord.setValue(sDependentField, aDependentValues[iIndex]); // set dependent field if empty for first choice match dependent value
+                                        this._setValue(sDependentField, aDependentValues[iIndex], this.oRecordValues);
+                                    } // if dependent field but no value
+                                    return true;
+                                } // if same choice
+                            }, this); // each choice value
+                            if (!bMatch) {
+                                this._errorHandler('400_009', 'Field ' + sField + ' value ' + sValue + ' is not a valid choice: ' + aChoices.join(', '), '', [sField, sValue, aChoices.join(', ')], true, false);
+                            } // if invalid choice
+                        } else {
+                            this._errorHandler('400_009', 'Field + ' + sField + ' value ' + sValue + ' Choice list not found!', '', [sField, sValue, 'Choice list not found!'], true, false);
+                        } // if choice
+                    } // if value, reference, glide_list or choice
+                } // if internal type
+                if (!bFieldDone) {
+                    this.grRecord.setValue(sField, sValue);
+                } // if field done
+            } // if valid field
+            //gs.info('tomtom sField: ' + JSON.stringify(sField) + ' sValue: ' + sValue + ' sInternalType: ' + sInternalType);
+        }, this); // each field
+    }, // function _apply
+
+    _writeRecord: function() {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var bSaveActionDone = false;
+        if ((this.bUpdateValidRecord) && (this._getValue('oAction', '', this.oRecordConfig))) {
+            bSaveActionDone = this._validateStateFlowAction();
+        } // if state flow action
+        if (!bSaveActionDone) {
+            if (((this.sAction == 'insert') || (this.sAction == 'save')) && (!this.bUpdateValidRecord)) {
+                if ((this._getValue('bKeepSysId', false, this.oRecordConfig)) && (this._getValue('sys_id', '', this.oRecordValues))) {
+                    grRecord.setNewGuidValue(this._getValue('sys_id', '', this.oRecordValues));
+                } // if keep sys_id
+                this.sRecordId = this.grRecord.insert();
+                if (!this.sRecordId) {
+                    this._errorHandler('500_004', 'Error inserting record: ' + this.grRecord.getLastErrorMessage(), '', [this.grRecord.getLastErrorMessage()], false, true);
+                } // if error
+            } else if (((this.sAction == 'update') || (this.sAction == 'save')) && (this.bUpdateValidRecord)) {
+                if (this.grRecord.update()) {
+                    this._errorHandler('500_005', 'Error updating record: ' + this.grRecord.getLastErrorMessage(), '', [this.grRecord.getLastErrorMessage()], false, true);
+                } // if update
+            } else if ((this.sAction == 'delete') && (this.bUpdateValidRecord)) {
+                if ((this.grRecord.canDelete()) && (this.grRecord.deleteRecord())) {
+                    this._errorHandler('500_005', 'Error deleting record: ' + this.grRecord.getLastErrorMessage(), '', [this.grRecord.getLastErrorMessage()], false, true);
+                } // if delete
+            } // if action
+        } // if action done
+        if (this.bLog) {
+            gs.info(this.bLogPrefix + 'sRecordId: ' + this.sRecordId + ' oRecord: ' + this._gtRead.convertGRtoJSON(this.grRecord, true));
+        } // if log
+    }, // function _writeRecord
+
+    _validateInput: function(oRecordConfig, oRecordValues) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        this.bLog = this._getValue('bLog', false, this.oRecordConfig);
+        this.bLogPrefix = this._getValue('bLogPrefix', 'GlobalToolsRecordWriteValidate - ', this.oRecordConfig);
+        if ((!oRecordConfig) || (!oRecordConfig.hasOwnProperty('sTargetTable'))) {
+            this._errorHandler('405_001', 'Missing record config object or sTargetTable property', '', '', false, true);
+            return;
+        } else {
+            this.sTargetTable = oRecordConfig['sTargetTable'];
+            this.oRecordConfig = oRecordConfig;
+        } // if no record config
+        if ((!oRecordValues) || (Object.keys(oRecordValues).length < 1)) {
+            this._errorHandler('400_002', 'Missing or empty record values object', '', ['No values found'], false, true);
+            return;
+        } else {
+            this.oRecordValues = oRecordValues;
+        } // if no record values
+        return true;
+    }, // function _validateInput
+
+    _validateRecordAction: function() {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var sAction = this._getValue('sAction', '', this.oRecordConfig);
+        if (sAction == 'insert') {
+            this._setValue('bInsert', true, this.oRecordConfig);
+            this._setValue('bUpdate', false, this.oRecordConfig);
+            this._setValue('bDelete', false, this.oRecordConfig);
+        } else if (sAction == 'update') {
+            this._setValue('bInsert', false, this.oRecordConfig);
+            this._setValue('bUpdate', true, this.oRecordConfig);
+            this._setValue('bDelete', false, this.oRecordConfig);
+        } else if (sAction == 'save') {
+            this._setValue('bInsert', true, this.oRecordConfig);
+            this._setValue('bUpdate', true, this.oRecordConfig);
+            this._setValue('bDelete', false, this.oRecordConfig);
+        } else if (sAction == 'delete') {
+            this._setValue('bInsert', false, this.oRecordConfig);
+            this._setValue('bUpdate', false, this.oRecordConfig);
+            this._setValue('bDelete', true, this.oRecordConfig);
+        } // if action
+        var bInsert = this._getValue('bInsert', false, this.oRecordConfig);
+        var bUpdate = this._getValue('bUpdate', false, this.oRecordConfig);
+        var bDelete = this._getValue('bDelete', false, this.oRecordConfig);
+        if ((bDelete) && ((bInsert) || (bUpdate))) {
+            this._errorHandler('405_002', 'Invalid action properties bDelete and bInsert or bUpdate are true', '', '', false, true);
+            return;
+        } else if ((!bInsert) && (!bUpdate) && (!bDelete)) {
+            this._errorHandler('405_002', 'Invalid action properties bInsert and bUpdate or bDelete are false and no sAction', '', '', false, true);
+            return;
+        } // if invalid actions
+        if ((!this.bIsValidRecord) && (bDelete)) {
+            this._errorHandler('404_001', 'No record found for delete action', '', '', false, true);
+        } else if ((this.bIsValidRecord) && (bInsert) && (!bUpdate)) {
+            this._errorHandler('404_001', 'Record exists, cannot do insert action', '', '', false, true);
+        } else if ((!this.bIsValidRecord) && (!bInsert) && (bUpdate)) {
+            this._errorHandler('404_001', 'Record does not exists, cannot do update action', '', '', false, true);
+        } else {
+            if (!sAction) {
+                if ((bInsert) && (bUpdate) && (!bDelete)) {
+                    sAction = 'save';
+                } else if ((bInsert) && (!bUpdate) && (!bDelete)) {
+                    sAction = 'insert';
+                } else if ((!bInsert) && (bUpdate) && (!bDelete)) {
+                    sAction = 'update';
+                } else if (bDelete) {
+                    sAction = 'delete';
+                } // if insert, update or delete
+            } // if no sAction
+            this.sAction = sAction;
+            return true;
+        } // if valid record and action
+    }, // function _validateRecordAction
+
+    _validateApplyTemplate: function() {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var bTemplateIsMandatory = this._getValue('bTemplateIsMandatory', false, this.oRecordConfig);
+        var bTemplateDeleteFieldValue = this._getValue('bTemplateDeleteFieldValue', false, this.oRecordConfig);
+        var sTemplateName = this._getValue('sTemplateName', '', this.oRecordConfig);
+        var sTemplateValueField = this._getValue('sTemplateValueField', '', this.oRecordConfig);
+        var sTemplateValueFieldValue = this._getValue(sTemplateValueField, '', this.oRecordValues);
+        if ((bTemplateDeleteFieldValue) && (sTemplateValueField) && (this.oRecordValues.hasOwnProperty(sTemplateValueField))) {
+            delete this.oRecordValues[sTemplateValueField];
+        } // if delete template value field
+        sTemplateName = (sTemplateValueFieldValue) ? sTemplateValueFieldValue : sTemplateName;
+        if ((sTemplateName) && (this._gtRead.checkRecordByQuery('sys_template', 'name=' + sTemplateName + '^table=' + this.sTargetTable))) {
+            this.grRecord.applyTemplate(sTemplateName);
+        } else {
+            if (sTemplateName) {
+                this._errorHandler('400_007', 'Invalid Template: ' + sTemplateName, '', ['Invalid Template: ' + sTemplateName], false, false);
+            } // if template
+            if (bTemplateIsMandatory) {
+                this._errorHandler('400_003', 'Template is mandatory', '', ['template'], true, false);
+            } // if mandatory
+        } // if template
+    }, // function _validateApplyTemplate
+
+    _validateImpersonate: function() {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var sDefaultUser = this._getValue('sDefaultUser', '', this.oRecordConfig); // only for backwards compatibility
+        var sImpersonateDefaultUser = this._getValue('sImpersonateDefaultUser', sDefaultUser, this.oRecordConfig);
+        var bImpersonateDeleteFieldValue = this._getValue('bImpersonateDeleteFieldValue', false, this.oRecordConfig);
+        var sImpersonateValueField = this._getValue('sImpersonateValueField', 'user', this.oRecordConfig);
+        var sImpersonateValueFieldValue = this._getValue(sImpersonateValueField, '', this.oRecordValues);
+        if ((bImpersonateDeleteFieldValue) && (sImpersonateValueField) && (this.oRecordValues.hasOwnProperty(sImpersonateValueField))) {
+            delete this.oRecordValues[sImpersonateValueField];
+        } // if delete impersonate value field
+        var sImpersonateUser = (sImpersonateValueFieldValue) ? sImpersonateValueFieldValue : sImpersonateDefaultUser;
+        if (sImpersonateUser) {
+            var grUser = this._gtRead.getRecords('sys_user', 'user_name=' + sImpersonateUser + '^ORsys_id=' + sImpersonateUser + '^ORemail=' + sImpersonateUser, '', '', 1, '', '', this._getValue('bNoDomain', false, this.oRecordConfig));
+            if (grUser.next()) {
+                this.sImpersonateUser = grUser.getUniqueValue();
+            } else if (this._getValue('bImpersonateMandatory', false, this.oRecordConfig)) {
+                this._errorHandler('400_999', 'Invalid mandatory impersonate user: ' + sImpersonateUser, '', [sImpersonateUser], true, false);
+            } else {
+                this._errorHandler('400_999', 'Invalid impersonate user: ' + sImpersonateUser, '', [sImpersonateUser], false, false);
+            } // if gruser 
+        } // if user
+    }, // function _validateImpersonate
+
+    _runImpersonate: function(bEndImpersonation) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var sImpersonateUser = (bEndImpersonation) ? this.sImpersonateUserOld : this.sImpersonateUser;
+        if (sImpersonateUser) {
+            if (sImpersonateUser != gs.getUserID()) {
+                this.sImpersonateUserOld = ((bEndImpersonation) || (this.sImpersonateUserOld)) ? this.sImpersonateUserOld : sImpersonateUser;
+                gs.getSession().impersonate(sImpersonateUser);
+                if (!new GlideImpersonate().isImpersonating()) {
+                    this.sImpersonateUserOld = (bEndImpersonation) ? this.sImpersonateUserOld : gs.getUserID();
+                    if (this._getValue('bImpersonateMandatory', false, this.oRecordConfig)) {
+                        this._errorHandler('400_999', 'Error mandatory impersonating user: ' + sImpersonateUser + ' end: ' + bEndImpersonation, '', [sImpersonateUser, bEndImpersonation], true, false);
+                    } else {
+                        this._errorHandler('400_999', 'Error impersonating user: ' + sImpersonateUser + ' end: ' + bEndImpersonation, '', [sImpersonateUser, bEndImpersonation], false, false);
+                    } // if mandatory impersonate
+                } // if impersonating
+            } // if not current user
+        } // if imp user
+    }, // function _runImpersonate
+
+    _validateRecordSecurity: function() {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var grRecord = new GlideRecord('incident');
+        if ((this.sAction == 'insert') || ((this.sAction == 'save') && (!this.bUpdateValidRecord))) {
+            if (!grRecord.canCreate()) {
+                this._errorHandler('400_011', 'Security check failed: create', '', [this.sAction], true, false);
+            } // if no create
+        } else if ((this.sAction == 'update') || ((this.sAction == 'save') && (this.bUpdateValidRecord))) {
+            if (!grRecord.canWrite()) {
+                this._errorHandler('400_011', 'Security check failed: write', '', [this.sAction], true, false);
+            } // if no write
+        } else if (this.sAction == 'delete') {
+            if (!grRecord.canDelete()) {
+                this._errorHandler('400_011', 'Security check failed: delete', '', [this.sAction], true, false);
+            } // if no delete
+        } // if action
+        // _validateFieldSecurity
+    }, // function _validateRecordSecurity
+
+    _validateStateFlowAction: function() {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var sActionValueField = this._getValue('oAction/sActionValueField', 'action', this.oRecordConfig);
+        var sActionValueFieldValue = this._getValue(sActionValueField, '', this.oRecordValues);
+        var bActionIsMandatory = this._getValue('oActions/bActionIsMandatory', false, this.oRecordConfig);
+        var bActionDeleteFieldValue = this._getValue('oActions/bActionDeleteFieldValue', false, this.oRecordConfig);
+        var sActionName = this._getValue('oActions/' + sActionValueFieldValue + '/sStateAction', '', this.oRecordConfig);
+        var sActionId = this._getValue('oActions/' + sActionValueFieldValue + '/sStateActionId', '', this.oRecordConfig);
+        var bWorkNotesMandatory = this._getValue('oActions/' + sActionValueFieldValue + '/bWorkNotesMandatory', false, this.oRecordConfig);
+        if ((bActionDeleteFieldValue) && (sActionValueField) && (this.oRecordValues.hasOwnProperty(sActionValueField))) {
+            delete this.oRecordValues[sActionValueField];
+        } // if delete action value field
+        if ((bActionIsMandatory) && (!sActionId) && (!sActionName)) {
+            this._errorHandler('400_003', 'Stateflow action is mandatory', '', ['Missing stateflow action'], true, false);
+        } // if no action id
+        if ((bWorkNotesMandatory) && (!this._getValue('work_notes', '', this.oRecordValues))) {
+            this._errorHandler('400_003', 'Worknotes are mandatory for action ' + sActionName + ' [' + sActionId + ']', '', ['Missing worknotes for ' + sActionValueFieldValue], true, false);
+        } // if mandatory work notes
+        var aQuery = [];
+        if (sActionId) {
+            aQuery.push('sys_id=' + sActionId);
+        } // if action id
+        if (sActionName) {
+            aQuery.push('name=' + sActionName);
+        } // if action id
+        var grStateFlow = this._gtRead.getRecords('sf_state_flow', aQuery.join('^OR'), '', '', 1);
+        if (grStateFlow.next()) {
+            sActionId = grStateFlow.getUniqueValue();
+            try {
+                if (new global.StateFlow().validFlow(this.grRecord, sActionId, 'manual')) {
+                    new global.StateFlow().processFlow(this.grRecord, sActionId, 'manual');
+                    return true;
+                } else {
+                    this._errorHandler('400_003', 'Stateflow action ' + sActionName + ' [' + sActionId + '] ' + ' is not valid', '', ['Invalid stateflow action ' + sActionValueFieldValue], true, false);
+                } // if action
+            } catch (oEx) {
+                this._errorHandler('500_002', 'Stateflow action ' + sActionValueFieldValue + ' failed with error: ' + String(oEx), '', ['Failed stateflow action ' + sActionValueFieldValue], true, false);
+            } // try stateflow
+        } else {
+            this._errorHandler('400_003', 'Stateflow action ' + sActionValueFieldValue + ' is not found with query: ' + aQuery.join('^OR'), '', ['Invalid stateflow action ' + sActionValueFieldValue], true, false);
+        } // if state flow
+    }, // function _validateStateFlowAction
+
+    _validateFields: function() {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var grRecordTest = new GlideRecord(this.sTargetTable);
+        var aRecordValueFields = Object.keys(this.oRecordValues);
+        var bErrorOnAddlFieldsInBody = this._getValue('bErrorOnAddlFieldsInBody', false, this.oRecordConfig); // only for backwards compatibility
+        var bErrorOnAddlFieldsInValues = this._getValue('bErrorOnAddlFieldsInValues', bErrorOnAddlFieldsInBody, this.oRecordConfig);
+        this.aMandatoryFields = this._getValue('aMandatoryFields', [], this.oRecordConfig);
+        var aMandatoryFields = this.aMandatoryFields.join(',').split(','); // copy values, not reference
+        var iMandatoryField = -1;
+        this.aComplexFields = [];
+        this._getComplexFields();
+        var aSimpleFields = this._getValue('aFields', [], this.oRecordConfig).filter(function(sKey) {
+            return typeof sKey == 'string';
+        }); // if valid fields
+        var aAllFields = this._unique([].concat(aRecordValueFields, aSimpleFields, aMandatoryFields, this.aComplexFields));
+        var aAddlFieldsInValues = [];
+        aAllFields.forEach(function(sField) {
+            if (!sField) {
+                return;
+            }
+            if ((bErrorOnAddlFieldsInValues) && (aSimpleFields.indexOf(sField) == -1) && (this.aMandatoryFields.indexOf(sField) == -1) && (this.aComplexFields.indexOf(sField) == -1)) {
+                aAddlFieldsInValues.push(sField);
+            } // if addl field in body
+            if (grRecordTest.isValidField(sField)) {
+                if (this._getValue('bUseGlideRecordSecure', false, this.oRecordConfig)) {
+                    this._validateFieldSecurity(sField);
+                } // if glide record secure
+            } else if (this.aComplexFields.indexOf(sField) == -1) {
+                if (this.aMandatoryFields.indexOf(sField) != -1) {
+                    this._errorHandler('400_011', 'Invalid field found in mandatory fields: ' + sField, '', [sField], true, false);
+                } else if (aRecordValueFields.indexOf(sField) != -1) {
+                    this._errorHandler('400_011', 'Invalid field found in values: ' + sField, '', [sField], true, false);
+                } else {
+                    this._errorHandler('400_011', 'Invalid field found in field config: ' + sField, '', [sField], true, false);
+                } // if field in array
+            } // if field is valid or key input field
+            iMandatoryField = aMandatoryFields.indexOf(sField);
+            if ((iMandatoryField != -1) && (this.oRecordValues.hasOwnProperty(sField)) && this.oRecordValues[sField] && (this.oRecordValues[sField] != 'NULL')) {
+                aMandatoryFields.splice(iMandatoryField, 1);
+            } // if mandatory
+        }, this); // each field
+        if ((bErrorOnAddlFieldsInValues) && (this._isValidArray(aAddlFieldsInValues))) {
+            this._errorHandler('400_004', 'Additional fields in values: ' + String(aAddlFieldsInValues), '', [String(aAddlFieldsInValues)], true, false);
+        } // if error addl fields in body
+        if (this._isValidArray(aMandatoryFields)) {
+            this._errorHandler('400_003', 'Mandatory field not found: ' + String(aMandatoryFields), '', [String(aMandatoryFields)], true, false);
+        } // if missing mandatory
+    }, // function _validateFields
+
+    _getComplexFields: function() {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var aKeys = this._getValue('aKeys', [], this.oRecordConfig);
+        aKeys.forEach(function(oKey) {
+            this._getFieldsFromKeyArrays(oKey, true);
+        }, this);
+        var aFields = this._getValue('aFields', [], this.oRecordConfig);
+        aFields.forEach(function(oField) {
+            if (oField.hasOwnProperty('sField')) {
+                if ((oField.hasOwnProperty('sDefaultValue')) && (!this._getValue(oField['sField'], '', this.oRecordValues))) {
+                    if (oField['sDefaultValue'] == 'NULL') {
+                        this._setValue(oField['sField'], '', this.oRecordValues); // backwards compatibilty
+                    } else {
+                        this._setValue(oField['sField'], oField['sDefaultValue'], this.oRecordValues);
+                    } // if set null
+                } // if default value
+            } else if (typeof oField != 'string') {
+                this._errorHandler('400_999', 'Field object does not contain sField property: ' + JSON.stringify(oField), '', [JSON.stringify(oField)], true, false);
+            } // if field
+            if (oField.hasOwnProperty('aKeys')) {
+                this._getFieldsFromKeyArrays(oField['aKeys'], false);
+            } // if keys
+        }, this); // each field
+    }, // function _getComplexFields
+
+    _getFieldsFromKeyArrays: function(oKey, bAllFields) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var aKey = [];
+        if (Array.isArray(oKey)) {
+            aKey = oKey;
+        } else {
+            aKey.push(oKey);
+        } // if array
+        aKey.forEach(function(oKeyPart) {
+            if (oKeyPart.hasOwnProperty('sInputField')) {
+                this.aComplexFields.push(oKeyPart['sInputField']);
+            } else if ((bAllFields) && (this.grRecord.isValidField(oKeyPart))) {
+                this.aComplexFields.push(oKeyPart);
+            } // if valid field
+        }, this); // each multipart key
+    }, // function _getFieldsFromKeyArrays
+
+    _validateFieldSecurity: function(sField) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        if (!this.grRecord[sField].canWrite()) {
+            this._errorHandler('400_011', 'Security check failed: field is not writable: ' + sField, '', [sField], true, false);
+        } // no write field
+    }, // function _validateFieldSecurity
+
+    _runBusinessLogic: function() {
+        if (!this.checkAccess()) {
+            return;
+        }
+        try {
+            var aUpdateBusinessLogicChecks = this._getValue('aUpdateBusinessLogicChecks', [], this.oRecordConfig);
+            var sBeforeQuery = '',
+                bBeforeMatch = false,
+                sAfterQuery = '',
+                bAfterMatch = false,
+                sErrorMsg = '',
+                bError = false;
+            aUpdateBusinessLogicChecks.forEach(function(oUpdateBusinessLogicCheck) {
+                sBeforeQuery = this._getValue('sBeforeQuery', '', oUpdateBusinessLogicCheck);
+                sAfterQuery = this._getValue('sAfterQuery', '', oUpdateBusinessLogicCheck);
+                sErrorMsg = this._getValue('sErrorMsg', '', oUpdateBusinessLogicCheck);
+                if (sBeforeQuery) {
+                    var gfBeforeQuery = new GlideFilter(sBeforeQuery, '');
+                    gfBeforeQuery.setCaseSensitive(false);
+                    bBeforeMatch = (gfBeforeQuery.match(this.grRecordOld, true));
+                } // if before query
+                if (sAfterQuery) {
+                    var gfAfterQuery = new GlideFilter(sAfterQuery, '');
+                    gfAfterQuery.setCaseSensitive(false);
+                    bAfterMatch = (gfAfterQuery.match(this.grRecord, true));
+                } // if after query
+                if ((sBeforeQuery) && (sAfterQuery)) {
+                    if ((bBeforeMatch) && (bAfterMatch)) {
+                        bError = true;
+                    } // if before and after match
+                } else {
+                    if (bBeforeMatch) {
+                        bError = true;
+                    } else if (bAfterMatch) {
+                        bError = true;
+                    } // if error
+                } // if before and after
+                if (bError) {
+                    this._errorHandler('400_006', 'Update business logic check failed with error: ' + gs.getMessage(sErrorMsg), '', [gs.getMessage(sErrorMsg)], true, false);
+                } // if error
+            }, this); // bl check
+        } catch (oEx) {
+            this._errorHandler('500_002', 'Run business logic failed with error: ' + String(oEx), '', [String(oEx)], true, false);
+        } // try
+        return (!this.bError);
+    }, // function _runBusinessLogic
+
+    _errorHandlerInit: function(oError) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        if (oError) {
+            if (!oError.hasOwnProperty('bFatalError')) {
+                oError['bFatalError'] = false;
+            } // if no fatal
+            if (!oError.hasOwnProperty('aErrorMessages')) {
+                oError['aErrorMessages'] = [];
+            } // if no fatal
+            this.oError = oError;
+        } else {
+            this.oError = {
+                'bFatalError': false,
+                'aErrorMessages': [],
+            }; // error object
+        } // if no error object
+    }, // function errorHandler
+
+    _errorHandler: function(sErrorCode, sErrorMessage, aErrorMessageArgs, aErrorDetailArgs, bNoActionError, bFatalError) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        if (bNoActionError) {
+            this.oError['bNoActionError'] = true;
+        } // if no action
+        if (bFatalError) {
+            this.oError['bFatalError'] = true;
+        } // if fatal
+        sErrorCode = (sErrorCode) ? sErrorCode : -1;
+        sErrorMessage = (sErrorMessage) ? sErrorMessage : 'no error message provided';
+        var oErrorObj = {
+            'code': sErrorCode,
+            'sErrorMessage': sErrorMessage,
+        }; // error
+        if (this._isValidArray(aErrorMessageArgs)) {
+            oErrorObj['aErrorMessageArgs'] = aErrorMessageArgs;
+        } // if message args
+        if (this._isValidArray(aErrorDetailArgs)) {
+            oErrorObj['aErrorDetailArgs'] = aErrorDetailArgs;
+        } // if detail args
+        this.oError['aErrorMessages'].push(oErrorObj);
+    }, // function errorHandler
+
+    _canContinue: function() {
+        return !this.oError['bFatalError'];
+    }, // function _canContinue
+
+    _canDoAction: function() {
+        return !this.oError['bNoActionError'];
+    }, // function _canContinue
+
+    type: 'GlobalToolsRecordWriteValidate',
+    version: '1.0.0',
+    author: 'Tom Hauri',
+    email: 'tom@hauri.biz'
+
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-08-18 10:19:54</sys_created_on>
+        <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
+        <sys_mod_count>166</sys_mod_count>
+        <sys_name>GlobalToolsRecordWriteValidate</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-08-26 13:20:54</sys_updated_on>
+    </sys_script_include>
+</record_update>

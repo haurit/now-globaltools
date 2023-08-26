@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.GlobalToolsRecordRead</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description>Tools to support (scoped) app development&#13;
+Some functions are only available for specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom".</description>
+        <name>GlobalToolsRecordRead</name>
+        <script><![CDATA[var GlobalToolsRecordRead = Class.create();
+GlobalToolsRecordRead.prototype = {
+    initialize: function() {
+        if (!this.checkAccess()) {
+            return;
+        }
+        this._gtObject = new global.GlobalToolsObject();
+        this._getValue = this._gtObject.getValue;
+        //this._setValue = this._gtObject.setValue;
+        this._gtTable = new global.GlobalToolsTable();
+		this._isValidArray = new global.GlobalToolsArray().isValidArray;
+    },
+
+    checkAccess: function() {
+        var sCallerScope = gs.getCallerScopeName();
+        var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
+        var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
+        if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
+            return true;
+        } // if scope is allowed
+    }, // function checkAccess
+
+    // Convenience function to get count of records, returns number or Array in Array with value, displayvalue (optional) and count per field
+    countRecords: function(sTable, sQuery, sField, bDisplayValue, bDisplayValueOnly, bQueryNoDomain) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        if (!sTable) {
+            gs.error('GlobalToolsRecordRead.countRecords called without a table!');
+            return;
+        } // if no table return
+        var gaRecord = new GlideAggregate(sTable);
+        if (sQuery) {
+            gaRecord.addEncodedQuery(sQuery);
+        } // if query
+        if (sField) {
+            var aRow = [],
+                sFieldValue = '',
+                sFieldDisplayValue = '',
+                iFieldCount = -1;
+            var grRecord = new GlideRecord(sTable);
+            if (grRecord.isValidField(sField)) {
+                gaRecord.addAggregate('COUNT', sField);
+                if (bQueryNoDomain) {
+                    gaRecord.queryNoDomain();
+                } else {
+                    gaRecord.query();
+                } // if no domain
+                while (gaRecord.next()) {
+                    sFieldValue = gaRecord.getValue(sField);
+                    if ((bDisplayValue) || (bDisplayValueOnly)) {
+                        sFieldDisplayValue = gaRecord.getDisplayValue(sField); // perf is sometimes suboptimal
+                    } // if no disp is true
+                    iFieldCount = gaRecord.getAggregate('COUNT', sField);
+                    if (bDisplayValueOnly) {
+                        sFieldDisplayValue = (sFieldDisplayValue) ? sFieldDisplayValue : sFieldValue;
+                        aRow.push([sTable, sFieldDisplayValue, iFieldCount]);
+                    } else if (!bDisplayValue) {
+                        aRow.push([sTable, sFieldValue, iFieldCount]);
+                    } else {
+                        aRow.push([sTable, sFieldValue, sFieldDisplayValue, iFieldCount]);
+                    } // if bDisplayOnly
+                } // while record
+            } else {
+                iFieldCount = this.countRecords(sTable, sQuery);
+                if ((bDisplayValueOnly) || (!bDisplayValue)) {
+                    aRow.push([sTable, '', iFieldCount]);
+                } else {
+                    aRow.push([sTable, '', '', iFieldCount]);
+                } // if bDisplayOnl
+            } // if field is not valid return total count with empty field/display
+            return aRow;
+        } else {
+            gaRecord.addAggregate('COUNT');
+            if (bQueryNoDomain) {
+                gaRecord.queryNoDomain();
+            } else {
+                gaRecord.query();
+            } // if no domain
+            if (gaRecord.next()) {
+                return gaRecord.getAggregate('COUNT');
+            } else {
+                return -1;
+            } // if record
+        } // if field
+    }, // function countRecords
+
+    // Function for scoped apps to query a gliderecord with the options
+    getRecords: function(sTable, sQuery, aOrderBy, aOrderByDesc, iLimit, bWorkflow, bAutoSysFields, bQueryNoDomain) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        if (!sTable) {
+            gs.error('GlobalToolsRecordRead.getRecords table is empty!');
+            return;
+        } // if table is empty
+        var grRecord = new GlideRecord(sTable);
+        if (sQuery) {
+            grRecord.addEncodedQuery(sQuery);
+        } // if query
+        if (aOrderBy) {
+            var fnOrderBy = function(sOrderByField) {
+                grRecord.orderBy(sOrderByField);
+            };
+            aOrderBy.forEach(fnOrderBy);
+        } // if order by
+        if (aOrderByDesc) {
+            var fnOrderByDesc = function(sOrderByField) {
+                grRecord.orderByDesc(sOrderByField);
+            };
+            aOrderByDesc.forEach(fnOrderByDesc);
+        } // if order by
+        if ((iLimit) && (!isNaN(iLimit))) {
+            grRecord.setLimit(iLimit);
+        } // if limit
+        if (bWorkflow === false) {
+            grRecord.setWorkflow(false);
+        } // if workflow false
+        if (bAutoSysFields === false) {
+            grRecord.autoSysFields(false);
+        } // if autosysfields false
+        if (bQueryNoDomain === true) {
+            grRecord.queryNoDomain();
+        } else {
+            grRecord.query();
+        } // if queryno domain
+        return grRecord;
+    }, // function getRecords
+
+    checkRecordByField: function(sTable, sField, sValue) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        if ((!sTable) || (!sField) || (!sValue)) {
+            gs.error('GlobalToolsRecordRead.checkRecordByField table or field or value is empty!');
+            return;
+        } // if table is empty
+        var grRecord = new GlideRecord(sTable);
+        if (grRecord.get(sField, sValue)) {
+            return true;
+        } // if found
+    }, // function
+
+    checkRecordByQuery: function(sTable, sQuery) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        if ((!sTable) || (!sQuery)) {
+            gs.error('GlobalToolsRecordRead.checkRecordByQuery table or query is empty!');
+            return;
+        } // if table is empty
+        var grRecord = new GlideRecord(sTable);
+        grRecord.setLimit(1);
+        grRecord.addEncodedQuery(sQuery);
+        grRecord.query();
+        if (grRecord._next()) {
+            return true;
+        } // if found
+    }, // function 
+
+    getRecordByKeys: function(oRecordConfig, oRecordValues, aError, oField, sRefTable, aAllKeys, iArrayField) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var sTable = ((oRecordConfig) && (oRecordConfig.hasOwnProperty('sTargetTable'))) ? oRecordConfig['sTargetTable'] : '';
+        var sField = '';
+        if (!sTable) {
+            aError.push('GlobalToolsRecordRead.getRecordByKeys table is empty!');
+            gs.error('GlobalToolsRecordRead.getRecordByKeys table is empty!');
+            return;
+        } // if table is empty
+        if (!this._isValidArray(aAllKeys)) {
+            if ((oField) && (oField.hasOwnProperty('sField'))) {
+                sField = oField['sField'];
+                aAllKeys = this._getValue('aKeys', [], oField);
+                sRefTable = (sRefTable) ? sRefTable : this._getValue('sRefTable', '', oField);
+            } else if ((oField) && (typeof oField == 'string')) {
+                if (oRecordConfig.hasOwnProperty('aFields')) {
+                    oRecordConfig['aFields'].some(function(oTmpField) {
+                        if (this._getValue('sField', '', oTmpField) == oField) {
+                            sField = oTmpField['sField'];
+                            aAllKeys = this._getValue('aKeys', [], oTmpField);
+                            sRefTable = (sRefTable) ? sRefTable : this._getValue('sRefTable', '', oTmpField);
+                            return true;
+                        } // if field fount
+                    }); // each field
+                } // if fields
+            } else {
+                aAllKeys = this._getValue('aKeys', [], oRecordConfig);
+            } // if field
+        } // if all keys not defined
+        if (((oField)) && (!sRefTable)) {
+            sField = (sField) ? sField : this._getValue('sField', [], oField);
+            sRefTable = this._gtTable.getRefTable(sTable, sField);
+        } // if field but no ref table
+        aAllKeys = (this._isValidArray(aAllKeys)) ? aAllKeys : ['sys_id'];
+        var sRetType = (oField) ? 'sysid' : 'record';
+        var aKeys = [],
+            aQuery = [],
+            sKeyField = '',
+            sTargetField = '',
+            sValue = '',
+            sAddlQuery = '';
+        var sQueryTable = (sRefTable) ? sRefTable : sTable;
+        var grRecord = (this._getValue('bUseGlideRecordSecure', false, oRecordConfig) == true) ? new GlideRecordSecure(sQueryTable) : new GlideRecord(sQueryTable);
+        if (this._getValue('bNoWorkflow', false, oRecordConfig) == true) {
+            grRecord.setWorkflow(false);
+        } // if no workflow
+        if (this._getValue('bNoAutoSysFields', false, oRecordConfig) == true) {
+            grRecord.autoSysFields(false);
+        } // if no autosysfields
+		//grRecord.initialize();
+        aAllKeys.some(function(oAllKey) {
+            aQuery = [];
+            aKeys = [];
+            if (Array.isArray(oAllKey)) {
+                aKeys = oAllKey;
+            } else {
+                aKeys.push(oAllKey);
+            } // if array
+            aKeys.forEach(function(oKey) {
+                sKeyField = (oKey.hasOwnProperty('sInputField')) ? oKey['sInputField'] : oField;
+                sKeyField = (sKeyField) ? sKeyField : oKey;
+                sTargetField = (oKey.hasOwnProperty('sTargetField')) ? oKey['sTargetField'] : String(oKey);
+                sValue = '';
+                sAddlQuery = (oKey.hasOwnProperty('sAddlQuery')) ? '^' + oKey['sAddlQuery'] : '';
+                if ((oRecordValues) && (oRecordValues.hasOwnProperty(sKeyField))) {
+                    if ((!gs.nil(iArrayField)) && (Array.isArray(oRecordValues[sKeyField])) && (iArrayField <= oRecordValues[sKeyField].length)) {
+                        sValue = oRecordValues[sKeyField][iArrayField];
+                    } else if (gs.nil(iArrayField)) {
+                        sValue = oRecordValues[sKeyField];
+                    } // if array field and body field is array and length fits
+                } // if body has field
+                if (grRecord.isValidField(sTargetField)) {
+                    if ((sValue == 'NULL') || ((!sValue) && (this._getValue('bQueryEmptyFields', false, oRecordConfig)))) {
+                        aQuery.push(sTargetField + 'ISEMPTY' + sAddlQuery);
+                    } else if (sValue) {
+                        aQuery.push(sTargetField + '=' + sValue + sAddlQuery);
+                    } else {
+                        aError.push('Field ' + sTargetField + ' is empty and parameter bQueryEmptyFields is not set');
+                        gs.error('GlobalToolsRecordRead.getRecordByKeys key not found Field ' + sTargetField + ' is empty and parameter bQueryEmptyFields is not set.');
+                    } // if value
+                } else {
+                    aError.push('Field ' + sTargetField + ' does not exist in table ' + sQueryTable);
+                    gs.error('GlobalToolsRecordRead.getRecordByKeys key not found sQueryTable: ' + sQueryTable + ' sTargetField: ' + sTargetField);
+                } // if valid field
+            }, this); // each key array
+            if ((this._getValue('bLog', false, oRecordConfig))) {
+                gs.info('GlobalToolsRecordRead.getRecordByKeys sTable: ' + sTable + ' aAllKeys: ' + JSON.stringify(aAllKeys) + ' oField: ' + oField + ' sRefTable: ' + sRefTable + ' iArrayField: ' + iArrayField + ' sQuery: ' + aQuery.join('^') + ' aQuery len: ' + aQuery.length + ' aKeys len: ' + aKeys.length);
+            } // if log
+            if (aQuery.length == aKeys.length) { // only if all values are present
+                grRecord.addEncodedQuery(aQuery.join('^'));
+                if ((this._getValue('bNoDomain', false, oRecordConfig) == true)) {
+                    grRecord.queryNoDomain();
+                } else {
+                    grRecord._query();
+                } // no domain
+                if (grRecord._next()) {
+                    return true;
+                } // if record			
+            } // if query matches keys
+        }, this); // for each key object
+        if ((sRetType == 'record') && (grRecord.isValidRecord()) && (grRecord.sys_id != 'undefined')) {
+            return grRecord;
+        } else if ((sRetType == 'sysid') && (grRecord.isValidRecord()) && (grRecord.sys_id != 'undefined')) {
+            return grRecord.getUniqueValue();
+        } else {
+            return '';
+        } // if return type
+    }, // function getRecordByKeys
+
+    // Convert GlideRecord to JSON
+    // grRecord: to be converted
+    // bStringify: return JSON.stringify other wise JSON (default: JSON)
+    // bDisplayValue: get Display Value (default: true)
+    // bDisplayValueOwnField: get Display Value in own field with postfix "_dv" (default: true), otherwise return as: "value (display)"
+    // Returns: JSON or String
+    convertGRtoJSON: function(grRecord, bStringify, bDisplayValue, bDisplayValueOwnField) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var oResult = {},
+            sValue = '',
+            sDisplayValue = '';
+        bDisplayValue = (bDisplayValue) ? bDisplayValue : true;
+        bDisplayValueOwnField = (bDisplayValueOwnField) ? bDisplayValueOwnField : true;
+        var aFields = new GlideRecordUtil().getFields(grRecord);
+        aFields.forEach(function(sField) {
+            sValue = this.nsub(grRecord.getValue(sField));
+            if (bDisplayValue) {
+                sDisplayValue = grRecord.getDisplayValue(sField);
+                if (sValue != sDisplayValue) {
+                    if (bDisplayValueOwnField) {
+                        oResult[sField + '_dv'] = sDisplayValue;
+                    } else {
+                        sValue = sValue + ' (' + sDisplayValue + ')';
+                    } // if display own field
+                } // if value != display
+            } // if display value
+            oResult[sField] = sValue;
+        }, this); // each field
+        if (bStringify) {
+            return JSON.stringify(oResult);
+        } else {
+            return oResult;
+        } // if stringify
+    }, // function convertGRToJSON
+
+    // Add dot walking field to a query
+    makeQueryADotWalkQuery: function(sQuery, sDotWalkField) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        if ((sQuery) && (sDotWalkField)) {
+            var aQuery = [];
+            var gqsQuery = new GlideQueryString('cmdb_ci', sQuery);
+            gqsQuery.deserialize();
+            var gqsTerms = gqsQuery.getTerms();
+            for (var i = 0; i < gqsTerms.size(); i++) {
+                var gqsTerm = gqsTerms.get(i);
+                var sField = gqsTerm.getField();
+                var sValue = gqsTerm.getValue();
+                var sOperator = gqsTerm.getOperator();
+                var sTermPrefix = '';
+                if (gqsTerm.isOR()) {
+                    sTermPrefix = 'OR';
+                } else if (gqsTerm.isNewQuery()) {
+                    sTermPrefix = 'NQ';
+                } // if or or big or
+                aQuery.push(sTermPrefix + sDotWalkField + '.' + sField + sOperator + sValue);
+            } // each query string
+            return aQuery.join('^');
+        } // if params
+    }, // function makeQueryADotWalkQuery
+
+    // Combine Queries where the one of the queries can contain big or statements (^NQ)
+    combineQueries: function(sFirstQuery, sSecondQuery) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        if ((sFirstQuery) && (sSecondQuery)) {
+            var bNQFirstQuery = (sFirstQuery.indexOf('^NQ') != -1);
+            var bNQSecondQuery = (sSecondQuery.indexOf('^NQ') != -1);
+            if ((bNQFirstQuery) && (bNQSecondQuery)) {
+                gs.warn('GlobalToolsRecordRead.combineQueries is used with two big or statements in both queries! Return false! sFirstQuery: ' + sFirstQuery + ' sSecondQuery: ' + sSecondQuery);
+                return 'false';
+            } // if both queries contain big or
+            var aResult = [];
+            var aQueries = (bNQFirstQuery) ? sFirstQuery.split('^NQ') : sSecondQuery.split('^NQ');
+            var sAddlQuery = (bNQFirstQuery) ? sSecondQuery : sFirstQuery;
+            aQueries.forEach(function(sQuery) {
+                aResult.push(sQuery + '^' + sAddlQuery);
+            }, this); // each big or query
+            return aResult.join('^NQ'); // join by big or query
+        } else if ((sFirstQuery) && (!sSecondQuery)) {
+            return sFirstQuery;
+        } else if (sSecondQuery) {
+            return sSecondQuery;
+        } else {
+            return '';
+        } // if main query
+    }, // function combineQueries	
+
+    type: 'GlobalToolsRecordRead',
+    version: '1.0.0',
+    author: 'Tom Hauri',
+    email: 'tom@hauri.biz'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-08-18 10:16:00</sys_created_on>
+        <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
+        <sys_mod_count>37</sys_mod_count>
+        <sys_name>GlobalToolsRecordRead</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-08-26 12:51:10</sys_updated_on>
+    </sys_script_include>
+</record_update>

@@ -10,768 +10,285 @@ Some functions are only available for specific scopes defined in the system prop
         <name>GlobalTools</name>
         <script><![CDATA[var GlobalTools = Class.create();
 GlobalTools.prototype = {
-    initialize: function() {
-    },
-	
-	checkAccess: function() {
-		var sCallerScope = gs.getCallerScopeName();
-		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
-		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-		
-		gs.info('tom: ' + sCallerScope + ' aScopes: ' + aScopes + ' isArray: ' + Array.isArray(aScopes) + ' aCustomScopes: ' + aCustomScopes + '  isarray: '  + Array.isArray(aCustomScopes));
-		
-		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-			return true;
-		} // if scope is allowed
-	}, // function checkAccess
-	
-	// Substitute null values in simple types and object keys
-	// TODO: validate other field types, like date and number
-	nsub: function(sValue, sSubstitute, sType, sObjKey) {
-		if (!this.checkAccess()) {return;}
-		if (sObjKey) {
-			if (sValue.hasOwnProperty(sObjKey)) {
-				sValue = sValue[sObjKey];
-			} else {
-				sValue = null;
-			} // if has property
-		} // if obj and objkey
-		if (sValue) {
-			if ((sType == 'array') || (Array.isArray(sSubstitute))) {
-				if (Array.isArray(sValue)) {
-					return sValue;	
-				} else {
-					return sValue.split(',');	
-				} // if is array
-			} else if ((sType == 'object') || (typeof(sSubstitute) == 'object')) {
-				return sValue;
-			} else if ((sType == 'boolean')  || ((sSubstitute === true || sSubstitute === false || toString.call(sSubstitute) === '[object Boolean]'))) {
-				return Boolean(sValue);
-			} else {
-				return String(sValue);
-			} // if array, bool, string
-		} else if (((sSubstitute !== undefined)) && (sSubstitute !== null)) {
-			if (sType == 'string') {
-				return String(sSubstitute);
-			} else {
-				return sSubstitute;
-			} // if force string
-		} else {
-			if (sType == 'array') {
-				return [];
-			} else if (sType == 'object') {
-				return {};
-			} else if (sType == 'boolean') {
-				return false;
-			} else {
-				return '';
-			} // if array
-		} // if value
-	}, // function nsub 
+    initialize: function() {},
 
-	// Convenience function to get count of records, returns number or Array in Array with value, displayvalue and count per field
-	countRecords: function(sTable, sQuery, sField, bDisplayOnly, bQueryNoDomain) {
-		if (!sTable) {
-			gs.error('GlobalTools.countRecords called without a table!');
-			return;
-		} // if no table return
-		var gaRecord = new GlideAggregate(sTable);
-		if (sQuery) {
-			gaRecord.addEncodedQuery(sQuery);
-		} // if query
-		if (sField) {
-			var aRow = [], sFieldValue = '', sFieldDisplayValue = '', iFieldCount = -1;
-			var grRecord = new GlideRecord(sTable);
-			if (grRecord.isValidField(sField)) {
-				gaRecord.addAggregate('COUNT', sField);
-				if (bQueryNoDomain) {
-					gaRecord.queryNoDomain();	
-				} else {
-					gaRecord.query();
-				} // if no domain
-				while (gaRecord.next()){
-					sFieldValue = gaRecord.getValue(sField);
-					sFieldDisplayValue = gaRecord.getDisplayValue(sField);
-					iFieldCount = gaRecord.getAggregate('COUNT', sField);
-					if (bDisplayOnly) {
-						sFieldDisplayValue = (sFieldDisplayValue) ? sFieldDisplayValue : sFieldValue;
-						aRow.push([sTable, sFieldDisplayValue, iFieldCount]);
-					} else {
-						aRow.push([sTable, sFieldValue, sFieldDisplayValue, iFieldCount]);
-					} // if bDisplayOnly
-				} // while record
-			} else {
-				iFieldCount = this.countRecords(sTable, sQuery);
-				if (bDisplayOnly) {
-					aRow.push([sTable, '', iFieldCount]);
-				} else {
-					aRow.push([sTable, '', '', iFieldCount]);
-				} // if bDisplayOnl
-			} // if field is not valid return total count with empty field/display
-			return aRow;
-		} else {
-			gaRecord.addAggregate('COUNT');
-			if (bQueryNoDomain) {
-				gaRecord.queryNoDomain();	
-			} else {
-				gaRecord.query();
-			} // if no domain
-			if (gaRecord.next()) {
-				return gaRecord.getAggregate('COUNT');
-			} else {
-				return -1;
-			} // if record
-		} // if field
-	}, // function countRecords
+    checkAccess: function() {
+        var sCallerScope = gs.getCallerScopeName();
+        var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
+        var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
+        if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
+            return true;
+        } // if scope is allowed
+    }, // function checkAccess
 
-	// Encode value 
-	encode: function(sValue) {
-		var sResult = (sValue) ? String(sValue).replace(/\n/g, '!^br^!') : '';
-		return sResult;
-	}, // function encode 
+    // Substitute null values in simple types and object keys
+    // TODO: validate other field types, like date and number
+    nsub: function(sValue, sSubstitute, sType, sObjKey) {
+        if (sObjKey) {
+            if (sValue.hasOwnProperty(sObjKey)) {
+                sValue = sValue[sObjKey];
+            } else {
+                sValue = null;
+            } // if has property
+        } // if obj and objkey
+        if (sValue) {
+            if ((sType == 'array') || (Array.isArray(sSubstitute))) {
+                if (Array.isArray(sValue)) {
+                    return sValue;
+                } else {
+                    return sValue.split(',');
+                } // if is array
+            } else if ((sType == 'object') || (typeof(sSubstitute) == 'object')) {
+                return sValue;
+            } else if ((sType == 'boolean') || ((sSubstitute === true || sSubstitute === false || toString.call(sSubstitute) === '[object Boolean]'))) {
+                return Boolean(sValue);
+            } else {
+                return String(sValue);
+            } // if array, bool, string
+        } else if (((sSubstitute !== undefined)) && (sSubstitute !== null)) {
+            if (sType == 'string') {
+                return String(sSubstitute);
+            } else {
+                return sSubstitute;
+            } // if force string
+        } else {
+            if (sType == 'array') {
+                return [];
+            } else if (sType == 'object') {
+                return {};
+            } else if (sType == 'boolean') {
+                return false;
+            } else {
+                return '';
+            } // if array
+        } // if value
+    }, // function nsub
 
-	// Decode value 
-	decode: function(sValue) {
-		var sResult = String(sValue).replace(/!\^br\^!/g, '\n');
-		return sResult;
-	}, // function decode 
+    getType: function(oValue, bDoNotConvertCase) {
+        if (oValue === null) {
+            return 'null';
+        }
+        var sType = typeof oValue;
+        if (sType == 'undefined') {
+            return 'undefined';
+        }
+        if (sType == 'object') {
+            var strObject = String(Object.prototype.toString.call(oValue));
+            var aType = strObject.match(/^\[object\s(.*)\]$/);
+            sType = ((aType) && (Array.isArray(aType)) && (aType.length > 0)) ? aType[1] : '';
+            if (sType) {
+                return (bDoNotConvertCase) ? sType : String(sType).toLowerCase();
+            }
+        }
+        return sType;
+    }, // function getType
 
-	// Function for scoped apps to query a gliderecord with the options
-	getRecords: function(sTable, sQuery, aOrderBy, aOrderByDesc, iLimit, bWorkflow, bAutoSysFields, bQueryNoDomain) {
-		if (sTable) {
-			var grRecord = new GlideRecord(sTable);
-			if (sQuery) {
-				grRecord.addEncodedQuery(sQuery);
-			} // if query
-			if (aOrderBy) {
-				var fnOrderBy = function(sOrderByField) {grRecord.orderBy(sOrderByField);};
-				aOrderBy.forEach(fnOrderBy);
-			} // if order by
-			if (aOrderByDesc) {
-				var fnOrderByDesc = function(sOrderByField) {grRecord.orderByDesc(sOrderByField);};
-				aOrderByDesc.forEach(fnOrderByDesc);
-			} // if order by
-			if ((iLimit) && (!isNaN(iLimit))) {
-				grRecord.setLimit(iLimit);	
-			} // if limit
-			if (bWorkflow === false) {
-				grRecord.setWorkflow(false);
-			} // if workflow false
-			if (bAutoSysFields === false) {
-				grRecord.autoSysFields(false);
-			} // if autosysfields false
-			if (bQueryNoDomain === true) {
-				grRecord.queryNoDomain();
-			} else {
-				grRecord.query();
-			} // if queryno domain
-			return grRecord;
-		} else {
-			gs.error('GlobalTools.getRecords table is empty!');
-		} // if table is empty
-	}, // function getRecords
+    // Encode value 
+    encode: function(sValue) {
+        var sResult = (sValue) ? String(sValue).replace(/\n/g, '!^br^!') : '';
+        return sResult;
+    }, // function encode 
 
-	// Insert, update or delete record based on values and config object
-	doRecord: function(oValues, oConfig, oError) {
-		try {
-			var bLog = (String(oConfig['bLog']) == 'true') ? true : false;
-			if (bLog) {gs.info('GlobalTools.doRecord oValues: ' + JSON.stringify(oValues));} 
-			if (bLog) {gs.info('GlobalTools.doRecord oConfig: ' + JSON.stringify(oConfig));} 
-			var sId = '', sQuery = '', aQuery = [], bQueryEmptyFieldDone = false;
-			var bQueryEmptyFields = (String(oConfig['bQueryEmptyFields']) == 'true') ? true : false; // default is false
-			var aQueryFields = (Array.isArray(oConfig['aQueryFields'])) ? oConfig['aQueryFields'] : [oConfig['aQueryFields']];
-			aQueryFields.forEach(function(sField) {
-				bQueryEmptyFieldDone = false;
-				if (oValues[sField]) {
-					bQueryEmptyFieldDone = true;
-					aQuery.push(sField + '=' + oValues[sField]);
-				} // if value
-				if ((oConfig['oValues']) && (oConfig['oValues'][sField])) {
-					bQueryEmptyFieldDone = true;
-					aQuery.push(sField + '=' + oConfig['oValues'][sField]);
-				} // if value
-				if ((bQueryEmptyFields) && (!bQueryEmptyFieldDone)) {
-					aQuery.push(sField + 'ISEMPTY');
-				} // if query empty field
-			}); // each field
-			var sTargetTable = oConfig['sTargetTable'];
-			if (sTargetTable) {
-				var bInsert = (String(oConfig['bInsert']) == 'false') ? false : true; // default is true
-				var bUpdate = (String(oConfig['bUpdate']) == 'false') ? false : true; // default is true
-				var bDelete = (String(oConfig['bDelete']) == 'true') ? true : false; // default is false
-				var bNoWorkflow = (String(oConfig['bNoWorkflow']) == 'true') ? true : false; // default is false
-				var bNoEngine = (String(oConfig['bNoEngine']) == 'true') ? true : false; // default is false
-				var bNoAutoSysFields = (String(oConfig['bNoAutoSysFields']) == 'true') ? true : false; // default is false
-				var bNoDomain = (String(oConfig['bNoDomain']) == 'true') ? true : false; // default is false
-				var bKeepSysId = (String(oConfig['bKeepSysId']) == 'true') ? true : false; // default is false
-				var grRecord = new GlideRecord(sTargetTable);
-				if (bNoWorkflow) {
-					grRecord.setWorkflow(false);
-				} // if no workflow
-				if (bNoEngine) {
-					grRecord.setUseEngine(false);
-				} // if no engine (data policy)
-				if (bNoAutoSysFields) {
-					grRecord.autoSysFields(false);
-				} // if no autosysfields
-				sQuery = aQuery.join('^');
-				if (sQuery) {
-					grRecord.addEncodedQuery(sQuery);
-				} else {
-					gs.error('GlobalTools.doRecord missing query (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
-					oError['code'] = '001';
-					oError['message'] = 'missing query';
-					return;
-				} // if query
-				if (bNoDomain) {
-					grRecord.queryNoDomain();	
-				} else {
-					grRecord.query();
-				} // if no domain
-				var bFound = grRecord.next();
-				if (bDelete) {
-					var oDeleteReturnValue = grRecord.deleteRecord();
-					if (bLog) {gs.info('GlobalTools.doRecord bDelete: ' + bDelete + ' oDeleteReturnValue: ' + oDeleteReturnValue);} 
-					return oDeleteReturnValue;
-				} else {
-					if (oConfig['oValues']) {
-						Object.keys(oConfig['oValues']).forEach(function(sField) {
-							grRecord.setValue(sField, oConfig['oValues'][sField]);
-						}); // each values field
-					} // if values
-					if (oValues['aTargetFields']) {
-						oValues['aTargetFields'].forEach(function(sField) {
-							if (oValues[sField]) {
-								grRecord.setValue(sField, oValues[sField]);
-							} // if value
-						}); // each field
-					} else {
-						Object.keys(oValues).forEach(function(sField) {
-							if (oValues.hasOwnProperty(sField)) {
-								grRecord.setValue(sField, oValues[sField]);
-							} // if has property;
-						}); // each field
-					} // if target fields
-					if ((bUpdate) && (bFound)) {
-						sId = grRecord.getUniqueValue();
-						if (!grRecord.update()) {
-							oError['code'] = '002';
-							oError['message'] = 'error updating: ' + grRecord.getLastErrorMessage();
-							gs.error('GlobalTools.doRecord error updating record: ' + sId + ' with msg: ' + grRecord.getLastErrorMessage() + ' (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
-						} // if error updating
-					} else if ((bInsert) && (!bFound)) {
-						if ((bKeepSysId) && (oValues['sys_id'])) {
-							grRecord.setNewGuidValue(oValues['sys_id']);
-						} // if keep sys id
-						sId = grRecord.insert();
-						if (!sId) {
-							oError['code'] = '003';
-							oError['message'] = 'error inserting: ' + grRecord.getLastErrorMessage();
-							gs.error('GlobalTools.doRecord error inserting record with msg: ' + grRecord.getLastErrorMessage() + ' (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
-						} // if error inserting
-					} // if insert
-					if (bLog) {gs.info('GlobalTools.doRecord  bInsert: ' + bInsert + ' bUpdate: ' + bUpdate + ' sId: ' + sId);} 
-					return sId;
-				} // if delete
-			} else {
-				oError['code'] = '004';
-				oError['message'] = 'missing table';
-				gs.error('GlobalTools.doRecord missing target table (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
-			} // if target table
-		} catch(ex) {
-			oError['code'] = '005';
-			oError['message'] = 'exception: ' + ex.toString();
-			gs.error('GlobalTools.doRecord Error: ' + ex.toString());
-		} // try end
-		gs.info('tomtom tools oError: ' + JSON.stringify(oError));
-	}, // function doRecord
+    // Decode value 
+    decode: function(sValue) {
+        var sResult = String(sValue).replace(/!\^br\^!/g, '\n');
+        return sResult;
+    }, // function decode 
 
-	// Global scoped updateMultiple function to overcome scope issue
-	updateMultiple: function(oValues, oConfig) {
-		var bLog = (String(oConfig['bLog']) == 'true') ? true : false;
-		if (bLog) {gs.info('GlobalTools.updateMultiple oValues: ' + JSON.stringify(oValues));} 
-		if (bLog) {gs.info('GlobalTools.updateMultiple oConfig: ' + JSON.stringify(oConfig));} 
-		var sQuery = String(oConfig['sQuery']);
-		var sTargetTable = oConfig['sTargetTable'];
-		if ((sTargetTable) && (sQuery) && (sQuery != 'null') && (Object.keys(oValues).length > 0)) {
-			var bDoUpdate = false;
-			var bNoWorkflow = (String(oConfig['bNoWorkflow']) == 'true') ? true : false; // default is false
-			var bNoAutoSysFields = (String(oConfig['bNoAutoSysFields']) == 'true') ? true : false; // default is false
-			var bNoEngines = (String(oConfig['bNoEngines']) == 'true') ? true : false; // default is false
-			var grRecord = new GlideRecord(sTargetTable);
-			grRecord.addEncodedQuery(sQuery);
-			if (bNoWorkflow) {
-				grRecord.setWorkflow(false);
-			} // if no workflow
-			if (bNoAutoSysFields) {
-				grRecord.autoSysFields(false);
-			} // if no autosysfields
-			if (bNoEngines) {
-				grRecord.setUseEngines(false);
-			} // if no engines
-			Object.keys(oValues).forEach(function(sField) {
-				if (oValues.hasOwnProperty(sField)) {
-					if (grRecord.isValidField(sField)) {
-						grRecord.setValue(sField, oValues[sField]);
-						bDoUpdate = true;
-					} // if valid field
-				} // if has property;
-			}); // each field
-			if (bDoUpdate) {
-				grRecord.updateMultiple();
-			} else {
-				gs.error('GlobalTools.updateMultiple no field value set (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');	
-			} // if update
-		} else {
-			gs.error('GlobalTools.updateMultiple missing table,query or value (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
-			return;
-		} // if query
-	}, // function updateMultiple
+    // Schedule ScriptInclude Function
+    scheduleScript: function(sScriptInclude, sFunction, iSeconds, aFunctionArgs, aClassArgs, sScheduleName) {
+        if (!this.checkAccess()) {
+            return;
+        }
 
-	// Global scoped setValue function to overcome scope issue
-	setGRValue: function(grRecord, sFieldName, oValue) {
-		if ((sFieldName) && (oValue)) {
-			grRecord.setValue(sFieldName, oValue);
-		} // if fieldname and value
-	}, // function setGRValue
+        function parseArgs(aArgs) {
+            var aReturn = [];
+            if (!aArgs) {
+                return '';
+            } // if no args
+            aArgs.forEach(function(oItem, iIndex) {
+                var sType = typeof oItem;
+                if ((!oItem) && (sType != 'boolean') && (!oItem === 0)) {
+                    return '';
+                } // if empty
+                //gs.info('what is it: ' + GlideJSUtil.getJavaClassName(oItem));
+                if (JSUtil.instance_of(oItem, GlideRecord)) {
+                    aScript.push('var grRecord_' + iIndex + " = new GlideRecord('" + oItem.getTableName() + "');");
+                    aScript.push('grRecord_' + iIndex + ".get('" + oItem.getUniqueValue() + "');");
+                    aReturn.push('grRecord_' + iIndex);
+                } else if (JSUtil.instance_of(oItem, GlideDate)) {
+                    aScript.push('var dtDate_' + iIndex + " = new GlideDate('" + oItem + "');");
+                    aReturn.push('dtDate_' + iIndex);
+                } else if (JSUtil.instance_of(oItem, GlideTime)) {
+                    aScript.push('var dtTime_' + iIndex + " = new GlideTime('" + oItem + "');");
+                    aReturn.push('dtTime_' + iIndex);
+                } else if (JSUtil.instance_of(oItem, GlideDateTime)) {
+                    aScript.push('var dtDateTime_' + iIndex + " = new GlideDateTime('" + oItem + "');");
+                    aReturn.push('dtDateTime_' + iIndex);
+                } else {
+                    aReturn.push(JSON.stringify(oItem));
+                } // if special object
+            }, this); // each argument
+            return aReturn.join(', ');
+        } // function parseArgs
+        iSeconds = (iSeconds) ? iSeconds : 1;
+        var sScriptName = '';
+        var bCalcScript = true;
+        var aScript = [];
+        if (Array.isArray(sScriptInclude)) {
+            sScriptName = (sFunction) ? sFunction : 'Passed Script';
+            bCalcScript = false;
+            aScript = sScriptInclude;
+        } // if is array
+        if (bCalcScript) {
+            var sClassArgs = (aClassArgs) ? parseArgs(aClassArgs) : '';
+            var sFunctionArgs = (aFunctionArgs) ? parseArgs(aFunctionArgs) : '';
+            sScriptName = 'GlobalTools.scheduleScript - ' + sScriptInclude + '.' + sFunction;
+            aScript.push('new ' + sScriptInclude + '(' + sClassArgs + ').' + sFunction + '(' + sFunctionArgs + ');');
+        } // if bCalcScript
+        var dtDelay = new GlideDateTime();
+        dtDelay.addSeconds(iSeconds);
+        sScheduleName = (sScheduleName) ? sScheduleName : 'GlobalTools.ScriptScheduler - ' + sScriptName;
+        var grTrigger = new GlideRecord('sys_trigger');
+        grTrigger.newRecord();
+        grTrigger.setValue('name', sScheduleName);
+        grTrigger.setValue('trigger_type', '0');
+        grTrigger.setValue('next_action', dtDelay);
+        grTrigger.setValue('script', aScript.join('\n'));
+        grTrigger.insert();
+    }, // function scheduleScript
 
-	// Global scoped abort function to overcome scope issue
-	abortGRAction: function (grRecord) {
-		grRecord.setAbortAction(true);
-	}, // function abortGRAction
+    // Convenience function to handle scheduler
+    scheduleHandler: function(sEvent, sDelaySeconds, sAction, sAddlQuery, grRecord, oParam1, oParam2, sQueue) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        try {
+            if (!sEvent) {
+                gs.info('global.GlobalTools.scheduleHandler called without an event.');
+                return false;
+            } // if not event return
+            sAddlQuery = (sAddlQuery) ? '^' + sAddlQuery : '';
+            grRecord = (grRecord) ? grRecord : '';
+            oParam1 = (oParam1) ? String(oParam1) : '';
+            oParam2 = (oParam2) ? String(oParam2) : '';
+            sQueue = (sQueue) ? sQueue : '';
+            var grEvent = new GlideRecord('sysevent');
+            grEvent.addQuery('stateNOT INprocessed,error^name=' + sEvent + sAddlQuery);
+            grEvent.query();
+            if (sAction == 'stop') {
+                while (grEvent.next()) {
+                    grEvent.setValue('processed', gs.daysAgo(0));
+                    grEvent.setValue('state', 'processed');
+                    grEvent.setValue('processing_duration', 0);
+                    grEvent.setWorkflow(false);
+                    grEvent.update();
+                } // disable active events
+            } else if (!grEvent.next()) {
+                if ((sDelaySeconds) && (!isNaN(sDelaySeconds))) {
+                    var dtSchedule = new GlideDateTime();
+                    dtSchedule.addSeconds(sDelaySeconds);
+                    gs.eventQueueScheduled(sEvent, grRecord, oParam1, oParam2, dtSchedule);
+                } else {
+                    gs.eventQueue(sEvent, grRecord, oParam1, oParam2, sQueue);
+                } // if delay
+            } // if action
+        } catch (oExeption) {
+            gs.error('global.GlobalTools.scheduleHandler Exception during schedule sEvent: ' + sEvent, oExeption);
+        } // catch errors
+    }, // function scheduleHandler
 
-	// Javascript alternative to ECMA6 Object.assign to merge objects
-	// oSource: source object
-	// oMerge: object to merge
-	// Returns: source object
-	ObjectAssign: function(oSource, oMerge) {
-		Object.keys(oMerge).forEach(function (k) {
-			if ((typeof oMerge[k] === 'object') && (!Array.isArray(oMerge[k])) && (!oMerge[k] instanceof String)) {
-				oSource[k] = oSource[k] || {};
-				this.ObjectAssign(oSource[k], oMerge[k]);
-			} else {
-				oSource[k] = oMerge[k];
-			} // if object
-		}, this);
-	}, // function ObjectAssign
+    // Function to overcome scope barrier for GlideEncrypter
+    decryptPassword: function(sPassword) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        var sClearText = '';
+        var glEncrypter = new GlideEncrypter();
+        if (sPassword) {
+            sClearText = glEncrypter.decrypt(sPassword);
+        } // if input
+        return sClearText;
+    }, // function decryptPassword
 
-	// Convert GlideRecord to JSON
-	// grRecord: to be converted
-	// bStringify: return JSON.stringify other wise JSON (default: JSON)
-	// bDisplayValue: get Display Value (default: true)
-	// bDisplayValueOwnField: get Display Value in own field with postfix "_dv" (default: true), otherwise return as: "value (display)"
-	// Returns: JSON or String
-	convertGRtoJSON: function(grRecord, bStringify, bDisplayValue, bDisplayValueOwnField) {
-		var oResult = {}, sValue = '', sDisplayValue = '';
-		bDisplayValue = (bDisplayValue) ? bDisplayValue : true;
-		bDisplayValueOwnField = (bDisplayValueOwnField) ? bDisplayValueOwnField : true;
-		var aFields = new GlideRecordUtil().getFields(grRecord);
-		aFields.forEach(function(sField) {
-			sValue = this.nsub(grRecord.getValue(sField));
-			if (bDisplayValue) {
-				sDisplayValue = grRecord.getDisplayValue(sField);
-				if (sValue != sDisplayValue) {
-					if (bDisplayValueOwnField) {
-						oResult[sField+'_dv'] = sDisplayValue;
-					} else {
-						sValue = sValue + ' (' + sDisplayValue + ')';
-					} // if display own field
-				} // if value != display
-			} // if display value
-			oResult[sField] = sValue;
-		}, this); // each field
-		if (bStringify) {
-			return JSON.stringify(oResult);
-		} else {
-			return oResult;
-		} // if stringify
-	}, // function convertGRToJSON
+    // Function to evaluate a script in global context
+    scriptExecute: function(sScript, oParams) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        try {
+            if (oParams) {
+                var hmParam = new Packages.java.util.HashMap();
+                Object.keys(oParams).forEach(function(sKey) {
+                    hmParam.put(sKey, oParams[sKey]);
+                }, this); // each param
+                GlideEvaluator.evaluateStringWithGlobals(sScript, hmParam);
+            } else {
+                GlideEvaluator.evaluateString(sScript);
+            } // if param
+        } catch (oExeption) {
+            gs.error('global.GlobalTools.scriptExecute Exception during function for sScript: ' + sScript, oExeption);
+        } // catch errors
+    }, // function scriptExecute
 
-	addRemoveFromArray: function (aArray, aArrayAdd, aArrayRemove) {
-		var _ArrayUtil = new global.ArrayUtil();
-		var aResult = _ArrayUtil.union(aArray, aArrayAdd);
-		var iFound = 0;
-		aArrayRemove.forEach(function(sElement) {
-			iFound = aResult.indexOf(sElement);
-			if (iFound != -1) {
-				aResult.splice(iFound, 1);
-			} // if found
-		}, this);
-		return aResult;
-	}, // function addRemoveFromArray
+    // Overcome scopeing issue
+    sleep: function(iMilliseconds) {
+        if (!this.checkAccess()) {
+            return;
+        }
+        gs.sleep(iMilliseconds);
+    }, // function sleep
 
-	// Get add/remove arrays from two arrays
-	// Note: Not optimal for performance on very big arrays
-	getAddRemoveFromArrays: function(aArray, aArrayOld) {
-		if ((!aArray) || (!Array.isArray(aArray))) {
-			aArray = [];
-		} // is not array
-		if ((!aArrayOld) || (!Array.isArray(aArrayOld))) {
-			aArrayOld = [];
-		} // is not array
-		var aAdd = [];
-		var aRemove = [];
-		var sItem = '';
-		var oReturn = {'add': aAdd, 'remove': aRemove, 'same': false};
-		aArray.sort();
-		aArrayOld.sort();
-		if (aArray.join(',') != aArrayOld.join(',')) {
-			aArray.forEach(function(sItem){
-				if (aArrayOld.indexOf(sItem) == -1) {
-					aAdd.push(sItem);
-				} // if not found
-			}, this); // each sItem is not yet
-			aArrayOld.forEach(function(sItem){
-				if (aArray.indexOf(sItem) == -1) {
-					aRemove.push(sItem);
-				} // if not found
-			}, this); // each sItem is no longer
-		} else {
-			oReturn.same = true;
-		}  // if not same
-		return oReturn;
-	}, // function getAddRemoveFromArray
+    // Run function in a specific scope (please note the function may only use valid scoped features)
+    runFunctionInScope: function(sFunction, sScopeId) { // function is a <script_include>.<function>.toString(), 3rd... args will be evaluated in function call
+        if (!this.checkAccess()) {
+            return;
+        }
+        if (gs.getProperty('glide.record.legacy_cross_scope_access_policy_in_script') == 'true') {
+            gs.warn('GlobalTools.runFunctionInScope is allowed, please validate your instance security settings!');
+            var gsEvaluator = new GlideScopedEvaluator();
+            gsEvaluator.putVariable('result', null);
+            var aArguments = [];
+            for (var i = 2; i < arguments.length; i++) {
+                gsEvaluator.putVariable('param_' + String(i), arguments[i]);
+                aArguments.push('param_' + String(i));
+            } // each argument after script and scope
+            sFunction = sFunction.replace('function (', 'function tempname(');
+            sFunction = 'result = tempname(' + aArguments.join(',') + ');\n' + sFunction;
+            var grScriptInclude = new GlideRecord('sys_script_include');
+            if (grScriptInclude.get('name', 'GlobalTools')) {
+                grScriptInclude.setValue('sys_scope', sScopeId);
+                grScriptInclude.setValue('script', sFunction);
+                try {
+                    var vResult = gsEvaluator.evaluateScript(grScriptInclude, 'script'); // glide eval insists on a "queried" record
+                    var oResult = gsEvaluator.getVariable('result');
+                    return oResult;
+                } catch (ex) {
+                    gs.error('GlobalTools.runFunctionInScope is had an error: ' + String(ex));
+                } // catch error in code
+            } // if script include
+        } else {
+            gs.error('GlobalTools.runFunctionInScope is not allowed in a secured instances!');
+        } // if legacy scope script policy is true
+    }, // runFunctionInScope
 
-	// Schedule ScriptInclude Function
-	scheduleScript: function(sScriptInclude, sFunction, iSeconds, aFunctionArgs, aClassArgs, sScheduleName) {
-		function parseArgs(aArgs) {
-			var aReturn = [];
-			if (!aArgs) {
-				return '';
-			} // if no args
-			aArgs.forEach(function(oItem, iIndex){
-				var sType = typeof oItem;
-				if ((!oItem) && (sType != 'boolean') && (!oItem === 0)) {
-					return '';
-				} // if empty
-				//gs.info('what is it: ' + GlideJSUtil.getJavaClassName(oItem));
-				if (JSUtil.instance_of(oItem, GlideRecord)) {
-					aScript.push('var grRecord_' + iIndex + " = new GlideRecord('" + oItem.getTableName() + "');");
-					aScript.push('grRecord_' + iIndex + ".get('" + oItem.getUniqueValue() + "');");
-					aReturn.push('grRecord_' + iIndex);
-				} else if (JSUtil.instance_of(oItem, GlideDate)) {
-					aScript.push('var dtDate_' + iIndex + " = new GlideDate('" + oItem + "');");
-					aReturn.push('dtDate_' + iIndex);
-				} else if (JSUtil.instance_of(oItem, GlideTime)) {
-					aScript.push('var dtTime_' + iIndex + " = new GlideTime('" + oItem + "');");
-					aReturn.push('dtTime_' + iIndex);
-				} else if (JSUtil.instance_of(oItem, GlideDateTime)) {
-					aScript.push('var dtDateTime_' + iIndex + " = new GlideDateTime('" + oItem + "');");
-					aReturn.push('dtDateTime_' + iIndex);
-				} else {
-					aReturn.push(JSON.stringify(oItem));
-				} // if special object
-			}, this); // each argument
-			return aReturn.join(', ');
-		} // function parseArgs
-		iSeconds = (iSeconds) ? iSeconds : 1;
-		var sScriptName = '';
-		var bCalcScript = true;
-		var aScript = [];
-		if (Array.isArray(sScriptInclude)) {
-			sScriptName = (sFunction) ? sFunction : 'Passed Script';
-			bCalcScript = false;
-			aScript = sScriptInclude;
-		} // if is array
-		if (bCalcScript) {
-			var sClassArgs = (aClassArgs) ? parseArgs(aClassArgs) : '';
-			var sFunctionArgs = (aFunctionArgs) ? parseArgs(aFunctionArgs) : '';
-			sScriptName =  'GlobalTools.scheduleScript - ' + sScriptInclude + '.' + sFunction;
-			aScript.push('new ' + sScriptInclude + '(' + sClassArgs + ').' + sFunction + '(' + sFunctionArgs + ');');
-		} // if bCalcScript
-		var dtDelay = new GlideDateTime();
-		dtDelay.addSeconds(iSeconds);
-		sScheduleName = (sScheduleName) ? sScheduleName : 'GlobalTools.ScriptScheduler - ' + sScriptName;
-		var grTrigger = new GlideRecord('sys_trigger');
-		grTrigger.newRecord();
-		grTrigger.setValue('name', sScheduleName);
-		grTrigger.setValue('trigger_type', '0');
-		grTrigger.setValue('next_action', dtDelay);
-		grTrigger.setValue('script', aScript.join('\n'));
-		grTrigger.insert();
-	}, // function scheduleScript
+    type: 'GlobalTools',
+    version: '1.0.0',
+    author: 'Tom Hauri',
+    email: 'tom@hauri.biz'
 
-	// Get reference field name based on reference table
-	getRefFieldName: function(fRecord, sRefTable, bCheckRefTableHierarchy, sReturnType) {
-		var _ArrayUtil = new global.ArrayUtil();
-		var sReturnField = '';
-		var aReturnFields = [];
-		var sTableName = (fRecord) ? fRecord.getTableName() : '';
-		if ((sTableName) && (sRefTable)) {
-			if (sTableName) {
-				var aTables = _ArrayUtil.convertArray(new global.TableUtils(sTableName).getTables());
-				var aRefTables = [sRefTable];
-				if (bCheckRefTableHierarchy) {
-					aRefTables = _ArrayUtil.convertArray(new global.TableUtils(sRefTable).getHierarchy());
-				} // if check extended ref tables
-				var fDict = new GlideRecord('sys_dictionary');
-				fDict.addEncodedQuery('nameIN' + aTables.join(',') + '^internal_type=reference^referenceIN' + aRefTables.join(','));
-				fDict.query();
-				while ((fDict.next()) && (sReturnField == '')) {
-					if (sReturnType == 'array') {
-						aReturnFields.push(fDict.getValue('element'));
-					} else {
-						sReturnField = fDict.getValue('element');
-					} // if return array
-				} // while dict
-			} // if tablename
-		} // if record
-		if (sReturnType == 'array') {
-			return aReturnFields;
-		} else {
-			return sReturnField;
-		} // if return array
-	}, // function getRefFieldName
-
-	// Convenience function to handle scheduler
-	scheduleHandler: function(sEvent, sDelaySeconds, sAction, sAddlQuery, grRecord, oParam1, oParam2, sQueue) {
-		try {
-			if (!sEvent) {
-				gs.info('global.GlobalTools.scheduleHandler called without an event.');
-				return false;
-			} // if not event return
-			sAddlQuery = (sAddlQuery) ? '^' + sAddlQuery : '';
-			grRecord = (grRecord) ? grRecord : '';
-			oParam1 = (oParam1) ? String(oParam1) : '';
-			oParam2 = (oParam2) ? String(oParam2) : '';
-			sQueue = (sQueue) ? sQueue : '';
-			var grEvent = new GlideRecord('sysevent');
-			grEvent.addQuery('stateNOT INprocessed,error^name=' + sEvent + sAddlQuery);
-			grEvent.query();
-			if (sAction == 'stop') {
-				while (grEvent.next()) {
-					grEvent.setValue('processed', gs.daysAgo(0));
-					grEvent.setValue('state', 'processed');
-					grEvent.setValue('processing_duration', 0);
-					grEvent.setWorkflow(false);
-					grEvent.update();
-				} // disable active events
-			} else if (!grEvent.next()) {
-				if ((sDelaySeconds) && (!isNaN(sDelaySeconds))) {
-					var dtSchedule = new GlideDateTime();
-					dtSchedule.addSeconds(sDelaySeconds);
-					gs.eventQueueScheduled(sEvent, grRecord, oParam1, oParam2, dtSchedule);
-				} else {
-					gs.eventQueue(sEvent, grRecord, oParam1, oParam2, sQueue);
-				} // if delay
-			} // if action
-		} catch (oExeption) {
-			gs.error('global.GlobalTools.scheduleHandler Exception during schedule sEvent: ' + sEvent, oExeption);
-		} // catch errors
-	}, // function scheduleHandler
-
-	// Convenience function to get absolute base class (to avoid scope issues)
-	getAbsoluteBase: function(sTableName) {
-		try {
-			var _tableUtils = new global.TableUtils(sTableName);
-			return String(_tableUtils.getAbsoluteBase());
-		} catch (oExeption) {
-			gs.error('global.GlobalTools.getTableHierarchy Exception during function for sTableName: ' + sTableName, oExeption);
-		} // catch errors
-	}, // function getAbsoluteBase
-
-	// Convenience function to get table hierarchy (to avoid scope issues) and convert to JavaScript array (from ArrayList type)
-	getTableHierarchy: function(sTableName) {
-		try {
-			var _tableUtils = new global.TableUtils(sTableName);
-			return String(_tableUtils.getTables()).replace(/^\[|\s|\]$/g, '').split(',');
-		} catch (oExeption) {
-			gs.error('global.GlobalTools.getTableHierarchy Exception during function for sTableName: ' + sTableName, oExeption);
-		} // catch errors
-	}, // function getTableHierarchy
-
-	// Convenience function to get table extentions (to avoid scope issues) and convert to JavaScript array (from ArrayList type)
-	getTableExtensions: function(sTableName, bAllExtensions) {
-		try {
-			var _tableUtils = new global.TableUtils(sTableName);
-			if (bAllExtensions) {
-				return String(_tableUtils.getAllExtensions()).replace(/^\[|\s|\]$/g, '').split(',');	
-			} // if all extentions
-			return String(_tableUtils.getTableExtensions()).replace(/^\[|\s|\]$/g, '').split(',');
-		} catch (oExeption) {
-			gs.error('global.GlobalTools.getTableExtensions Exception during function for sTableName: ' + sTableName, oExeption);
-		} // catch errors
-	}, // function getTableExtensions
-
-	// Function to overcome scope barrier for GlideEncrypter
-	decryptPassword: function (sPassword) {
-		var sClearText = '';
-		var glEncrypter = new GlideEncrypter();
-		if (sPassword) {
-			sClearText = glEncrypter.decrypt(sPassword);
-		} // if input
-		return sClearText;
-	}, // function decryptPassword
-
-	// Function to evaluate a script in global context
-	scriptExecute: function(sScript, oParams) {
-		try {
-			if (oParams) {
-				var hmParam = new Packages.java.util.HashMap();
-				Object.keys(oParams).forEach(function(sKey){
-					hmParam.put(sKey, oParams[sKey]);
-				}, this); // each param
-				GlideEvaluator.evaluateStringWithGlobals(sScript, hmParam);
-			} else {
-				GlideEvaluator.evaluateString(sScript);
-			} // if param
-		} catch (oExeption) {
-			gs.error('global.GlobalTools.scriptExecute Exception during function for sScript: ' + sScript, oExeption);
-		} // catch errors
-	}, // function scriptExecute
-
-	// Function to replace field values in a string (oRecord can be JSON or GlideRecord, sValue replace sValue field, bJSON is InputString JSON)
-	replaceFieldsInString: function(sInputValue, oRecord, sValue, bJSON) {
-		var _ArrayUtil = new global.ArrayUtil();
-		if ((sInputValue) && (oRecord)) {
-			var bIsRecord = (oRecord.isValidRecord() !== undefined) ? true : false;
-			var reGetFields = /(\[[a-z_1-9]*\])(?!.*")/gi;
-			if (bJSON) {
-				reGetFields = /(\[[a-z_1-9]*\])/gi;
-			} // if json
-			var aReResults = String(sInputValue).match(reGetFields);
-			var reReplace = new RegExp('placeholder'); 
-			var sFieldName = '', sReplaceValue = '', sReplace = '';
-			if ((aReResults) && (Array.isArray(aReResults))) {
-				_ArrayUtil.unique(aReResults);
-				aReResults.forEach(function(sReResult) {
-					sFieldName = sReResult.replace(/\[|\]/g, '');
-					if (sFieldName == 'sValue') {
-						sReplaceValue = sValue;
-					} else if (bIsRecord) {
-						sReplaceValue = oRecord.getValue(sFieldName);
-					} else {
-						sReplaceValue = oRecord[sFieldName];
-					} // if fieldname is value
-					if (sReplaceValue) {
-						sReplace = sReResult.replace('[', '\\[').replace(']', '\\]');
-						reReplace = new RegExp(sReplace, 'gi');
-						sInputValue = sInputValue.replace(reReplace, sReplaceValue);
-					} // if value
-				}, this); // each re result
-			} // if reResult
-		} // if input 
-		return sInputValue;
-	}, // function replaceFieldsInString
-
-	// Overcome scopeing issue
-	sleep: function(iMilliseconds) {
-		gs.sleep(iMilliseconds);
-	}, // function sleep
-
-	// Add dot walking field to a query
-	makeQueryADotWalkQuery: function(sQuery, sDotWalkField) {
-		if ((sQuery) && (sDotWalkField)) {
-			var aQuery = [];
-			var gqsQuery = new GlideQueryString('cmdb_ci', sQuery);
-			gqsQuery.deserialize();
-			var gqsTerms = gqsQuery.getTerms();
-			for (var i = 0; i < gqsTerms.size(); i++) {
-				var gqsTerm = gqsTerms.get(i);
-				var sField = gqsTerm.getField();
-				var sValue = gqsTerm.getValue();
-				var sOperator = gqsTerm.getOperator();
-				var sTermPrefix = '';
-				if (gqsTerm.isOR()) {
-					sTermPrefix = 'OR';
-				} else if (gqsTerm.isNewQuery()) {
-					sTermPrefix = 'NQ';
-				} // if or or big or
-				aQuery.push(sTermPrefix + sDotWalkField + '.' + sField + sOperator + sValue);
-			} // each query string
-			return aQuery.join('^');
-		} // if params
-	}, // function makeQueryADotWalkQuery
-
-	// Combine Queries where the one of the queries can contain big or statements (^NQ)
-	combineQueries: function (sFirstQuery, sSecondQuery) {
-		if ((sFirstQuery) && (sSecondQuery)) {
-			var bNQFirstQuery = (sFirstQuery.indexOf('^NQ') != -1);
-			var bNQSecondQuery = (sSecondQuery.indexOf('^NQ') != -1);
-			if ((bNQFirstQuery) && (bNQSecondQuery)) {
-				gs.warn('GlobalTools.combineQueries is used with two big or statements in both queries! Return false! sFirstQuery: ' + sFirstQuery + ' sSecondQuery: ' + sSecondQuery);
-				return 'false';
-			} // if both queries contain big or
-			var aResult = [];
-			var aQueries = (bNQFirstQuery) ? sFirstQuery.split('^NQ') : sSecondQuery.split('^NQ');
-			var sAddlQuery = (bNQFirstQuery) ? sSecondQuery : sFirstQuery;
-			aQueries.forEach(function(sQuery){
-				aResult.push(sQuery + '^' + sAddlQuery);
-			}, this); // each big or query
-			return aResult.join('^NQ'); // join by big or query
-		} else if ((sFirstQuery) && (!sSecondQuery)) {
-			return sFirstQuery;
-		} else if (sSecondQuery) {
-			return sSecondQuery;
-		} else {
-			return '';
-		} // if main query
-	}, // function combineQueries	
-
-	// Get cross scope access information for a table
-	getTableScopeInfo: function (sTableName) {
-		var oScopeInfo = {'id': '', 'access': '', 'read': false, 'create': false, 'write': false, 'delete': false};
-		var grTable = new GlideRecord('sys_db_object');
-		if (grTable.get('name', sTableName)) {
-			oScopeInfo['id'] = grTable.getValue('sys_scope');
-			oScopeInfo['access'] = grTable.getValue('access');
-			if ((grTable.getValue('access') == 'public') || ((!grTable.getValue('access')))) {
-				oScopeInfo['read'] = (grTable.getValue('read_access') == '1') ? true : false;
-				oScopeInfo['create'] = (grTable.getValue('create_access') == '1') ? true : false;
-				oScopeInfo['write'] = (grTable.getValue('update_access') == '1') ? true : false;
-				oScopeInfo['delete'] = (grTable.getValue('delete_access') == '1') ? true : false;
-			} // if public
-		} // if table
-		return oScopeInfo;
-	}, // function checkTableScopeAccess
-
-	// Run function in a specific scope (please note the function may only use valid scoped features)
-	runFunctionInScope: function(sFunction, sScopeId) { // function is a <script_include>.<function>.toString(), 3rd... args will be evaluated in function call
-		if (gs.getProperty('glide.record.legacy_cross_scope_access_policy_in_script') == 'true') {
-			gs.warn('GlobalTools.runFunctionInScope is allowed, please validate your instance security settings!');
-			var gsEvaluator = new GlideScopedEvaluator();
-			gsEvaluator.putVariable('result', null);
-			var aArguments = [];
-			for (var i = 2; i < arguments.length; i++) {
-				gsEvaluator.putVariable('param_' + String(i), arguments[i]);
-				aArguments.push('param_' + String(i));
-			} // each argument after script and scope
-			sFunction = sFunction.replace('function (', 'function tempname(');
-			sFunction = 'result = tempname(' + aArguments.join(',') + ');\n' + sFunction;
-			var grScriptInclude = new GlideRecord('sys_script_include');
-			if (grScriptInclude.get('name', 'GlobalTools')) {
-				grScriptInclude.setValue('sys_scope', sScopeId);
-				grScriptInclude.setValue('script', sFunction);
-				try {
-					var vResult = gsEvaluator.evaluateScript(grScriptInclude, 'script'); // glide eval insists on a "queried" record
-					var oResult = gsEvaluator.getVariable('result');
-					return oResult;
-				} catch (ex) {
-					gs.error('GlobalTools.runFunctionInScope is had an error: ' + String(ex));
-				} // catch error in code
-			} // if script include
-		} else {
-			gs.error('GlobalTools.runFunctionInScope is not allowed in a secured instances!');
-		} // if legacy scope script policy is true
-	}, // runScriptInScope
-
-	type: 'GlobalTools',
-	version: '1.0.0',
-	author: 'Tom Hauri',
-	email: 'tom@hauri.biz'
-    
 };]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>14</sys_mod_count>
+        <sys_mod_count>26</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-08-18 09:15:28</sys_updated_on>
+        <sys_updated_on>2023-08-23 15:16:57</sys_updated_on>
     </sys_script_include>
 </record_update>
