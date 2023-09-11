@@ -182,6 +182,7 @@ GlobalToolsTable.prototype = {
     getFieldChoices: function(sTable, sField, sDependentFieldValue) {
         var aChoices = [],
             aDependentValues = [],
+			aChoiceDisplayValues = [],
             bFound = false;
         if ((sTable) && (sField)) {
             var aTableHierarchy = this.getTableHierarchy(sTable);
@@ -194,12 +195,13 @@ GlobalToolsTable.prototype = {
                 while (grChoice.next()) {
                     aChoices.push(grChoice.getValue('value'));
                     aDependentValues.push(grChoice.getValue('dependent_value'));
+					aChoiceDisplayValues.push(grChoice.getValue('value') + ' (' + grChoice.getValue('label') + ')');
                     bFound = true;
                 } // while choices
                 return bFound;
             }, this); // some tables
         } // if tablename and fieldname
-        return [aChoices, aDependentValues];
+        return [aChoices, aDependentValues, aChoiceDisplayValues];
     }, // function getFieldChoices
 
     type: 'GlobalToolsTable',
@@ -212,13 +214,13 @@ GlobalToolsTable.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:03:21</sys_created_on>
         <sys_id>157e05681bb47150d5be777d8b4bcb77</sys_id>
-        <sys_mod_count>16</sys_mod_count>
+        <sys_mod_count>17</sys_mod_count>
         <sys_name>GlobalToolsTable</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_157e05681bb47150d5be777d8b4bcb77</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-08-25 19:06:47</sys_updated_on>
+        <sys_updated_on>2023-09-07 14:14:52</sys_updated_on>
     </sys_script_include>
 </record_update>
