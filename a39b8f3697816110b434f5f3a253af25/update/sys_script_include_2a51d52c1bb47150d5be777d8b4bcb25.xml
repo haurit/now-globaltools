@@ -20,7 +20,7 @@ GlobalToolsRecordRead.prototype = {
 		//this._setValue = this._gtObject.setValue;
 		this._gtTable = new global.GlobalToolsTable();
 		this._isValidArray = new global.GlobalToolsArray().isValidArray;
-	},
+	}, // function initialize
 
 	checkAccess: function () {
 		var sCallerScope = gs.getCallerScopeName();
@@ -152,6 +152,30 @@ GlobalToolsRecordRead.prototype = {
 		} // if found
 	}, // function checkRecordByField
 
+	getSysIdByQuery: function (sTable, sQuery, bUniqueOnly) {
+		if (!this.checkAccess()) {
+			return;
+		}
+		if ((!sTable) || (!sQuery)) {
+			gs.error('GlobalToolsRecordRead.getSysIdByQuery table or query is empty!');
+			return;
+		} // if table is empty
+		var grRecord = new GlideRecord(sTable);
+		if (bUniqueOnly) {
+			grRecord.setLimit(2);
+		} else {
+			grRecord.setLimit(1);
+		} // if error on multiple
+		grRecord.addEncodedQuery(sQuery);
+		grRecord.query();
+		if (grRecord._next()) {
+			if ((bUniqueOnly) && (grRecord.getRowCount() > 1)) {
+				return;
+			} // if unique don't return value
+			return grRecord.getUniqueValue();
+		} // if found
+	}, // function getSysIdByQuery
+
 	checkRecordByQuery: function (sTable, sQuery) {
 		if (!this.checkAccess()) {
 			return;
@@ -173,25 +197,32 @@ GlobalToolsRecordRead.prototype = {
 		if (!this.checkAccess()) {
 			return;
 		}
+		var bLog = this._getValue('bLog', false, oRecordConfig);
+		var sLogPrefix = this._getValue('sLogPrefix', 'GlobalToolsRecordRead.getRelatedRecordByKeys ', oRecordConfig);
 		if (!oField) {
-			aError.push('GlobalToolsRecordRead.getRelatedRecordByKeys field is empty!');
-			gs.error('GlobalToolsRecordRead.getRelatedRecordByKeys field is empty! (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+			aError.push('Field is empty!');
+			if (bLog) {
+				gs.error(sLogPrefix + 'Field is empty! (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+			} // if log
 			return;
 		} // if not field
 		var oRecordConfigTmp = JSON.parse(JSON.stringify(oRecordConfig));
 		var oRecordValuesTmp = JSON.parse(JSON.stringify(oRecordValues));
 		var sField = '';
+		var sTable = this._getValue('sTargetTable', '', oRecordConfig);
 		var aKeys = [];
 		if ((this._gtObject.isObject(oField)) && (oField.hasOwnProperty('sField'))) {
 			sField = oField['sField'];
-			aKeys = this._getValue('aKeys', [], oField);
+			aKeys = this._getValue('aKeys', ['sys_id'], oField);
 			sRefTable = (sRefTable) ? sRefTable : this._getValue('sRefTable', '', oField);
 		} else if ((oField) && (this._gt.getType(oField) == 'string')) {
 			sField = oField;
 			aKeys.push({'sInputField': sField, 'sTargetField': 'sys_id'});
 		} else {
-			aError.push('GlobalToolsRecordRead.getRelatedRecordByKeys invalid field type or sField not defined!');
-			gs.error('GlobalToolsRecordRead.getRelatedRecordByKeys invalid field type or sField not defined! (oField: ' + JSON.stringify(oField) + ' type: ' + this._gt.getType(oField) + ' oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+			aError.push('Invalid field type or field not defined!');
+			if (bLog) {
+				gs.error(sLogPrefix + 'Invalid field type or field not defined! (oField: ' + JSON.stringify(oField) + ' type: ' + this._gt.getType(oField) + ' oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+			} // if log
 			return;
 		} // if field is obj
 		aKeys.forEach(function(oKey, iIndex){
@@ -222,24 +253,29 @@ GlobalToolsRecordRead.prototype = {
 		2. oRecordConfig['aKeys']: array of keys to look for to identify record (first one that produces a result is taken)
 			A key (string or object) or an array with key combinations (all must match) to uniquely identify a record
 			2.1 'key_field': simple key field taking the value of the respective value field (fieldname in source body and target record are the same)
-			
-			'key', {'sInputField'}, ['key1', 'key2']: a key (string or object) or an array with key combinations (all must match) to uniquely identify a record
-			
-			
-			{'sInputField': 'caller_email', 'sTargetField': 'caller_id.email', 'sAddlQuery': 'active=true'} // complex key, source and target field are different
+			2.2 array of key fields ['key_field_1', 'key_field_2'], key combinations (all must match) to uniquely identify a record
 
-		3. oRecordConfig['bQueryEmptyFields'] // generic setting to query empty fields with ISEMPTY instead of returning an error for empty fields
-		
-
+			If the input field is different from the target field or the target field is a dot walk field you can replace the string with an object that contains the following properties:
+			{
+				'sInputField': 'input_field', --> field from oRecordValues where the value is found
+				'sTargetField': 'target_field', --> field in the sTargetTable record (can be a dot walk field like caller_id.email)
+				'sAddlQuery': 'active=true', --> additional query to be applied to the target lookup
+				'bQueryEmptyFields': 'true/false', --> if input_field is empty will add a query: input_fieldISEMPTY'
+		3. oRecordConfig['bQueryEmptyFields'] // generic setting to query empty fields with ISEMPTY instead of returning an error for all empty fields
 	*/
 	getRecordByKeys: function (oRecordConfig, oRecordValues, aError) {
 		if (!this.checkAccess()) {
 			return;
 		}
 		var sTable = this._getValue('sTargetTable', '', oRecordConfig);
+		var bLog = this._getValue('bLog', false, oRecordConfig);
+		var sLogLevel = this._getValue('sLogLevel', 'error', oRecordConfig);
+		var sLogPrefix = this._getValue('sLogPrefix', 'GlobalToolsRecordRead.getRecordByKeys ', oRecordConfig);
 		if (!sTable) {
-			aError.push('GlobalToolsRecordRead.getRecordByKeys table is empty!');
-			gs.error('GlobalToolsRecordRead.getRecordByKeys table is empty! (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+			aError.push('Table is empty!');
+			if (bLog) {
+				gs.error(sLogPrefix + 'table is empty! (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+			} // if log
 			return;
 		} // if table is empty
 		var aAllKeys = this._getValue('aKeys', [], oRecordConfig);
@@ -248,6 +284,7 @@ GlobalToolsRecordRead.prototype = {
 			aQuery = [],
 			sKeyField = '',
 			sTargetField = '',
+			sTargetNonDotWalkField = '',
 			sValue = '',
 			sAddlQuery = '',
 			bQueryEmptyFields = false;
@@ -270,6 +307,7 @@ GlobalToolsRecordRead.prototype = {
 			aKeys.forEach(function (oKey) {
 				sKeyField = '';
 				sTargetField = '';
+				sTargetNonDotWalkField = '';
 				sAddlQuery = '';
 				bQueryEmptyFields = this._getValue('bQueryEmptyFields', false, oRecordConfig);
 				if (this._gtObject.isObject(oKey)) {
@@ -281,23 +319,26 @@ GlobalToolsRecordRead.prototype = {
 					sKeyField = oKey;
 				} // if key is object
 				sTargetField = (sTargetField) ? sTargetField : sKeyField;
+				sTargetNonDotWalkField = (sTargetField.indexOf('.') != -1) ? sTargetField.split('.')[0] : sTargetField;
 				sValue = this._getValue(sKeyField, '', oRecordValues);
-				if (grRecord.isValidField(sTargetField)) {
+				if (grRecord.isValidField(sTargetNonDotWalkField)) {
 					if ((sValue == 'NULL') || ((!sValue) && (bQueryEmptyFields))) {
 						aQuery.push(sTargetField + 'ISEMPTY' + sAddlQuery);
 					} else if (sValue) {
 						aQuery.push(sTargetField + '=' + sValue + sAddlQuery);
 					} else {
-						aError.push('Field ' + sKeyField + ' is empty and parameter bQueryEmptyFields is not set');
-						gs.error('GlobalToolsRecordRead.getRecordByKeys key not found sKeyField ' + sKeyField + ' is empty and parameter bQueryEmptyFields is not set. (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+						aError.push('Field \'' + sKeyField + '\' is empty and parameter bQueryEmptyFields is not set');
+						if (bLog) {
+							gs.error(sLogPrefix + 'Key not found sKeyField \'' + sKeyField + '\' is empty and parameter bQueryEmptyFields is not set. (oRecordConfig: ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+						} // if log
 					} // if value
 				} else {
 					aError.push('Field ' + sTargetField + ' does not exist in table ' + sTable);
-					gs.error('GlobalToolsRecordRead.getRecordByKeys key not found sTable: ' + sTable + ' sTargetField: ' + sTargetField + ' (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+					gs.error('GlobalToolsRecordRead.getRecordByKeys key not found sTable: ' + sTable + ' sTargetField: ' + sTargetField + ' (oRecordConfig: ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
 				} // if valid field
 			}, this); // each key array
-			if ((this._getValue('bLog', false, oRecordConfig))) {
-				gs.info('GlobalToolsRecordRead.getRecordByKeys sTable: ' + sTable + ' oAllKey: ' + JSON.stringify(oAllKey) + ' sTargetField: ' + JSON.stringify(sTargetField) + ' sQuery: ' + aQuery.join('^') + ' aQuery len: ' + aQuery.length + ' aKeys len: ' + aKeys.length);
+			if ((bLog) && (sLogLevel == 'debug')) {
+				gs.info(sLogPrefix + 'sTable: ' + sTable + ' oAllKey: ' + JSON.stringify(oAllKey) + ' sTargetField: ' + sTargetField + ' sTargetNonDotWalkField: ' + sTargetNonDotWalkField + ' sQuery: ' + aQuery.join('^') + ' aQuery len: ' + aQuery.length + ' aKeys len: ' + aKeys.length);
 			} // if log
 			if (aQuery.length == aKeys.length) { // only if all values are present
 				grRecord.addEncodedQuery(aQuery.join('^'));
@@ -313,7 +354,7 @@ GlobalToolsRecordRead.prototype = {
 		}, this); // for each key object
 		if ((grRecord.isValidRecord()) && (grRecord.sys_id != 'undefined')) {
 			return grRecord;
-		} // if vaild record
+		} // if valid record
 	}, // function getRecordByKeys
 
 	/*
@@ -530,13 +571,13 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>46</sys_mod_count>
+        <sys_mod_count>61</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-11 06:00:11</sys_updated_on>
+        <sys_updated_on>2023-09-17 12:31:30</sys_updated_on>
     </sys_script_include>
 </record_update>
