@@ -51,10 +51,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this._runBusinessLogic();
 		this._validateDataPolicy();
 		if ((this.bLog) && (this.sLogLevel == 'debug')) {
-			gs.info(this.bLogPrefix + 'canDoAction: ' + this._canDoAction() + ' bDoAction: ' + this._getValue('bDoAction', true, this.oRecordConfig));
+			gs.info(this.bLogPrefix + ' sTargetTable: ' + this.sTargetTable + ' canDoAction: ' + this._canDoAction() + ' bDoAction: ' + this._getValue('bDoAction', true, this.oRecordConfig));
 		} // if log and debug
-		gs.info('tomtom bDoAction: ' + this._getValue('bDoAction', '', this.oRecordConfig) + ' cfg: ' + JSON.stringify(this.oRecordConfig));
-
 		if ((this._canDoAction()) && (this._getValue('bDoAction', true, this.oRecordConfig))) {
 			if (this._getValue('bUseIRE', false, this.oRecordConfig)) {
 				this._createIREPayload();
@@ -79,6 +77,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this._apply();
 		this._runBusinessLogic();
 		this._validateDataPolicy();
+		if ((this.bLog) && (this.sLogLevel == 'debug')) {
+			gs.info(this.bLogPrefix + ' sTargetTable: ' + this.sTargetTable + ' canDoAction: ' + this._canDoAction() + ' bDoAction: ' + this._getValue('bDoAction', true, this.oRecordConfig));
+		} // if log and debug
 		if ((this._canDoAction()) && (this._getValue('bDoAction', true, this.oRecordConfig))) {
 			this._createIREPayload();
 		} // if can write
@@ -104,7 +105,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this.sRecordId = '-1';
 		this.sImpersonateUser = '';
 		this.sImpersonateUserOld = '';
-		this.aRecordValueFields = Object.keys(oRecordValues);
+		this.aAllRecordValueFields = Object.keys(oRecordValues);
+		this.aRecordValueFields = [];
 		this.aFields = this._getValue('aFields', [], oRecordConfig);
 		this.aFieldsSimple = [];
 		this.oFieldsObjects = {};
@@ -141,11 +143,18 @@ GlobalToolsRecordWriteValidate.prototype = {
 				this._errorHandler('400_999', 'Field object \'' + JSON.stringify(oField) + '\' is invalid type: ' + sFieldType, '', [JSON.stringify(oField), sFieldType], true, false);
 			} // if valid field type
 		}, this); // each field
+		if (this.grRecord) {
+			this.aAllRecordValueFields.forEach(function (sField) {
+				if (this.grRecord.isValidField(sField)) {
+					this.aRecordValueFields.push(sField);
+				} // if valid field
+			}, this); // each record value field
+		} // if record
 		this._getFieldsFromKeyArrays(this._getValue('aKeys', [], this.oRecordConfig), 'record');
-		this.aAllFields = this._unique([].concat(this.aRecordValueFields, this.aSimpleFields, this.aFieldsComplex, this.aRecordKeyFields, this.aFieldsKeyFields, this.aMandatoryFields), true);
+		this.aAllFields = this._unique([].concat(this.aAllRecordValueFields, this.aSimpleFields, this.aFieldsComplex, this.aRecordKeyFields, this.aFieldsKeyFields, this.aMandatoryFields), true);
 		this.aAllRecordFields = this._unique([].concat(this.aRecordValueFields, this.aSimpleFields, this.aFieldsComplex), true);
 		if ((this.bLog) && (this.sLogLevel == 'debug')) {
-			gs.info(this.bLogPrefix + ' aRecordValueFields: ' + this.aRecordValueFields + ' aFields: ' + JSON.stringify(this.aFields) + ' aFieldsSimple: ' + this.aFieldsSimple + ' aFieldsComplex: ' + this.aFieldsComplex + ' aFieldsKeyFields: ' + this.aFieldsKeyFields + ' aRecordKeyFields: ' + this.aRecordKeyFields + ' aMandatoryFields: ' + this.aMandatoryFields + ' aAllFields: ' + this.aAllFields + ' aAllRecordFields: ' + this.aAllRecordFields + ' this.oFieldsObjects: ' + JSON.stringify(this.oFieldsObjects));
+			gs.info(this.bLogPrefix + ' aAllRecordValueFields: ' + this.aAllRecordValueFields + ' aRecordValueFields: ' + this.aRecordValueFields + ' aFields: ' + JSON.stringify(this.aFields) + ' aFieldsSimple: ' + this.aFieldsSimple + ' aFieldsComplex: ' + this.aFieldsComplex + ' aFieldsKeyFields: ' + this.aFieldsKeyFields + ' aRecordKeyFields: ' + this.aRecordKeyFields + ' aMandatoryFields: ' + this.aMandatoryFields + ' aAllFields: ' + this.aAllFields + ' aAllRecordFields: ' + this.aAllRecordFields + ' this.oFieldsObjects: ' + JSON.stringify(this.oFieldsObjects));
 		} // if log and debug
 	}, // function _getFields
 
@@ -332,13 +341,32 @@ GlobalToolsRecordWriteValidate.prototype = {
 		if (!this.checkAccess()) {
 			return;
 		}
-		this.oIREPayload = {};
+		this.oIREPayload = { 'items': [] };
+		var sItem = {
+			'className': this._gtTable.getRecordClass(this.grRecord),
+			'internal_id': this._getValue('sTableSequenceId', '', this.oRecordConfig),
+			'lookup': [],
+			'values': {},
+		}; // item
+		this.aAllRecordFields.forEach(function (sField) {
+			if (sField != 'sys_class_name') {
+				sItem['values'][sField] = this.grRecord.getValue(sField);
+			} // if not class
+		}, this);
+		this.oIREPayload['items'].push(sItem);
+		gs.info('tomtom ire: ' + JSON.stringify(this.oIREPayload));
 	}, // function _createIREPayload
 
 	_runIRE: function () {
 		if (!this.checkAccess()) {
 			return;
 		}
+		var sIREPayload = JSON.stringify(this.oIREPayload);
+		var sIREOutput = sn_cmdb.IdentificationEngine.createOrUpdateCI('ServiceNow', sIREPayload);
+		if ((this.bLog) && (this.sLogLevel == 'debug')) {
+			gs.info(this.bLogPrefix + 'sTable: ' + this.sTargetTable + ' sIREPayload: ' + JSON.stringify(JSON.parse(sIREOutput), null, 2));
+		} // if log and debug
+
 	}, // function _runIRE
 
 	_writeRecord: function () {
@@ -632,7 +660,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 			} else if (this.aFieldsKeyFields.indexOf(sField) == -1) {
 				if (this.aMandatoryFields.indexOf(sField) != -1) {
 					this._errorHandler('400_011', 'Invalid field found in mandatory fields: ' + sField, '', [sField], true, false);
-				} else if (this.aRecordValueFields.indexOf(sField) != -1) {
+				} else if (this.aAllRecordValueFields.indexOf(sField) != -1) {
 					this._errorHandler('400_011', 'Invalid field found in values: ' + sField, '', [sField], true, false);
 				} else {
 					this._errorHandler('400_011', 'Invalid field found in field config: ' + sField, '', [sField], true, false);
@@ -987,13 +1015,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>337</sys_mod_count>
+        <sys_mod_count>342</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-17 12:47:30</sys_updated_on>
+        <sys_updated_on>2023-09-19 18:37:17</sys_updated_on>
     </sys_script_include>
 </record_update>
