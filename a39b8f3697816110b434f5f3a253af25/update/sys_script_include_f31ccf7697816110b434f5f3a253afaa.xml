@@ -6,7 +6,7 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description>Tools to support (scoped) app development&#13;
-Some functions are only available for specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom".</description>
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
         <name>GlobalTools</name>
         <script><![CDATA[var GlobalTools = Class.create();
 GlobalTools.prototype = {
@@ -24,6 +24,7 @@ GlobalTools.prototype = {
 	// Substitute null values in simple types and object keys
 	// TODO: validate other field types, like date and number
 	nsub: function (sValue, sSubstitute, sType, sObjKey) {
+		if (!this.checkAccess()) { return; }
 		if (sObjKey) {
 			if (sValue.hasOwnProperty(sObjKey)) {
 				sValue = sValue[sObjKey];
@@ -65,42 +66,39 @@ GlobalTools.prototype = {
 	}, // function nsub
 
 	getType: function (oValue, bDoNotConvertCase) {
+		if (!this.checkAccess()) { return; }
 		if (oValue === null) {
 			return 'null';
 		}
 		var sType = typeof oValue;
-		if (sType == 'undefined') {
-			return 'undefined';
-		}
 		if (sType == 'object') {
 			var strObject = String(Object.prototype.toString.call(oValue));
 			var aType = strObject.match(/^\[object\s(.*)\]$/);
 			sType = ((aType) && (Array.isArray(aType)) && (aType.length > 0)) ? aType[1] : '';
 			if (sType) {
 				return (bDoNotConvertCase) ? sType : String(sType).toLowerCase();
-			}
-		}
+			} // if type
+		} // if obj
 		return sType;
 	}, // function getType
 
-	// Encode value 
-	encode: function (sValue) {
+	// Encode new line to tag
+	encodeNewLineToTag: function (sValue) {
+		if (!this.checkAccess()) { return; }
 		var sResult = (sValue) ? String(sValue).replace(/\n/g, '!^br^!') : '';
 		return sResult;
-	}, // function encode 
+	}, // function encodeNewLineToTag 
 
-	// Decode value 
-	decode: function (sValue) {
+	// Decode tag to new line
+	decodeTagToNewLine: function (sValue) {
+		if (!this.checkAccess()) { return; }
 		var sResult = String(sValue).replace(/!\^br\^!/g, '\n');
 		return sResult;
-	}, // function decode 
+	}, // function decodeTagToNewLine 
 
 	// Schedule ScriptInclude Function
 	scheduleScript: function (sScriptInclude, sFunction, iSeconds, aFunctionArgs, aClassArgs, sScheduleName) {
-		if (!this.checkAccess()) {
-			return;
-		}
-
+		if (!this.checkAccess()) { return; }
 		function parseArgs(aArgs) {
 			var aReturn = [];
 			if (!aArgs) {
@@ -111,7 +109,6 @@ GlobalTools.prototype = {
 				if ((!oItem) && (sType != 'boolean') && (!oItem === 0)) {
 					return '';
 				} // if empty
-				//gs.info('what is it: ' + GlideJSUtil.getJavaClassName(oItem));
 				if (JSUtil.instance_of(oItem, GlideRecord)) {
 					aScript.push('var grRecord_' + iIndex + " = new GlideRecord('" + oItem.getTableName() + "');");
 					aScript.push('grRecord_' + iIndex + ".get('" + oItem.getUniqueValue() + "');");
@@ -160,9 +157,7 @@ GlobalTools.prototype = {
 
 	// Convenience function to handle scheduler
 	scheduleHandler: function (sEvent, sDelaySeconds, sAction, sAddlQuery, grRecord, oParam1, oParam2, sQueue) {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		try {
 			if (!sEvent) {
 				gs.info('global.GlobalTools.scheduleHandler called without an event.');
@@ -200,9 +195,7 @@ GlobalTools.prototype = {
 
 	// Function to overcome scope barrier for GlideEncrypter
 	decryptPassword: function (sPassword) {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		var sClearText = '';
 		var glEncrypter = new GlideEncrypter();
 		if (sPassword) {
@@ -213,17 +206,13 @@ GlobalTools.prototype = {
 
 	// Overcome scopeing issue
 	sleep: function (iMilliseconds) {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		gs.sleep(iMilliseconds);
 	}, // function sleep
 
 	// Run function in a same scope
 	runFunction: function (sFunction) { // function is a <script_include>.<function>.toString(), 2nd... args will be evaluated in function call
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		var gsEvaluator = new GlideScopedEvaluator();
 		gsEvaluator.putVariable('result', null);
 		var aArguments = [];
@@ -248,9 +237,7 @@ GlobalTools.prototype = {
 
 	// Run function in a specific scope (please note the function may only use valid scoped features)
 	runFunctionInScope: function (sFunction, sScopeId) { // function is a <script_include>.<function>.toString(), 3rd... args will be evaluated in function call
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		if (gs.getProperty('glide.record.legacy_cross_scope_access_policy_in_script') == 'true') {
 			gs.warn('GlobalTools.runFunctionInScope is allowed, please validate your instance security settings!');
 			var gsEvaluator = new GlideScopedEvaluator();
@@ -289,13 +276,13 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>33</sys_mod_count>
+        <sys_mod_count>37</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-11 17:47:27</sys_updated_on>
+        <sys_updated_on>2023-09-26 17:32:36</sys_updated_on>
     </sys_script_include>
 </record_update>

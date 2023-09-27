@@ -6,7 +6,7 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description>Tools to support (scoped) app development&#13;
-Some functions are only available for specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom".</description>
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
         <name>GlobalToolsRecordRead</name>
         <script><![CDATA[var GlobalToolsRecordRead = Class.create();
 GlobalToolsRecordRead.prototype = {
@@ -17,7 +17,6 @@ GlobalToolsRecordRead.prototype = {
 		this._gt = new global.GlobalTools();
 		this._gtObject = new global.GlobalToolsObject();
 		this._getValue = this._gtObject.getValue;
-		//this._setValue = this._gtObject.setValue;
 		this._gtTable = new global.GlobalToolsTable();
 		this._isValidArray = new global.GlobalToolsArray().isValidArray;
 	}, // function initialize
@@ -33,9 +32,7 @@ GlobalToolsRecordRead.prototype = {
 
 	// Convenience function to get count of records, returns number or Array in Array with value, displayvalue (optional) and count per field
 	countRecords: function (sTable, sQuery, sField, bDisplayValue, bDisplayValueOnly, bQueryNoDomain) {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
 			gs.error('GlobalToolsRecordRead.countRecords called with invalid table: ' + sTable);
 			return;
@@ -98,9 +95,7 @@ GlobalToolsRecordRead.prototype = {
 
 	// Function for scoped apps to query a gliderecord with the options
 	getRecords: function (sTable, sQuery, aOrderBy, aOrderByDesc, iLimit, bWorkflow, bAutoSysFields, bQueryNoDomain) {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
 			gs.error('GlobalToolsRecordRead.getRecords called with invalid table: ' + sTable);
 			return;
@@ -139,9 +134,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function getRecords
 
 	checkRecordByField: function (sTable, sField, sValue) {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sField) || (!sValue)) {
 			gs.error('GlobalToolsRecordRead.checkRecordByField table or field or value is empty!');
 			return;
@@ -153,9 +146,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function checkRecordByField
 
 	getSysIdByQuery: function (sTable, sQuery, bUniqueOnly) {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sQuery)) {
 			gs.error('GlobalToolsRecordRead.getSysIdByQuery table or query is empty!');
 			return;
@@ -177,9 +168,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function getSysIdByQuery
 
 	checkRecordByQuery: function (sTable, sQuery) {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sQuery)) {
 			gs.error('GlobalToolsRecordRead.checkRecordByQuery table or query is empty!');
 			return;
@@ -194,9 +183,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function checkRecordByQuery
 
 	getRelatedRecordByKeys: function (oRecordConfig, oRecordValues, aError, oField, sRefTable, iArrayField) {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		var bLog = this._getValue('bLog', false, oRecordConfig);
 		var sLogPrefix = this._getValue('sLogPrefix', 'GlobalToolsRecordRead.getRelatedRecordByKeys ', oRecordConfig);
 		if (!oField) {
@@ -217,7 +204,7 @@ GlobalToolsRecordRead.prototype = {
 			sRefTable = (sRefTable) ? sRefTable : this._getValue('sRefTable', '', oField);
 		} else if ((oField) && (this._gt.getType(oField) == 'string')) {
 			sField = oField;
-			aKeys.push({'sInputField': sField, 'sTargetField': 'sys_id'});
+			aKeys.push({ 'sInputField': sField, 'sTargetField': 'sys_id' });
 		} else {
 			aError.push('Invalid field type or field not defined!');
 			if (bLog) {
@@ -225,13 +212,13 @@ GlobalToolsRecordRead.prototype = {
 			} // if log
 			return;
 		} // if field is obj
-		aKeys.forEach(function(oKey, iIndex){
+		aKeys.forEach(function (oKey, iIndex) {
 			if (this._gtObject.isObject(oKey)) {
 				if (!oKey.hasOwnProperty('sInputField')) {
 					oKey['sInputField'] = sField;
 				} // if no input field
 			} else {
-				aKeys[iIndex] = {'sInputField': sField, 'sTargetField': aKeys[iIndex]};
+				aKeys[iIndex] = { 'sInputField': sField, 'sTargetField': aKeys[iIndex] };
 			} // if key is obj
 		}, this); // for each key
 		sRefTable = (sRefTable) ? sRefTable : this._getValue('sRefTable', '', oField);
@@ -264,9 +251,7 @@ GlobalToolsRecordRead.prototype = {
 		3. oRecordConfig['bQueryEmptyFields'] // generic setting to query empty fields with ISEMPTY instead of returning an error for all empty fields
 	*/
 	getRecordByKeys: function (oRecordConfig, oRecordValues, aError) {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		var sTable = this._getValue('sTargetTable', '', oRecordConfig);
 		var bLog = this._getValue('bLog', false, oRecordConfig);
 		var sLogLevel = this._getValue('sLogLevel', 'error', oRecordConfig);
@@ -364,17 +349,18 @@ GlobalToolsRecordRead.prototype = {
 	// bDisplayValueOwnField: get Display Value in own field with postfix "_dv" (default: true), otherwise return as: "value (display)"
 	// Returns: JSON or String
 	convertGRtoJSON: function (grRecord, bStringify, bDisplayValue, bDisplayValueOwnField) {
-		if (!this.checkAccess()) {
+		if (!this.checkAccess()) { return; }
+		if (this._gt.getType(grRecord).indexOf('gliderecord') == -1) {
 			return;
-		}
+		} // if not valid record
 		var oResult = {},
 			sValue = '',
 			sDisplayValue = '';
 		bDisplayValue = (bDisplayValue) ? bDisplayValue : true;
 		bDisplayValueOwnField = (bDisplayValueOwnField) ? bDisplayValueOwnField : true;
-		var aFields = new GlideRecordUtil().getFields(grRecord);
+		var aFields = this._gtTable.getFields(grRecord);
 		aFields.forEach(function (sField) {
-			sValue = this.nsub(grRecord.getValue(sField));
+			sValue = grRecord.getValue(sField);
 			if (bDisplayValue) {
 				sDisplayValue = grRecord.getDisplayValue(sField);
 				if (sValue != sDisplayValue) {
@@ -396,9 +382,7 @@ GlobalToolsRecordRead.prototype = {
 
 	// Add dot walking field to a query
 	makeQueryADotWalkQuery: function (sQuery, sDotWalkField) {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		if ((sQuery) && (sDotWalkField)) {
 			var aQuery = [];
 			var gqsQuery = new GlideQueryString('cmdb_ci', sQuery);
@@ -423,9 +407,7 @@ GlobalToolsRecordRead.prototype = {
 
 	// Combine Queries where the one of the queries can contain big or statements (^NQ)
 	combineQueries: function (sFirstQuery, sSecondQuery) {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess()) { return; }
 		if ((sFirstQuery) && (sSecondQuery)) {
 			var bNQFirstQuery = (sFirstQuery.indexOf('^NQ') != -1);
 			var bNQSecondQuery = (sSecondQuery.indexOf('^NQ') != -1);
@@ -458,13 +440,13 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>62</sys_mod_count>
+        <sys_mod_count>67</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-19 06:30:22</sys_updated_on>
+        <sys_updated_on>2023-09-26 17:33:06</sys_updated_on>
     </sys_script_include>
 </record_update>

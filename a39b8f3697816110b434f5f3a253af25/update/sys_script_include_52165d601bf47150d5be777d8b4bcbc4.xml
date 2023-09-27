@@ -6,7 +6,7 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description>Tools to support (scoped) app development&#13;
-Some functions are only available for specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom".&#13;
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
 From Vancouver release onwards you can use GlideJsonPathAPI instead of getValue function.&#13;
 https://docs.servicenow.com/en-US/bundle/vancouver-api-reference/page/app-store/dev_portal/API_reference/GlideJsonPath/concept/GlideJsonPathAPI.html&#13;
 &#13;
@@ -15,8 +15,11 @@ If your script is in ECMA 6 mode use Object.assign instead of ObjectAssign funct
         <script><![CDATA[var GlobalToolsObject = Class.create();
 GlobalToolsObject.prototype = {
 	initialize: function () {
+		if (!this.checkAccess()) {
+			return;
+		}
 		this._gtArray = new GlobalToolsArray();
-	},
+	}, // function initialize
 
 	checkAccess: function () {
 		var sCallerScope = gs.getCallerScopeName();
@@ -29,6 +32,7 @@ GlobalToolsObject.prototype = {
 
 	// Function to check if it is an object
 	isObject: function (oObj) {
+		if (!this.checkAccess()) { return; }
 		if ((oObj) && (typeof oObj === 'object') && (!Array.isArray(oObj))) {
 			return true;
 		}
@@ -37,6 +41,7 @@ GlobalToolsObject.prototype = {
 	// Function to retrieve up to 8 levels of config
 	// For recursive configs pass sub object
 	getValue: function (sConfigPath, sReplace, oConfig) {
+		if (!this.checkAccess()) { return; }
 		if ((!sConfigPath) || (!oConfig)) {
 			return '';
 		} // if no path or object
@@ -95,8 +100,9 @@ GlobalToolsObject.prototype = {
 		} // if replace
 	}, // function getValue
 
+	// Function to set up to 8 levels of object
 	setValue: function (sConfigPath, oValue, oConfig) {
-		// Function to set up to 8 levels of object
+		if (!this.checkAccess()) { return; }
 		if ((!sConfigPath) || (!oConfig)) {
 			return '';
 		} // if no path or object
@@ -146,6 +152,7 @@ GlobalToolsObject.prototype = {
 
 	// With ECMA 6 onwards use Object.assign method for shallow merges
 	ObjectAssign: function (oSource, oMerge) {
+		if (!this.checkAccess()) { return; }
 		Object.keys(oMerge).forEach(function (k) {
 			if ((typeof oMerge[k] === 'object') && (!Array.isArray(oMerge[k])) && (!oMerge[k] instanceof String)) {
 				oSource[k] = oSource[k] || {};
@@ -158,6 +165,7 @@ GlobalToolsObject.prototype = {
 
 	// Simple deep merge without recursion protection etc, using ECMA 5 because running in global
 	deepMerge: function (oSource, oMerge, bMergeArrays) {
+		if (!this.checkAccess()) { return; }
 		if ((this.isObject(oSource)) && ((!this.isObject(oMerge)))) {
 			return oSource;
 		} else if ((!this.isObject(oSource)) && ((this.isObject(oMerge)))) {
@@ -186,13 +194,13 @@ GlobalToolsObject.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:36:44</sys_created_on>
         <sys_id>52165d601bf47150d5be777d8b4bcbc4</sys_id>
-        <sys_mod_count>21</sys_mod_count>
+        <sys_mod_count>24</sys_mod_count>
         <sys_name>GlobalToolsObject</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_52165d601bf47150d5be777d8b4bcbc4</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-17 12:50:28</sys_updated_on>
+        <sys_updated_on>2023-09-26 17:33:43</sys_updated_on>
     </sys_script_include>
 </record_update>

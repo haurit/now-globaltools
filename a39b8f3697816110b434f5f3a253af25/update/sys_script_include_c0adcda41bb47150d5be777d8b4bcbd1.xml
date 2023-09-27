@@ -6,15 +6,16 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description>Tools to support (scoped) app development&#13;
-Some functions are only available for specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom".</description>
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
         <name>GlobalToolsRecordWrite</name>
         <script><![CDATA[var GlobalToolsRecordWrite = Class.create();
 GlobalToolsRecordWrite.prototype = {
-    initialize: function() {
-		if (!this.checkAccess()) {return;}
-    },
-	
-	checkAccess: function() {
+	initialize: function () {
+		if (!this.checkAccess()) { return; }
+		this._gtTable = new global.GlobalToolsTable();
+	}, // function initialize
+
+	checkAccess: function () {
 		var sCallerScope = gs.getCallerScopeName();
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
@@ -24,16 +25,16 @@ GlobalToolsRecordWrite.prototype = {
 	}, // function checkAccess
 
 	// Insert, update or delete record based on values and config object
-	doRecord: function(oValues, oConfig, oError) {
-		if (!this.checkAccess()) {return;}
+	doRecord: function (oValues, oConfig, oError) {
+		if (!this.checkAccess()) { return; }
 		try {
 			var bLog = (String(oConfig['bLog']) == 'true') ? true : false;
-			if (bLog) {gs.info('GlobalToolsRecordWrite.doRecord oValues: ' + JSON.stringify(oValues));} 
-			if (bLog) {gs.info('GlobalToolsRecordWrite.doRecord oConfig: ' + JSON.stringify(oConfig));} 
+			if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord oValues: ' + JSON.stringify(oValues)); }
+			if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord oConfig: ' + JSON.stringify(oConfig)); }
 			var sId = '', sQuery = '', aQuery = [], bQueryEmptyFieldDone = false;
 			var bQueryEmptyFields = (String(oConfig['bQueryEmptyFields']) == 'true') ? true : false; // default is false
 			var aQueryFields = (Array.isArray(oConfig['aQueryFields'])) ? oConfig['aQueryFields'] : [oConfig['aQueryFields']];
-			aQueryFields.forEach(function(sField) {
+			aQueryFields.forEach(function (sField) {
 				bQueryEmptyFieldDone = false;
 				if (oValues[sField]) {
 					bQueryEmptyFieldDone = true;
@@ -48,7 +49,7 @@ GlobalToolsRecordWrite.prototype = {
 				} // if query empty field
 			}); // each field
 			var sTargetTable = oConfig['sTargetTable'];
-			if (sTargetTable) {
+			if ((sTargetTable) && (this._gtTable.isValidTable(sTargetTable))) {
 				var bInsert = (String(oConfig['bInsert']) == 'false') ? false : true; // default is true
 				var bUpdate = (String(oConfig['bUpdate']) == 'false') ? false : true; // default is true
 				var bDelete = (String(oConfig['bDelete']) == 'true') ? true : false; // default is false
@@ -77,29 +78,29 @@ GlobalToolsRecordWrite.prototype = {
 					return;
 				} // if query
 				if (bNoDomain) {
-					grRecord.queryNoDomain();	
+					grRecord.queryNoDomain();
 				} else {
 					grRecord.query();
 				} // if no domain
 				var bFound = grRecord.next();
 				if (bDelete) {
 					var oDeleteReturnValue = grRecord.deleteRecord();
-					if (bLog) {gs.info('GlobalToolsRecordWrite.doRecord bDelete: ' + bDelete + ' oDeleteReturnValue: ' + oDeleteReturnValue);} 
+					if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord bDelete: ' + bDelete + ' oDeleteReturnValue: ' + oDeleteReturnValue); }
 					return oDeleteReturnValue;
 				} else {
 					if (oConfig['oValues']) {
-						Object.keys(oConfig['oValues']).forEach(function(sField) {
+						Object.keys(oConfig['oValues']).forEach(function (sField) {
 							grRecord.setValue(sField, oConfig['oValues'][sField]);
 						}); // each values field
 					} // if values
 					if (oValues['aTargetFields']) {
-						oValues['aTargetFields'].forEach(function(sField) {
+						oValues['aTargetFields'].forEach(function (sField) {
 							if (oValues[sField]) {
 								grRecord.setValue(sField, oValues[sField]);
 							} // if value
 						}); // each field
 					} else {
-						Object.keys(oValues).forEach(function(sField) {
+						Object.keys(oValues).forEach(function (sField) {
 							if (oValues.hasOwnProperty(sField)) {
 								grRecord.setValue(sField, oValues[sField]);
 							} // if has property;
@@ -123,7 +124,7 @@ GlobalToolsRecordWrite.prototype = {
 							gs.error('GlobalToolsRecordWrite.doRecord error inserting record with msg: ' + grRecord.getLastErrorMessage() + ' (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
 						} // if error inserting
 					} // if insert
-					if (bLog) {gs.info('GlobalToolsRecordWrite.doRecord  bInsert: ' + bInsert + ' bUpdate: ' + bUpdate + ' sId: ' + sId);} 
+					if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord  bInsert: ' + bInsert + ' bUpdate: ' + bUpdate + ' sId: ' + sId); }
 					return sId;
 				} // if delete
 			} else {
@@ -131,7 +132,7 @@ GlobalToolsRecordWrite.prototype = {
 				oError['message'] = 'missing table';
 				gs.error('GlobalToolsRecordWrite.doRecord missing target table (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
 			} // if target table
-		} catch(ex) {
+		} catch (ex) {
 			oError['code'] = '005';
 			oError['message'] = 'exception: ' + ex.toString();
 			gs.error('GlobalToolsRecordWrite.doRecord Error: ' + ex.toString());
@@ -140,14 +141,14 @@ GlobalToolsRecordWrite.prototype = {
 	}, // function doRecord
 
 	// Global scoped updateMultiple function to overcome scope issue
-	updateMultiple: function(oValues, oConfig) {
-		if (!this.checkAccess()) {return;}
+	updateMultiple: function (oValues, oConfig) {
+		if (!this.checkAccess()) { return; }
 		var bLog = (String(oConfig['bLog']) == 'true') ? true : false;
-		if (bLog) {gs.info('GlobalToolsRecordWrite.updateMultiple oValues: ' + JSON.stringify(oValues));} 
-		if (bLog) {gs.info('GlobalToolsRecordWrite.updateMultiple oConfig: ' + JSON.stringify(oConfig));} 
+		if (bLog) { gs.info('GlobalToolsRecordWrite.updateMultiple oValues: ' + JSON.stringify(oValues)); }
+		if (bLog) { gs.info('GlobalToolsRecordWrite.updateMultiple oConfig: ' + JSON.stringify(oConfig)); }
 		var sQuery = String(oConfig['sQuery']);
 		var sTargetTable = oConfig['sTargetTable'];
-		if ((sTargetTable) && (sQuery) && (sQuery != 'null') && (Object.keys(oValues).length > 0)) {
+		if ((sTargetTable) && (this._gtTable.isValidTable(sTargetTable)) && (sQuery) && (sQuery != 'null') && (Object.keys(oValues).length > 0)) {
 			var bDoUpdate = false;
 			var bNoWorkflow = (String(oConfig['bNoWorkflow']) == 'true') ? true : false; // default is false
 			var bNoAutoSysFields = (String(oConfig['bNoAutoSysFields']) == 'true') ? true : false; // default is false
@@ -163,7 +164,7 @@ GlobalToolsRecordWrite.prototype = {
 			if (bNoEngines) {
 				grRecord.setUseEngines(false);
 			} // if no engines
-			Object.keys(oValues).forEach(function(sField) {
+			Object.keys(oValues).forEach(function (sField) {
 				if (oValues.hasOwnProperty(sField)) {
 					if (grRecord.isValidField(sField)) {
 						grRecord.setValue(sField, oValues[sField]);
@@ -174,7 +175,7 @@ GlobalToolsRecordWrite.prototype = {
 			if (bDoUpdate) {
 				grRecord.updateMultiple();
 			} else {
-				gs.error('GlobalToolsRecordWrite.updateMultiple no field value set (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');	
+				gs.error('GlobalToolsRecordWrite.updateMultiple no field value set (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
 			} // if update
 		} else {
 			gs.error('GlobalToolsRecordWrite.updateMultiple missing table,query or value (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
@@ -183,8 +184,8 @@ GlobalToolsRecordWrite.prototype = {
 	}, // function updateMultiple
 
 	// Global scoped setValue function to overcome scope issue
-	setGRValue: function(grRecord, sFieldName, oValue) {
-		if (!this.checkAccess()) {return;}
+	setGRValue: function (grRecord, sFieldName, oValue) {
+		if (!this.checkAccess()) { return; }
 		if ((sFieldName) && (oValue)) {
 			grRecord.setValue(sFieldName, oValue);
 		} // if fieldname and value
@@ -192,7 +193,7 @@ GlobalToolsRecordWrite.prototype = {
 
 	// Global scoped abort function to overcome scope issue
 	abortGRAction: function (grRecord) {
-		if (!this.checkAccess()) {return;}
+		if (!this.checkAccess()) { return; }
 		grRecord.setAbortAction(true);
 	}, // function abortGRAction
 
@@ -205,13 +206,13 @@ GlobalToolsRecordWrite.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 09:59:44</sys_created_on>
         <sys_id>c0adcda41bb47150d5be777d8b4bcbd1</sys_id>
-        <sys_mod_count>3</sys_mod_count>
+        <sys_mod_count>7</sys_mod_count>
         <sys_name>GlobalToolsRecordWrite</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_c0adcda41bb47150d5be777d8b4bcbd1</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-08-18 10:38:59</sys_updated_on>
+        <sys_updated_on>2023-09-26 17:34:01</sys_updated_on>
     </sys_script_include>
 </record_update>

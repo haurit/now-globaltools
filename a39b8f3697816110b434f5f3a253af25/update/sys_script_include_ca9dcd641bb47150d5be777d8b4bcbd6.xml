@@ -6,44 +6,47 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description>Tools to support (scoped) app development&#13;
-Some functions are only available for specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom".&#13;
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
 Probably obsolete with ECMA 21</description>
         <name>GlobalToolsArray</name>
         <script><![CDATA[var GlobalToolsArray = Class.create();
 GlobalToolsArray.prototype = {
-    initialize: function() {},
+	initialize: function () { },
 
-    checkAccess: function() {
-        var sCallerScope = gs.getCallerScopeName();
-        var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
-        var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-        if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-            return true;
-        } // if scope is allowed
-    }, // function checkAccess
+	checkAccess: function () {
+		var sCallerScope = gs.getCallerScopeName();
+		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
+		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
+		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
+			return true;
+		} // if scope is allowed
+	}, // function checkAccess
 
-    // Obsolete with ECMA 21, works fine for small arrays
-    unique: function(aArray, bRemoveEmpty) {
-        var onlyUnique = function(value, index, array) {
-            return array.indexOf(value) === index;
-        }; // function onlyUnique
-		var validUnique = function(value, index, array) {
-            return ((!gs.nil(value)) && (array.indexOf(value) === index));
-        }; // function validUnique
+	// Obsolete with ECMA 21, works fine for small arrays
+	unique: function (aArray, bRemoveEmpty) {
+		if (!this.checkAccess()) { return; }
+		var onlyUnique = function (value, index, array) {
+			return array.indexOf(value) === index;
+		}; // function onlyUnique
+		var validUnique = function (value, index, array) {
+			return ((!gs.nil(value)) && (array.indexOf(value) === index));
+		}; // function validUnique
 		if (bRemoveEmpty) {
 			return aArray.filter(validUnique);
 		} else {
 			return aArray.filter(onlyUnique);
 		} // if remove empty
-    }, // function
+	}, // function
 
-	isValidArray: function(aArray) {
+	isValidArray: function (aArray) {
+		if (!this.checkAccess()) { return; }
 		if ((aArray) && (Array.isArray(aArray)) && (aArray.length > 0) && (aArray[0])) {
 			return true;
 		} // if array with one value
 	}, // function validArray
 
-	mergeArray: function(aArray1, aArray2) {
+	mergeArray: function (aArray1, aArray2) {
+		if (!this.checkAccess()) { return; }
 		if ((this.isValidArray(aArray1)) && ((!this.isValidArray(aArray2)))) {
 			return aArray1;
 		} else if ((!this.isValidArray(aArray1)) && ((this.isValidArray(aArray2)))) {
@@ -54,74 +57,77 @@ GlobalToolsArray.prototype = {
 		return this.unique([].concat(aArray1, aArray2));
 	}, // function mergeArray
 
-    // Probably obsolete with ECMA 21
-    addRemoveFromArray: function(aArray, aArrayAdd, aArrayRemove) {
-        var _ArrayUtil = new global.ArrayUtil();
-        var aResult = _ArrayUtil.union(aArray, aArrayAdd);
-        var iFound = 0;
-        aArrayRemove.forEach(function(sElement) {
-            iFound = aResult.indexOf(sElement);
-            if (iFound != -1) {
-                aResult.splice(iFound, 1);
-            } // if found
-        }, this);
-        return aResult;
-    }, // function addRemoveFromArray
+	// Probably obsolete with ECMA 21
+	addRemoveFromArray: function (aArray, aArrayAdd, aArrayRemove) {
+		if (!this.checkAccess()) { return; }
+		var aResult = this.mergeArray(aArray, aArrayAdd);
+		var iFound = 0;
+		if (this.isValidArray(aArrayRemove)) {
+			aArrayRemove.forEach(function (sElement) {
+				iFound = aResult.indexOf(sElement);
+				if (iFound != -1) {
+					aResult.splice(iFound, 1);
+				} // if found
+			}, this); // each array remove
+		} // if valid array remove
+		return aResult;
+	}, // function addRemoveFromArray
 
-    // Probably obsolete with ECMA 21
-    // Get add/remove arrays from two arrays
-    // Note: Not optimal for performance on very big arrays
-    getAddRemoveFromArrays: function(aArray, aArrayOld) {
-        if ((!aArray) || (!Array.isArray(aArray))) {
-            aArray = [];
-        } // is not array
-        if ((!aArrayOld) || (!Array.isArray(aArrayOld))) {
-            aArrayOld = [];
-        } // is not array
-        var aAdd = [];
-        var aRemove = [];
-        var sItem = '';
-        var oReturn = {
-            'add': aAdd,
-            'remove': aRemove,
-            'same': false
-        };
-        aArray.sort();
-        aArrayOld.sort();
-        if (aArray.join(',') != aArrayOld.join(',')) {
-            aArray.forEach(function(sItem) {
-                if (aArrayOld.indexOf(sItem) == -1) {
-                    aAdd.push(sItem);
-                } // if not found
-            }, this); // each sItem is not yet
-            aArrayOld.forEach(function(sItem) {
-                if (aArray.indexOf(sItem) == -1) {
-                    aRemove.push(sItem);
-                } // if not found
-            }, this); // each sItem is no longer
-        } else {
-            oReturn.same = true;
-        } // if not same
-        return oReturn;
-    }, // function getAddRemoveFromArray
+	// Probably obsolete with ECMA 21
+	// Get add/remove arrays from two arrays
+	// Note: Not optimal for performance on very big arrays
+	getAddRemoveFromArrays: function (aArray, aArrayOld) {
+		if (!this.checkAccess()) { return; }
+		if (!this.isValidArray(aArray)) {
+			aArray = [];
+		} // is not array
+		if (!this.isValidArray(aArrayOld)) {
+			aArrayOld = [];
+		} // is not array
+		var aAdd = [];
+		var aRemove = [];
+		var sItem = '';
+		var oReturn = {
+			'add': aAdd,
+			'remove': aRemove,
+			'same': false
+		};
+		aArray.sort();
+		aArrayOld.sort();
+		if (aArray.join(',') != aArrayOld.join(',')) {
+			aArray.forEach(function (sItem) {
+				if (aArrayOld.indexOf(sItem) == -1) {
+					aAdd.push(sItem);
+				} // if not found
+			}, this); // each sItem is not yet
+			aArrayOld.forEach(function (sItem) {
+				if (aArray.indexOf(sItem) == -1) {
+					aRemove.push(sItem);
+				} // if not found
+			}, this); // each sItem is no longer
+		} else {
+			oReturn.same = true;
+		} // if not same
+		return oReturn;
+	}, // function getAddRemoveFromArray
 
-    type: 'GlobalToolsArray',
-    version: '1.0.0',
-    author: 'Tom Hauri',
-    email: 'tom@hauri.biz'
+	type: 'GlobalToolsArray',
+	version: '1.0.0',
+	author: 'Tom Hauri',
+	email: 'tom@hauri.biz'
 
 };]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 09:59:35</sys_created_on>
         <sys_id>ca9dcd641bb47150d5be777d8b4bcbd6</sys_id>
-        <sys_mod_count>8</sys_mod_count>
+        <sys_mod_count>12</sys_mod_count>
         <sys_name>GlobalToolsArray</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_ca9dcd641bb47150d5be777d8b4bcbd6</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-13 09:40:52</sys_updated_on>
+        <sys_updated_on>2023-09-26 17:33:17</sys_updated_on>
     </sys_script_include>
 </record_update>
