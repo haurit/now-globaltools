@@ -62,20 +62,18 @@
 		<h1>Script Include: global.GlobalTools</h1>
 		<h2>Function: nsub</h2>
 		<p>
-			<strong>Purpose:</strong> This function substitutes null values in simple types, arrays and object keys.
+			<strong>Purpose:</strong> This function substitutes null values in simple types, arrays.
 		</p>
 		<p>
 			<strong>Parameters:</strong>
 			<li><code>sValue</code>: The value to be checked and possibly substituted by <code>sSubstitute</code> if null.</li>
 			<li><code>sSubstitute</code>: The value to use as a substitute if <code>sValue</code> is null.</li>
 			<li><code>sType</code>: (Optional) The type of <code>sSubstitute</code> to be returned if <code>sValue</code> is null.</li>
-			<li><code>sObjKey</code>: (Optional) If provided, this key will be used to extract a value from an object,
-				and the function will check and substitute null for that value. It's recommended to use <code>new global.GlobalToolsObject().getValue()</code> instead.</li>
+			<li><code>sObjKey</code>: (Deprecated) Use <code>new global.GlobalToolsObject().getValue()</code> instead.</li>
 		</p>
 		<p>
 			<strong>Returns:</strong>&#160;The <code>sValue</code> if not null or <code>sSubstitute</code> respecting the type specified in <code>sType</code>
 		</p>
-
 		<h2>Function: getType</h2>
 		<p>
 			<strong>Purpose:</strong> This function determines the type of a given value.
@@ -88,7 +86,18 @@
 		<p>
 			<strong>Returns:</strong>&#160;The type of the provided <code>oValue</code> as a string.
 		</p>
-
+		<h2>Function: isEqual</h2>
+		<p>
+			<strong>Purpose:</strong> This function compares two values and returns true if they are the same (object deep compare, sorts arrays)
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>oValue1</code>: The first value.</li>
+			<li><code>oValue2</code>: The second value.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;True if <code>oValue1</code> and <code>oValue2</code> are the same, false if not.
+		</p>
 		<h2>Function: encodeNewLineToTag</h2>
 		<p>
 			<strong>Purpose:</strong> This function replaces newline characters "\n" in a string with a custom tag "!^br^!".
@@ -717,21 +726,56 @@
     <p>
         <strong>Returns:</strong>&#160;Returns an object with the IRE payload.
     </p>
+	<h1>Script Include: global.GlobalToolsATF</h1>
+		<h2>Function: initialize</h2>
+		<p>
+			<strong>Purpose:</strong> This function initializes the class with parameters.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sScriptIncludeName</code>: The name of the Script Include to be tested.</li>
+			<li><code>_ScriptIncludeRef</code>: The initialized Script Include to be tested <code>var _si = new myScriptInclude();</code> is null.</li>
+			<li><code>outputs</code>: The outputs parameter from ATF test step</li>
+			<li><code>steps</code>: The steps parameter from ATF test step</li>
+			<li><code>params</code>: The params parameter from ATF test step</li>
+			<li><code>stepResult</code>: The stepResult parameter ATF from test step</li>
+			<li><code>assertEqual</code>: The assertEqual parameter ATF from test step</li>
+		</p>
+		<h2>Function: runATF</h2>
+		<p>
+			<strong>Purpose:</strong> This function runs the specific function and passes all variables except script and expected value to it.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sFunction</code>: The Script Include <code>sFunction</code> to be tested.</li>
+			<li><code>oExpectedResult</code>: The expected return value from <code>sFunction</code> call.</li>
+			<li><code>arguments</code>: (Optional) The <code>arguments</code> that will be passed to the <code>sFunction</code>.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The true if test is successful or <code>undefined</code> if it failed.
+		</p>
+		<h2>Function: endATF</h2>
+		<p>
+			<strong>Purpose:</strong> This function parses the result, sets the error message if any and ends the ATF test.
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The true if test is successful or false if it failed.
+		</p>
 	</body>
 </j:jelly>]]></html>
-        <name>manual</name>
+        <name>global_tools_manual</name>
         <processing_script/>
         <sys_class_name>sys_ui_page</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>46</sys_mod_count>
-        <sys_name>manual</sys_name>
+        <sys_mod_count>49</sys_mod_count>
+        <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-27 09:47:53</sys_updated_on>
+        <sys_updated_on>2023-09-29 08:59:54</sys_updated_on>
     </sys_ui_page>
 </record_update>

@@ -21,8 +21,8 @@ GlobalTools.prototype = {
 		} // if scope is allowed
 	}, // function checkAccess
 
-	// Substitute null values in simple types and object keys
-	// TODO: validate other field types, like date and number
+	// Substitute null values in simple types
+	// DEPRECATED: sObjKey --> use GlobalToolsObject.getValue instead!
 	nsub: function (sValue, sSubstitute, sType, sObjKey) {
 		if (!this.checkAccess()) { return; }
 		if (sObjKey) {
@@ -32,16 +32,20 @@ GlobalTools.prototype = {
 				sValue = null;
 			} // if has property
 		} // if obj and objkey
-		if (sValue) {
+		sType = (sType) ? sType : this.getType(sValue);
+		var sSubstituteType = this.getType(sSubstitute);
+		if ((sValue) || (sValue === false) || (sValue === 0)) {
 			if ((sType == 'array') || (Array.isArray(sSubstitute))) {
 				if (Array.isArray(sValue)) {
 					return sValue;
 				} else {
 					return sValue.split(',');
 				} // if is array
-			} else if ((sType == 'object') || (typeof (sSubstitute) == 'object')) {
+			} else if (sType == 'number') {
 				return sValue;
-			} else if ((sType == 'boolean') || ((sSubstitute === true || sSubstitute === false || toString.call(sSubstitute) === '[object Boolean]'))) {
+			} else if ((sType == 'object') || (sSubstituteType == 'object')) {
+				return sValue;
+			} else if ((sType == 'boolean') || ((sSubstitute === true || sSubstitute === false || sSubstituteType === 'boolean'))) {
 				return Boolean(sValue);
 			} else {
 				return String(sValue);
@@ -57,6 +61,8 @@ GlobalTools.prototype = {
 				return [];
 			} else if (sType == 'object') {
 				return {};
+			} else if (sType == 'number') {
+				return -1;
 			} else if (sType == 'boolean') {
 				return false;
 			} else {
@@ -72,15 +78,66 @@ GlobalTools.prototype = {
 		}
 		var sType = typeof oValue;
 		if (sType == 'object') {
-			var strObject = String(Object.prototype.toString.call(oValue));
-			var aType = strObject.match(/^\[object\s(.*)\]$/);
+			var sObjectType = String(Object.prototype.toString.call(oValue));
+			var aType = sObjectType.match(/^\[object\s(.*)\]$/);
 			sType = ((aType) && (Array.isArray(aType)) && (aType.length > 0)) ? aType[1] : '';
+			if (sType == 'JavaObject') {
+				var sJavaClassName = GlideJSUtil.getJavaClassName(oValue);
+				if (sJavaClassName) {
+					sType = sJavaClassName.substring(sJavaClassName.lastIndexOf('.') + 1);
+				} // if java class name
+			} // if java object
 			if (sType) {
 				return (bDoNotConvertCase) ? sType : String(sType).toLowerCase();
 			} // if type
 		} // if obj
 		return sType;
 	}, // function getType
+
+	isEqual: function (oValue1, oValue2) {
+		if (((oValue1) && (!oValue2)) || ((!oValue1) && (oValue2))) {
+			return false;
+		} else if ((!oValue1) && (!oValue2)) {
+			return true;
+		} // if one is empty or both
+		var sValue1Type = this.getType(oValue1);
+		var sValue2Type = this.getType(oValue2);
+		if (sValue1Type != sValue2Type) {
+			return false;
+		} else if (sValue1Type == 'array') {
+			if (oValue1.length !== oValue2.length) {
+				return false;
+			} // if not same length
+			oValue1.sort();
+			oValue2.sort();
+			return (String(oValue1) == String(oValue2));
+		} else if (sValue1Type == 'object') {
+			var aKeys1 = Object.keys(oValue1);
+			var aKeys2 = Object.keys(oValue2);
+			if (aKeys1.length !== aKeys2.length) {
+				return false;
+			} // if not same keys length
+			if (!this.isEqual(aKeys1, aKeys2)) {
+				return false;
+			} // if not same keys
+			var bDifferent = false;
+			aKeys1.some(function (sKey) {
+				if (!this.isEqual(oValue1[sKey], oValue2[sKey])) {
+					bDifferent = true;
+					return true;
+				} // if not same keys
+			}, this); // some keys
+			if (bDifferent) {
+				return false;
+			} else {
+				return true;
+			} // if different
+		} // if not same type, array or obj
+		if ((sValue1Type == 'string') && (sValue1Type == 'string')) {
+			return String(oValue1) == String(oValue2);
+		} // if string convert to overcome character set issues
+		return oValue1 === oValue2;
+	}, // function isEqual
 
 	// Encode new line to tag
 	encodeNewLineToTag: function (sValue) {
@@ -152,7 +209,7 @@ GlobalTools.prototype = {
 		grTrigger.setValue('trigger_type', '0');
 		grTrigger.setValue('next_action', dtDelay);
 		grTrigger.setValue('script', aScript.join('\n'));
-		grTrigger.insert();
+		return grTrigger.insert();
 	}, // function scheduleScript
 
 	// Convenience function to handle scheduler
@@ -194,6 +251,7 @@ GlobalTools.prototype = {
 	}, // function scheduleHandler
 
 	// Function to overcome scope barrier for GlideEncrypter
+	// ATF test fails on vancouver to decrypt pw2 fields!
 	decryptPassword: function (sPassword) {
 		if (!this.checkAccess()) { return; }
 		var sClearText = '';
@@ -276,13 +334,13 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>37</sys_mod_count>
+        <sys_mod_count>75</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-26 17:32:36</sys_updated_on>
+        <sys_updated_on>2023-09-29 13:45:10</sys_updated_on>
     </sys_script_include>
 </record_update>

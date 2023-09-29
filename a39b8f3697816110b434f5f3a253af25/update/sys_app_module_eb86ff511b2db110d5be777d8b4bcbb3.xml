@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update sys_domain="global" table="sys_app_module">
+    <sys_app_module action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <application display_value="Global Tools (Dev Suite)">87443f9d1be9b110d5be777d8b4bcb72</application>
+        <assessment/>
+        <device_type/>
+        <filter/>
+        <hint/>
+        <homepage/>
+        <image/>
+        <link_type>DIRECT</link_type>
+        <map_page/>
+        <mobile_title>Global Tools Manual</mobile_title>
+        <mobile_view_name>Mobile</mobile_view_name>
+        <name/>
+        <order>100</order>
+        <override_menu_roles>false</override_menu_roles>
+        <query>/global_tools_manual.do</query>
+        <report/>
+        <roles/>
+        <sys_class_name>sys_app_module</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-09-27 13:02:25</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>eb86ff511b2db110d5be777d8b4bcbb3</sys_id>
+        <sys_mod_count>3</sys_mod_count>
+        <sys_name>Global Tools Manual</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_app_module_eb86ff511b2db110d5be777d8b4bcbb3</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-09-27 13:06:42</sys_updated_on>
+        <timeline_page/>
+        <title>Global Tools Manual</title>
+        <uncancelable>false</uncancelable>
+        <view_name/>
+        <window_name>Global Tools Manual</window_name>
+    </sys_app_module>
+</record_update>
