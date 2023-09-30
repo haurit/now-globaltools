@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.GlobalToolsRecordWrite</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description>Tools to support (scoped) app development&#13;
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
+        <name>GlobalToolsRecordWrite</name>
+        <script><![CDATA[var GlobalToolsRecordWrite = Class.create();
+GlobalToolsRecordWrite.prototype = {
+	initialize: function () {
+		if (!this.checkAccess()) { return; }
+		this._gtTable = new global.GlobalToolsTable();
+	}, // function initialize
+
+	checkAccess: function () {
+		var sCallerScope = gs.getCallerScopeName();
+		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
+		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
+		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
+			return true;
+		} // if scope is allowed
+	}, // function checkAccess
+
+	// Insert, update or delete record based on values and config object
+	doRecord: function (oValues, oConfig, oError) {
+		if (!this.checkAccess()) { return; }
+		try {
+			var bLog = (String(oConfig['bLog']) == 'true') ? true : false;
+			if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord oValues: ' + JSON.stringify(oValues)); }
+			if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord oConfig: ' + JSON.stringify(oConfig)); }
+			var sId = '', sQuery = '', aQuery = [], bQueryEmptyFieldDone = false;
+			var bQueryEmptyFields = (String(oConfig['bQueryEmptyFields']) == 'true') ? true : false; // default is false
+			var aQueryFields = (Array.isArray(oConfig['aQueryFields'])) ? oConfig['aQueryFields'] : [oConfig['aQueryFields']];
+			aQueryFields.forEach(function (sField) {
+				bQueryEmptyFieldDone = false;
+				if (oValues[sField]) {
+					bQueryEmptyFieldDone = true;
+					aQuery.push(sField + '=' + oValues[sField]);
+				} // if value
+				if ((oConfig['oValues']) && (oConfig['oValues'][sField])) {
+					bQueryEmptyFieldDone = true;
+					aQuery.push(sField + '=' + oConfig['oValues'][sField]);
+				} // if value
+				if ((bQueryEmptyFields) && (!bQueryEmptyFieldDone)) {
+					aQuery.push(sField + 'ISEMPTY');
+				} // if query empty field
+			}); // each field
+			var sTargetTable = oConfig['sTargetTable'];
+			if ((sTargetTable) && (this._gtTable.isValidTable(sTargetTable))) {
+				var bInsert = (String(oConfig['bInsert']) == 'false') ? false : true; // default is true
+				var bUpdate = (String(oConfig['bUpdate']) == 'false') ? false : true; // default is true
+				var bDelete = (String(oConfig['bDelete']) == 'true') ? true : false; // default is false
+				var bNoWorkflow = (String(oConfig['bNoWorkflow']) == 'true') ? true : false; // default is false
+				var bNoEngine = (String(oConfig['bNoEngine']) == 'true') ? true : false; // default is false
+				var bNoAutoSysFields = (String(oConfig['bNoAutoSysFields']) == 'true') ? true : false; // default is false
+				var bNoDomain = (String(oConfig['bNoDomain']) == 'true') ? true : false; // default is false
+				var bKeepSysId = (String(oConfig['bKeepSysId']) == 'true') ? true : false; // default is false
+				var grRecord = new GlideRecord(sTargetTable);
+				if (bNoWorkflow) {
+					grRecord.setWorkflow(false);
+				} // if no workflow
+				if (bNoEngine) {
+					grRecord.setUseEngine(false);
+				} // if no engine (data policy)
+				if (bNoAutoSysFields) {
+					grRecord.autoSysFields(false);
+				} // if no autosysfields
+				sQuery = aQuery.join('^');
+				if (sQuery) {
+					grRecord.addEncodedQuery(sQuery);
+				} else {
+					gs.error('GlobalToolsRecordWrite.doRecord missing query (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
+					oError['code'] = '001';
+					oError['message'] = 'missing query';
+					return;
+				} // if query
+				if (bNoDomain) {
+					grRecord.queryNoDomain();
+				} else {
+					grRecord.query();
+				} // if no domain
+				var bFound = grRecord.next();
+				if (bDelete) {
+					var oDeleteReturnValue = grRecord.deleteRecord();
+					if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord bDelete: ' + bDelete + ' oDeleteReturnValue: ' + oDeleteReturnValue); }
+					return oDeleteReturnValue;
+				} else {
+					if (oConfig['oValues']) {
+						Object.keys(oConfig['oValues']).forEach(function (sField) {
+							grRecord.setValue(sField, oConfig['oValues'][sField]);
+						}); // each values field
+					} // if values
+					if (oValues['aTargetFields']) {
+						oValues['aTargetFields'].forEach(function (sField) {
+							if (oValues[sField]) {
+								grRecord.setValue(sField, oValues[sField]);
+							} // if value
+						}); // each field
+					} else {
+						Object.keys(oValues).forEach(function (sField) {
+							if (oValues.hasOwnProperty(sField)) {
+								grRecord.setValue(sField, oValues[sField]);
+							} // if has property;
+						}); // each field
+					} // if target fields
+					if ((bUpdate) && (bFound)) {
+						sId = grRecord.getUniqueValue();
+						if (!grRecord.update()) {
+							oError['code'] = '002';
+							oError['message'] = 'error updating: ' + grRecord.getLastErrorMessage();
+							gs.error('GlobalToolsRecordWrite.doRecord error updating record: ' + sId + ' with msg: ' + grRecord.getLastErrorMessage() + ' (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
+						} // if error updating
+					} else if ((bInsert) && (!bFound)) {
+						if ((bKeepSysId) && (oValues['sys_id'])) {
+							grRecord.setNewGuidValue(oValues['sys_id']);
+						} // if keep sys id
+						sId = grRecord.insert();
+						if (!sId) {
+							oError['code'] = '003';
+							oError['message'] = 'error inserting: ' + grRecord.getLastErrorMessage();
+							gs.error('GlobalToolsRecordWrite.doRecord error inserting record with msg: ' + grRecord.getLastErrorMessage() + ' (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
+						} // if error inserting
+					} // if insert
+					if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord  bInsert: ' + bInsert + ' bUpdate: ' + bUpdate + ' sId: ' + sId); }
+					return sId;
+				} // if delete
+			} else {
+				oError['code'] = '004';
+				oError['message'] = 'missing table';
+				gs.error('GlobalToolsRecordWrite.doRecord missing target table (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
+			} // if target table
+		} catch (ex) {
+			oError['code'] = '005';
+			oError['message'] = 'exception: ' + ex.toString();
+			gs.error('GlobalToolsRecordWrite.doRecord Error: ' + ex.toString());
+		} // try end
+		gs.info('tomtom tools oError: ' + JSON.stringify(oError));
+	}, // function doRecord
+
+	// Global scoped updateMultiple function to overcome scope issue
+	updateMultiple: function (oValues, oConfig) {
+		if (!this.checkAccess()) { return; }
+		var bLog = (String(oConfig['bLog']) == 'true') ? true : false;
+		if (bLog) { gs.info('GlobalToolsRecordWrite.updateMultiple oValues: ' + JSON.stringify(oValues)); }
+		if (bLog) { gs.info('GlobalToolsRecordWrite.updateMultiple oConfig: ' + JSON.stringify(oConfig)); }
+		var sQuery = String(oConfig['sQuery']);
+		var sTargetTable = oConfig['sTargetTable'];
+		if ((sTargetTable) && (this._gtTable.isValidTable(sTargetTable)) && (sQuery) && (sQuery != 'null') && (Object.keys(oValues).length > 0)) {
+			var bDoUpdate = false;
+			var bNoWorkflow = (String(oConfig['bNoWorkflow']) == 'true') ? true : false; // default is false
+			var bNoAutoSysFields = (String(oConfig['bNoAutoSysFields']) == 'true') ? true : false; // default is false
+			var bNoEngines = (String(oConfig['bNoEngines']) == 'true') ? true : false; // default is false
+			var grRecord = new GlideRecord(sTargetTable);
+			grRecord.addEncodedQuery(sQuery);
+			if (bNoWorkflow) {
+				grRecord.setWorkflow(false);
+			} // if no workflow
+			if (bNoAutoSysFields) {
+				grRecord.autoSysFields(false);
+			} // if no autosysfields
+			if (bNoEngines) {
+				grRecord.setUseEngines(false);
+			} // if no engines
+			Object.keys(oValues).forEach(function (sField) {
+				if (oValues.hasOwnProperty(sField)) {
+					if (grRecord.isValidField(sField)) {
+						grRecord.setValue(sField, oValues[sField]);
+						bDoUpdate = true;
+					} // if valid field
+				} // if has property;
+			}); // each field
+			if (bDoUpdate) {
+				grRecord.updateMultiple();
+			} else {
+				gs.error('GlobalToolsRecordWrite.updateMultiple no field value set (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
+			} // if update
+		} else {
+			gs.error('GlobalToolsRecordWrite.updateMultiple missing table,query or value (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
+			return;
+		} // if query
+	}, // function updateMultiple
+
+	// Global scoped setValue function to overcome scope issue
+	setGRValue: function (grRecord, sFieldName, oValue) {
+		if (!this.checkAccess()) { return; }
+		if ((sFieldName) && (oValue)) {
+			grRecord.setValue(sFieldName, oValue);
+		} // if fieldname and value
+	}, // function setGRValue
+
+	// Global scoped abort function to overcome scope issue
+	abortGRAction: function (grRecord) {
+		if (!this.checkAccess()) { return; }
+		grRecord.setAbortAction(true);
+	}, // function abortGRAction
+
+	type: 'GlobalToolsRecordWrite',
+	version: '1.0.0',
+	author: 'Tom Hauri',
+	email: 'tom@hauri.biz'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-08-18 09:59:44</sys_created_on>
+        <sys_id>c0adcda41bb47150d5be777d8b4bcbd1</sys_id>
+        <sys_mod_count>7</sys_mod_count>
+        <sys_name>GlobalToolsRecordWrite</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_script_include_c0adcda41bb47150d5be777d8b4bcbd1</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-09-26 17:34:01</sys_updated_on>
+    </sys_script_include>
+</record_update>

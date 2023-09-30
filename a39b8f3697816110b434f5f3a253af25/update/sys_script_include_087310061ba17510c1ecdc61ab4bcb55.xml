@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>global.GlobalToolsATF</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description>Tools to support (scoped) app development&#13;
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
+&#13;
+For some check JASMINE would be a good option too!</description>
+        <name>GlobalToolsATF</name>
+        <script><![CDATA[var GlobalToolsATF = Class.create();
+GlobalToolsATF.prototype = {
+	initialize: function (sScriptIncludeName, _ScriptIncludeRef, bLog, outputs, steps, params, stepResult, assertEqual) {
+		this._bLog = bLog;
+		this._gt = new global.GlobalTools();
+		this._gtRead = new global.GlobalToolsRecordRead();
+		this._getType = this._gt.getType;
+		this._sScriptIncludeName = sScriptIncludeName;
+		this._ScriptIncludeRef = _ScriptIncludeRef;
+		this._aErrors = [];
+		this._outputs = outputs;
+		this._steps = steps;
+		this._params = params;
+		this._stepResult = stepResult;
+		this._assertEqual = assertEqual;
+		this._bContinue = true;
+		if ((this._getType(sScriptIncludeName) != 'string') || (this._getType(_ScriptIncludeRef) != 'object')) {
+			gs.error('GlobalToolsATF.initialize invalid parameters sScriptIncludeName is not an string or _ScriptIncludeRef is not an object.');
+			this._bContinue = false;
+		} // validate input
+	}, // function initialize
+
+	checkAccess: function () {
+		var sCallerScope = gs.getCallerScopeName();
+		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
+		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
+		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
+			return true;
+		} // if scope is allowed
+	}, // function checkAccess
+
+	runATF: function (sFunction, oExpectedResult) {
+		if ((this._bContinue === false) || (!this.checkAccess())) { return; }
+		if ((sFunction) && (this._getType(sFunction) == 'string')) {
+			var aArguments = [];
+			for (var i = 2; i < arguments.length; i++) {
+				aArguments.push(arguments[i]);
+			} // each arg after 2 mandatory params
+			var oResult = this._ScriptIncludeRef[sFunction].apply(this._ScriptIncludeRef, aArguments);
+			var sExpectedResultType = this._getType(oExpectedResult);
+			var sExpectedResultTypeComparison = '=';
+			if ((sExpectedResultType == 'string') && (oExpectedResult.indexOf('<') != -1)) {
+				sExpectedResultTypeComparison = '<';
+				oExpectedResult = oExpectedResult.replace('<', '');
+				oExpectedResult = (isNaN(oExpectedResult)) ? '' : Number(oExpectedResult);
+			} else if ((sExpectedResultType == 'string') && (oExpectedResult.indexOf('>') != -1)) {
+				sExpectedResultTypeComparison = '>';
+				oExpectedResult = oExpectedResult.replace('>', '');
+				oExpectedResult = (isNaN(oExpectedResult)) ? '' : Number(oExpectedResult);
+			} // if expeced is < > number
+			var sResultType = this._getType(oResult);
+			sExpectedResultType = this._getType(oExpectedResult);
+			var iResultCount = -1;
+			if ((sExpectedResultType == 'number') && (sResultType == 'array')) {
+				iResultCount = oResult.length;
+			} else if ((sExpectedResultType == 'number') && (sResultType == 'gliderecord')) {
+				iResultCount = oResult.getRowCount();
+			} // if number then count
+			if (this._bLog) {
+				gs.info(this._sScriptIncludeName + '.' + sFunction + ' expected result: ' + oExpectedResult + ' (' + sExpectedResultType + ' / ' + sExpectedResultTypeComparison + ')' + ' result: ' + oResult + ' (' + sResultType + ' / ' + iResultCount + ') with arguments: ' + JSON.stringify(aArguments));
+			} // if log
+			if (iResultCount != -1) {
+				if ((sExpectedResultTypeComparison == '<') && (iResultCount < oExpectedResult)) {
+					return true;
+				} else if ((sExpectedResultTypeComparison == '>') && (iResultCount > oExpectedResult)) {
+					return true;
+				} else if ((sExpectedResultTypeComparison == '=') && (iResultCount == oExpectedResult)) {
+					return true;
+				} // result count
+			} // expected number
+			if (this._gt.isEqual(oResult, oExpectedResult)) {
+				return true;
+			} else {
+				if (sResultType == 'object') {
+					this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' expected result: ' + JSON.stringify(oExpectedResult) + ' (' + sExpectedResultType + ')' + ' result: ' + JSON.stringify(oResult) + ' (' + sResultType + ') with arguments: ' + JSON.stringify(aArguments));
+				} else {
+					this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' expected result: ' + oExpectedResult + ' (' + sExpectedResultType + ')' + ' result: ' + oResult + ' (' + sResultType + ') with arguments: ' + JSON.stringify(aArguments));
+				} // if obj
+			} // if results match
+		} else {
+			this._aErrors.push('GlobalToolsATF.runATF invalid sFunction: ' + sFunction);
+		} // if valid params
+	}, // function runATF
+
+	getRecord: function (sTable, sQuery) {
+		var grRecord = this._gtRead.getRecords(sTable, sQuery, null, null, 1);
+		if (grRecord.next()) {
+			return grRecord;
+		} // if next
+	}, // function getRecord
+
+	addError: function(sFunction, sError) {
+		this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' ' + sError);
+	}, // function addError
+
+	endATF: function () {
+		if (this._aErrors.length > 0) {
+			this._stepResult.setOutputMessage(this._aErrors.join('\n'));
+			return false;
+		} else {
+			return true;
+		}
+	}, // function endATF
+
+	type: 'GlobalToolsATF',
+	version: '1.0.0',
+	author: 'Tom Hauri',
+	email: 'tom@hauri.biz'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-09-29 04:35:34</sys_created_on>
+        <sys_id>087310061ba17510c1ecdc61ab4bcb55</sys_id>
+        <sys_mod_count>27</sys_mod_count>
+        <sys_name>GlobalToolsATF</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_script_include_087310061ba17510c1ecdc61ab4bcb55</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-09-29 13:39:05</sys_updated_on>
+    </sys_script_include>
+</record_update>

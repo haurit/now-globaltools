@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description>With the current scoping mechanism a lot of basic things cannot be done from a scoped application. There is a school of thought to completly disable scoped protection (e.g. setting glide.record.legacy_cross_scope_access_policy_in_script to true) but I believe with the push towards citizen developers we need to keep this boundry. None the less there are many valid reasons why we need more access to API's, specifically GlideRecord has many base functions not allowed in scope. Cross Scope priviledges did NOT provide a solution unfortunatly, so this workaround was "stolen" from the global.ScopeGlideRecordExecutor script library.&#13;
+&#13;
+Global Tools provides these functions, but to keep the protection access is only granted for those scopes in this list. &#13;
+&#13;
+ATTENTION: do not overwrite this list, it will be reset to the default at each deployment. If you want to enable more scopes to use these script, create a NEW custom property "now.globaltools.access_from_scope_custom" and add your scopes there.</description>
+        <ignore_cache>true</ignore_cache>
+        <is_private>false</is_private>
+        <name>now.globaltools.access_from_scope</name>
+        <read_roles/>
+        <suffix/>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-08-18 08:52:52</sys_created_on>
+        <sys_id>a52cb8641b747150d5be777d8b4bcbda</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_name>now.globaltools.access_from_scope</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_properties_a52cb8641b747150d5be777d8b4bcbda</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-08-18 08:55:48</sys_updated_on>
+        <type>string</type>
+        <value>x_snc_interface_cm,x_snc_xinstcompare</value>
+        <write_roles/>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=a52cb8641b747150d5be777d8b4bcbda"/>
+</record_update>

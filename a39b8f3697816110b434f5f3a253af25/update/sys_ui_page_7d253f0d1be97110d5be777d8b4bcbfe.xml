@@ -1,0 +1,781 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ui_page">
+    <sys_ui_page action="INSERT_OR_UPDATE">
+        <category>general</category>
+        <client_script/>
+        <description/>
+        <direct>false</direct>
+        <endpoint/>
+        <html><![CDATA[<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+	<head>
+		<style>
+			body {font-family: Arial, sans-serif;margin: 20px;}
+			h1 {color: #000;}
+			h2 {color: #000;}
+			p {color: #000;}
+			code {background-color: #f5f5f5;padding: 2px 4px;color: #333;border-radius: 3px;font-family: Menlo, Monaco, Consolas, "Courier New", monospace;			}
+		</style>
+	</head>
+	<body>
+		<h1>Global Tools</h1>
+		<p>Welcome to Global Tools - created and maintained by&#160;<a href="mailto:tom@hauri.biz">Tom Hauri</a>.</p>
+		<h2>Overview</h2>
+		<p>Global tools provides generic functions that need to run in global scope while ensuring that delegated development security cannot be circumvented.</p>
+		<h2>Disclaimer</h2>
+		<p>Global Tools are NOT an officially supported ServiceNow products. Global Tools do NOT come with any kind of warranty. If you use it, you own it!</p>
+		<h2>System Requirements</h2>
+		<ul>
+			<li>Tokyo or later</li>
+			<li>Access to&#160;<a href="https://github.com/haurit/now-globaltools"
+					target="_blank">https://github.com/haurit/now-globaltools</a></li>
+		</ul>
+		<h2>License</h2>
+		<p>Copyright 2023-2024 by Tom Hauri</p>
+		<p>Licensed under the Apache License, Version 2.0 (the "License")</p>
+		<p>You may not use Global Tools except in compliance with the License.</p>
+		<p>You may obtain a copy of the License at: <a href="https://www.apache.org/licenses/LICENSE-2.0"
+				target="_blank">https://www.apache.org/licenses/LICENSE-2.0</a></p>
+		<p>Unless required by applicable law or agreed to in writing, software distributed under the License is
+			distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+			See the License for the specific language governing permissions and limitations under the License.</p>
+		<h2>Release Notes</h2>
+		<h3>1.0.0 - 09.2023</h3>
+		<ol>
+			<li>Initial Release</li>
+		</ol>
+		<h3>1.0.1 - 11.2023</h3>
+		<ol>
+			<li>Added administration menues</li>
+			<li>Added manual page</li>
+			<li>Additional ATF Tests</li>
+		</ol>
+		<h2>Problem Statement</h2>
+		<p>Many functions are not available in scoped applications which hinders the developent of reusable solution blocks and many functions are required across many different applications.</p>
+		<h2>Overview</h2>
+		<p>
+			Global Tools to support different areas of (scoped) app development (like Array or Object handling and working with Glide objects).
+			The functions are only available in global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.
+		</p>
+		<h2>Installation and usage</h2>
+		<ol><li>Create an account on&#160;<a href="https://github.com/" target="_blank">GitHub</a>&#160;- if not done already.</li><li>Create a&#160;<a href="https://github.com/settings/tokens" target="_blank">personal access token</a>&#160;for your GitHub account.</li><li>Add&#160;<a href="/discovery_credentials_list.do" target="_blank">credentials</a>&#160;to access GitHub - use "Basic Auth".</li><li>Fork the repository&#160;<a href="https://github.com/haurit/now-globaltools" target="_blank">https://github.com/haurit/now-globaltools</a>.</li><li>Go to&#160;<a href="/$studio.do" target="_blank">Studio</a>&#160;and import the Global Tools application from source control.</li><li>Create the system property&#160;<a href="/nav_to.do?uri=sys_properties.do?sys_id=-1" target="_blank">now.globaltools.access_from_scope_custom</a>&#160;and add the list of comma separated scope names for all applications that can use the Global Tools Suite.</li></ol>
+
+		<h1>Script Include: global.GlobalTools</h1>
+		<h2>Function: nsub</h2>
+		<p>
+			<strong>Purpose:</strong> This function substitutes null values in simple types, arrays.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sValue</code>: The value to be checked and possibly substituted by <code>sSubstitute</code> if null.</li>
+			<li><code>sSubstitute</code>: The value to use as a substitute if <code>sValue</code> is null.</li>
+			<li><code>sType</code>: (Optional) The type of <code>sSubstitute</code> to be returned if <code>sValue</code> is null.</li>
+			<li><code>sObjKey</code>: (Deprecated) Use <code>new global.GlobalToolsObject().getValue()</code> instead.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The <code>sValue</code> if not null or <code>sSubstitute</code> respecting the type specified in <code>sType</code>
+		</p>
+		<h2>Function: getType</h2>
+		<p>
+			<strong>Purpose:</strong> This function determines the type of a given value.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>oValue</code>: The value for which you want to determine the type.</li>
+			<li><code>bDoNotConvertCase</code>: (Optional) If true, the function returns the type in its original case else it's converted to lowercase.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The type of the provided <code>oValue</code> as a string.
+		</p>
+		<h2>Function: isEqual</h2>
+		<p>
+			<strong>Purpose:</strong> This function compares two values and returns true if they are the same (object deep compare, sorts arrays)
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>oValue1</code>: The first value.</li>
+			<li><code>oValue2</code>: The second value.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;True if <code>oValue1</code> and <code>oValue2</code> are the same, false if not.
+		</p>
+		<h2>Function: encodeNewLineToTag</h2>
+		<p>
+			<strong>Purpose:</strong> This function replaces newline characters "\n" in a string with a custom tag "!^br^!".
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sValue</code>: The input string containing newline characters.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The <code>sValue</code> with newline characters replaced by "!^br^!".
+		</p>
+
+		<h2>Function: decodeTagToNewLine</h2>
+		<p>
+			<strong>Purpose:</strong> This function replaces a custom tag "!^br^!" in a string with newline characters
+			"\n".
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sValue</code>: The input string containing the "!^br^!" tag.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The <code>sValue</code> with the "!^br^!" tag replaced by newline characters.
+		</p>
+
+		<h2>Function: scheduleScript</h2>
+		<p>
+			<strong>Purpose:</strong> This function schedules the execution of a script include function.
+		</p>
+		<p>
+			<strong>Description:</strong> This function can schedule the execution a script include function. It allows passing arguments to both the script include constructor and the script include function.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sScriptInclude</code>: The name of the script include.</li>
+			<li><code>sFunction</code>: The name of the function to be called within the script include.</li>
+			<li><code>iSeconds</code>: The delay in seconds before execution.</li>
+			<li><code>aFunctionArgs</code>: An array of arguments to pass to the function.</li>
+			<li><code>aClassArgs</code>: An array of arguments to pass to the script include constructor.</li>
+			<li><code>sScheduleName</code>: (Optional) The name of the scheduled script.</li>
+		</p>
+
+		<h2>Function: scheduleHandler</h2>
+		<p>
+			<strong>Purpose:</strong> This function handles event scheduling and queuing.
+		</p>
+		<p>
+			<strong>Description:</strong> This function handles the scheduling and management of events based on the provided parameters. It can also be used to stop active events.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sEvent</code>: The name of the event to be scheduled.</li>
+			<li><code>sDelaySeconds</code>: (Optional) The delay in seconds before scheduling the event.</li>
+			<li><code>sAction</code>: (Optional) The default action is "start", use "stop" to stop active events.</li>
+			<li><code>sAddlQuery</code>: (Optional) Additional query conditions for event selection.</li>
+			<li><code>grRecord</code>: (Optional) A GlideRecord representing the record associated with the event.</li>
+			<li><code>oParam1 and oParam2</code>: (Optional) Additional parameters for the event.</li>
+			<li><code>sQueue</code>: (Optional) The queue to use for event scheduling.</li>
+		</p>
+		<h2>Function: decryptPassword</h2>
+		<p>
+			<strong>Purpose:</strong> This function is used to decrypt a password using the GlideEncrypter.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sPassword</code>: The encrypted password string to be decrypted.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The decrypted clear text password string.
+		</p>
+		<h2>Function: sleep</h2>
+		<p>
+			<strong>Purpose:</strong> This function is used to pause script execution for a specified number of milliseconds.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>iMilliseconds</code>: The number of milliseconds to pause script execution.</li>
+		</p>
+		<h2>Function: runFunction</h2>
+		<p>
+			<strong>Purpose:</strong> This function runs a given JavaScript function in global scope. The function to run is provided as a string.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sFunction</code>: The JavaScript function to run, provided as a string.</li>
+			<li><code>arguments(1-n)</code>: Any argument passed after the function name will be passed to the function in the order provided.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The result of the executed function.
+		</p>
+		<h2>Function: runFunctionInScope</h2>
+		<p>
+			<strong>Purpose:</strong> This function runs a specified JavaScript function within a specific scope. The function to run and scope ID are provided as arguments. This function is only available if the system property "glide.record.legacy_cross_scope_access_policy_in_script" is set to true. WARNING: this is NOT recommended to be done on any productive system as it breaks the delegated development security.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sFunction</code>: The JavaScript function to run, provided as a string.</li>
+			<li><code>sScopeId</code>: The ID of the scope in which to run the function.</li>
+			<li><code>arguments(2-n)</code>: Any argument passed after the function name will be passed to the function in the order provided.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The result of the executed function within the specified scope.
+		</p>
+		<h1>Script Include: global.GlobalToolsArray</h1>
+		<h2>Function: unique</h2>
+		<p>
+			<strong>Purpose:</strong> This function removes duplicate elements from an array.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>aArray</code>: The input array to remove duplicates from.</li>
+			<li><code>bRemoveEmpty</code>: (Optional) A boolean flag to indicate whether to remove empty values.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;An array with duplicate elements removed.
+		</p>
+		<h2>Function: isValidArray</h2>
+		<p>
+			<strong>Purpose:</strong> This function checks if an array is valid, not empty, and has at least one element.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>aArray</code>: The array to check for validity.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;A boolean value indicating whether the array is valid.
+		</p>
+		<h2>Function: mergeArray</h2>
+		<p>
+			<strong>Purpose:</strong> This function merges two arrays into one, removing duplicates.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>aArray1</code>: The first array to merge.</li>
+			<li><code>aArray2</code>: The second array to merge.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;A merged array with duplicates removed.
+		</p>
+		<h2>Function: addRemoveFromArray</h2>
+		<p>
+			<strong>Purpose:</strong> This function adds elements to and removes elements from an array.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>aArray</code>: The original array.</li>
+			<li><code>aArrayAdd</code>: An array of elements to add to the original array.</li>
+			<li><code>aArrayRemove</code>: An array of elements to remove from the original array.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;An array with elements added and removed as specified.
+		</p>
+		<h2>Function: getAddRemoveFromArrays</h2>
+		<p>
+			<strong>Purpose:</strong> This function compares two arrays and returns the elements to add to and remove from one array to make it identical to the other.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>aArray</code>: The target array to be modified.</li>
+			<li><code>aArrayOld</code>: The reference array to compare with.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;An <code>object</code> containing three properties:
+			<li><code>add</code>: An array of elements to add to the target array.</li>
+			<li><code>remove</code>: An array of elements to remove from the target array.</li>
+			<li><code>same</code>: A boolean indicating whether the arrays are already identical.</li>
+		</p>
+		<h1>Script Include: global.GlobalToolsObject</h1>
+		<h2>Function: isObject</h2>
+		<p>
+			<strong>Purpose:</strong> This function checks if a given variable is an object.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>oObj</code>: The variable to check.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;A boolean indicating whether the variable is an object (is false for arrays).
+		</p>
+		<h2>Function: getValue</h2>
+		<p>
+			<strong>Purpose:</strong> This function retrieves a configuration value from an object, allowing up to 8
+			levels of depth. It supports replacing the value with a default if not found.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sConfigPath</code>: A string representing the path to the desired value, separated by '/'.</li>
+			<li><code>sReplace</code>: (Optional) A replacement value if the configuration value is not found.</li>
+			<li><code>oConfig</code>: The object in which to get the configuration value.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The retrieved configuration value or the replacement value if not found.
+		</p>
+		<h2>Function: setValue</h2>
+		<p>
+			<strong>Purpose:</strong> This function sets a configuration value in an object, allowing up to 8 levels of
+			depth. It creates nested objects as needed to match the provided path.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sConfigPath</code>: A string representing the path where the value should be set, separated by '/'.</li>
+			<li><code>oValue</code>: The value to set in the object.</li>
+			<li><code>oConfig</code>: The object in which to set the configuration value.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;None. It modifies the input object <code>oConfig</code> in place.
+		</p>
+
+		<h2>Function: ObjectAssign</h2>
+		<p>
+			<strong>Purpose:</strong> This function performs a shallow merge of two objects using ECMAScript 6's
+			<code>Object.assign</code> method.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>oSource</code>: The target object to merge into.</li>
+			<li><code>oMerge</code>: The source object to merge from.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The merged object.
+		</p>
+		<!-- Usage example goes here -->
+
+		<h2>Function: deepMerge</h2>
+		<p>
+			<strong>Purpose:</strong> This function performs a simple deep merge of two objects with an option to merge
+			arrays.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>oSource</code>: The target object to merge into.</li>
+			<li><code>oMerge</code>: The source object to merge from.</li>
+			<li><code>bMergeArrays</code>: A boolean indicating whether to merge arrays.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The merged object.
+		</p>
+	<h1>Script Include: global.GlobalToolsTable</h1>
+		<h2>isValidTable</h2>
+    <p>
+        <strong>Purpose:</strong> This function checks if a given table name is valid in ServiceNow's GlideRecord context.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the table name to check.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns <code>true</code> if the table is valid; otherwise, it returns <code>undefined</code>.
+    </p>
+    <h2>getRecordClass</h2>
+    <p>
+        <strong>Purpose:</strong> This function gets the class name of a GlideRecord object.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>grRecord</code>: A GlideRecord object to retrieve the class name from.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns the class name as a string if the input is a valid GlideRecord; otherwise, it returns <code>undefined</code>.
+    </p>
+
+    <h2>getAbsoluteBase</h2>
+    <p>
+        <strong>Purpose:</strong> This function gets the absolute base class for a given table name.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the table name to retrieve the absolute base class for.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns the absolute base class name as a string if the table is valid; otherwise, it returns <code>undefined</code>.
+    </p>
+
+    <h2>getTableHierarchy</h2>
+    <p>
+        <strong>Purpose:</strong> This function gets the hierarchy of tables for a given table name.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the table name to retrieve the table hierarchy for.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns an array of table names representing the hierarchy if the table is valid; otherwise, it returns <code>undefined</code>.
+    </p>
+
+    <h2>getTableExtensions</h2>
+    <p>
+        <strong>Purpose:</strong> This function gets the extensions or all extensions of a given table name.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the table name to retrieve the extensions for.</li>
+        <li><code>bAllExtensions</code>: A boolean flag indicating whether to retrieve all extensions (if <code>true</code>) or just direct extensions (if <code>false</code>).</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns an array of table names representing the extensions if the table is valid; otherwise, it returns <code>undefined</code>.
+    </p>
+	<h2>getTableScopeInfo</h2>
+    <p>
+        <strong>Purpose:</strong> This function retrieves cross-scope access information for a given table.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the name of the table to retrieve access information for.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns an <code>object</code> containing cross-scope access information for the table. The object has the following properties:
+        <ul>
+            <li><code>id</code>: A string representing the sys_scope ID.</li>
+            <li><code>access</code>: A string representing the access level.</li>
+            <li><code>read</code>: A boolean indicating if read access is granted.</li>
+            <li><code>create</code>: A boolean indicating if create access is granted.</li>
+            <li><code>write</code>: A boolean indicating if write access is granted.</li>
+            <li><code>delete</code>: A boolean indicating if delete access is granted.</li>
+        </ul>
+        If the table is not valid, it returns <code>undefined</code>.
+    </p>
+	<h2>getDisplayField</h2>
+    <p>
+        <strong>Purpose:</strong> This function retrieves the display field for a given table. It checks if a display field override is set and returns the overridden display field if available.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the name of the table for which to retrieve the display field.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns a string representing the display field of the table or <code>undefined</code> if not found.
+    </p>
+    <h2>getFields</h2>
+    <p>
+        <strong>Purpose:</strong> This function retrieves the list of field names for a given table or GlideRecord object.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>oTableOrRecord</code>: A string representing the table name or a GlideRecord object.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns an array of field names for the specified table or GlideRecord object.
+    </p>
+    <h2>getRefTable</h2>
+    <p>
+        <strong>Purpose:</strong> This function retrieves the reference table name based on the reference field and the table it belongs to.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the name of the table containing the reference field.</li>
+        <li><code>sField</code>: A string representing the name of the reference field.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns a string representing the name of the reference table associated with the given field and table.
+    </p>
+<h2>getRefFieldName</h2>
+    <p>
+        <strong>Purpose:</strong> This function retrieves the name of the reference field in a given table that points to a specified reference table. It can return either a single field name or an array of field names.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>fRecord</code>: A GlideRecord object representing the record.</li>
+        <li><code>sRefTable</code>: A string representing the name of the reference table.</li>
+        <li><code>bCheckRefTableHierarchy</code>: A boolean indicating whether to check the hierarchy of the <code>sRefTable</code> table.</li>
+        <li><code>sReturnType</code>: A string specifying the return type, either 'array' or 'string'.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns either a single field name or an array of field names in the specified table that reference the given <code>sRefTable</code> table with or without respecting the hierarchy depending on <code>bCheckRefTableHierarchy</code>.
+    </p>
+    <h2>getDictOrOverrideValue</h2>
+    <p>
+        <strong>Purpose:</strong> This function retrieves dictionary records or values (depending wether <code>bReturnRecord</code> is set) while respecting overrides. It can return dictionary records or their attribute values.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the name of the table.</li>
+        <li><code>sField</code>: A string representing the name of the field.</li>
+        <li><code>sAttributeName</code>: A string representing the name of the attribute.</li>
+        <li><code>bReturnRecord</code>: (Optional) A boolean indicating whether to return dictionary records.</li>
+        <li><code>sAddlDictQuery</code>: (Optional) A string representing additional query conditions for the dictionary.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns dictionary records or their attribute values based on the provided parameters.
+    </p>
+    <h2>getFieldChoices</h2>
+    <p>
+        <strong>Purpose:</strong> This function retrieves the choices available for a specific field in a table. It can also filter choices based on a dependent field value.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the name of the table.</li>
+        <li><code>sField</code>: A string representing the name of the field.</li>
+        <li><code>sDependentFieldValue</code>: A string representing the value of the dependent field to filter choices (optional).</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns an array containing three arrays: choices, dependent values, and choice display values.
+    </p>
+	<h2>getMandatoryFields</h2>
+    <p>
+        <strong>Purpose:</strong> This function retrieves an array of mandatory fields in a given table.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the name of the table.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns an array of mandatory field names in the specified table.
+    </p>
+	<h1>Script Include: global.GlobalToolsRecordRead</h1>
+	<h2>countRecords</h2>
+    <p>
+        <strong>Purpose:</strong> This function counts records in a specified table based on the provided query and field.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the name of the table.</li>
+        <li><code>sQuery</code>: A string representing the query to filter records.</li>
+        <li><code>sField</code>: (Optional) A string representing the field for which to count values.</li>
+        <li><code>bDisplayValue</code>: (Optional) A boolean indicating whether to include display values.</li>
+        <li><code>bDisplayValueOnly</code>: (Optional) A boolean indicating whether to include only display values.</li>
+        <li><code>bQueryNoDomain</code>: (Optional) A boolean indicating whether to query without considering domains.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns an integer with the count or an array of record counts grouped by the provided <code>sField</code> parameter.
+    </p>
+    <h2>getRecords</h2>
+    <p>
+        <strong>Purpose:</strong> This function retrieves records from a specified table based on the provided query and options.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the name of the table.</li>
+        <li><code>sQuery</code>: A string representing the query to filter records.</li>
+        <li><code>aOrderBy</code>: An array of strings representing fields to order records by.</li>
+        <li><code>aOrderByDesc</code>: An array of strings representing fields to order records by in descending order.</li>
+        <li><code>iLimit</code>: An integer representing the maximum number of records to retrieve.</li>
+        <li><code>bWorkflow</code>: A boolean indicating whether to include workflow information.</li>
+        <li><code>bAutoSysFields</code>: A boolean indicating whether to include auto-system fields.</li>
+        <li><code>bQueryNoDomain</code>: A boolean indicating whether to query without considering domains.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns a GlideRecord object with the retrieved records.
+    </p>
+    <h2>checkRecordByField</h2>
+    <p>
+        <strong>Purpose:</strong> This function checks if a record exists in a specified table with a given field-value pair.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the name of the table.</li>
+        <li><code>sField</code>: A string representing the field to check.</li>
+        <li><code>sValue</code>: A string representing the value to check for in the specified field.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns a boolean value indicating whether a record with the specified field-value pair exists.
+    </p>
+    <h2>getSysIdByQuery</h2>
+    <p>
+        <strong>Purpose:</strong> This function retrieves the sys_id of a record in a specified table based on the provided query.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sTable</code>: A string representing the name of the table.</li>
+        <li><code>sQuery</code>: A string representing the query to filter records.</li>
+        <li><code>bUniqueOnly</code>: A boolean indicating whether to retrieve only unique records.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns the sys_id of the first matching recor . If <code>bUniqueOnly</code> is true returns <code>undefined</code> if more than one record is found.
+    </p>
+	<h2>getRelatedRecordByKeys</h2>
+    <p>
+        <strong>Purpose:</strong> This function retrieves a related record based on specified keys and configurations using the <code>getRecordByKeys</code> function below.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>oRecordConfig</code>: An object containing configuration for record retrieval.</li>
+        <li><code>oRecordValues</code>: An object containing values for record retrieval.</li>
+        <li><code>aError</code>: An array to store error messages.</li>
+        <li><code>oField</code>: A field or configuration object for specifying the field to search.</li>
+        <li><code>sRefTable</code>: The reference table to use if not specified in the field configuration.</li>
+        <li><code>iArrayField</code>: An optional index for array fields.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns the unique value (sys_id) of the related record if found, or an empty string if not found.
+    </p>
+    <h2>getRecordByKeys</h2>
+    <p>
+        <strong>Purpose:</strong> This function retrieves a record based on specified keys and configurations.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>oRecordConfig</code>: An object containing configuration for record retrieval.</li>
+        <li><code>oRecordValues</code>: An object containing field / value pairs.</li>
+        <li><code>aError</code>: An array to store error messages.</li>
+    </p>
+	<p>
+		<strong>Parameters in detail:</strong>
+		Important <code>oRecordConfig</code> elements:
+		<ol>
+		<li>oRecordConfig['sTargetTable']: table to lookup record</li>
+		<li>oRecordConfig['aKeys']: array of keys to look for to identify record (first one that produces a result is taken)</li>
+			<div>A key (string or object) or an array with key combinations (all must match) to uniquely identify a record</div>
+			<div>2.1 'key_field': simple key field taking the value of the respective value field (fieldname in source body and target record are the same)</div>
+			<div>2.2 array of key fields ['key_field_1', 'key_field_2'], key combinations (all must match) to uniquely identify a record</div>
+			<div>If the input field is different from the target field or the target field is a dot walk field you can replace the string with an object that contains the following properties:</div>
+			<div>{</div>
+			<div>	'sInputField': 'input_field', --> field from oRecordValues where the value is found</div>
+			<div>	'sTargetField': 'target_field', --> field in the sTargetTable record (can be a dot walk field like caller_id.email)</div>
+			<div>	'sAddlQuery': 'active=true', --> additional query to be applied to the target lookup</div>
+			<div>	'bQueryEmptyFields': 'true/false', --> if input_field is empty will add a query: input_fieldISEMPTY'</div>
+		<li>oRecordConfig['bQueryEmptyFields'] // generic setting to query empty fields with ISEMPTY instead of returning an error for all empty fields</li>
+		</ol>
+	</p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns a GlideRecord object with the retrieved record if found, or <code>undefined</code> if not found.
+    </p>
+	<h2>convertGRtoJSON</h2>
+    <p>
+        <strong>Purpose:</strong> This function converts a GlideRecord to JSON format.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>grRecord</code>: The GlideRecord object to be converted.</li>
+        <li><code>bStringify</code>: (Optional) A boolean indicating whether to return a JSON string or a JSON object (default: true).</li>
+        <li><code>bDisplayValue</code>: (Optional)  A boolean indicating whether to get the Display Value (default: true).</li>
+        <li><code>bDisplayValueOwnField</code>: (Optional)  A boolean indicating whether to get the Display Value in its own field with the "_dv" postfix (default: true).</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns JSON or a JSON string depending on the <code>bStringify</code> parameter or or <code>undefined</code> if <code>grRecord</code> is not a valid GlideRecord.
+    </p>
+    <h2>makeQueryADotWalkQuery</h2>
+    <p>
+        <strong>Purpose:</strong> This function adds a dot walking field to a query string.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sQuery</code>: The query string to which the dot walking field is added.</li>
+        <li><code>sDotWalkField</code>: The dot walking field to add to the query.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns the modified query string.
+    </p>
+    <h2>combineQueries</h2>
+    <p>
+        <strong>Purpose:</strong> This function combines two queries, considerung that one of them could contains a big OR statements (^NQ).
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>sFirstQuery</code>: The first query string.</li>
+        <li><code>sSecondQuery</code>: The second query string.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns the combined query string or "false" if both queries contain a big OR statement.
+    </p>
+	<h1>Script Include: global.GlobalToolsRecordWrite</h1>
+	<h2>doRecord</h2>
+    <p>
+        <strong>Purpose:</strong> This function inserts, updates, or deletes a record based on values and a configuration object.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>oValues</code>: An object containing the values to be inserted or updated.</li>
+        <li><code>oConfig</code>: A configuration object specifying the table, query, and other options for the operation.</li>
+        <li><code>oError</code>: An object to store error information.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns the unique ID of the inserted or updated record or an error message.
+    </p>
+    <h2>updateMultiple</h2>
+    <p>
+        <strong>Purpose:</strong> This function updates multiple records in a table based on values and a query.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>oValues</code>: An object containing the values to be updated.</li>
+        <li><code>oConfig</code>: A configuration object specifying the table, query, and other options for the update.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Updates multiple records in the specified table.
+    </p>
+    <h2>setGRValue</h2>
+    <p>
+        <strong>Purpose:</strong> This function sets a value for a field in a GlideRecord object.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>grRecord</code>: The GlideRecord object to be updated.</li>
+        <li><code>sFieldName</code>: The name of the field to update.</li>
+        <li><code>oValue</code>: The value to set for the field.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Updates the field value in the <code>grRecord</code> object.
+    </p>
+    <h2>abortGRAction</h2>
+    <p>
+        <strong>Purpose:</strong> This function aborts a <code>grRecord</code> action, such as an update or insert.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>grRecord</code>: The GlideRecord object for which to abort the action.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Aborts the specified action for the <code>grRecord</code> object.
+    </p>
+	<h1>Script Include: global.GlobalToolsRecordWriteValidate</h1>
+	<p>This script will be documented in detail in a community article.</p>
+	<h2>validateAndWrite</h2>
+    <p>
+        <strong>Purpose:</strong> This function validates and writes a record based on configuration and values.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>oRecordConfig</code>: A configuration object specifying the record target table, options, and other settings.</li>
+        <li><code>oRecordValues</code>: An object containing the values to be written to the record.</li>
+        <li><code>oError</code>: An object to store error information.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns the unique ID of the written record or an error message.
+    </p>
+    <h2>validateAndReturnIREObject</h2>
+    <p>
+        <strong>Purpose:</strong> This function validates data and returns an object, such as an Incident Request (IRE), based on configuration and values.
+    </p>
+    <p>
+        <strong>Parameters:</strong>
+        <li><code>oRecordConfig</code>: A configuration object specifying the record target table, options, and other settings.</li>
+        <li><code>oRecordValues</code>: An object containing the values to be validated.</li>
+        <li><code>oError</code>: An object to store error information.</li>
+    </p>
+    <p>
+        <strong>Returns:</strong>&#160;Returns an object with the IRE payload.
+    </p>
+	<h1>Script Include: global.GlobalToolsATF</h1>
+		<h2>Function: initialize</h2>
+		<p>
+			<strong>Purpose:</strong> This function initializes the class with parameters.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sScriptIncludeName</code>: The name of the Script Include to be tested.</li>
+			<li><code>_ScriptIncludeRef</code>: The initialized Script Include to be tested <code>var _si = new myScriptInclude();</code> is null.</li>
+			<li><code>outputs</code>: The outputs parameter from ATF test step</li>
+			<li><code>steps</code>: The steps parameter from ATF test step</li>
+			<li><code>params</code>: The params parameter from ATF test step</li>
+			<li><code>stepResult</code>: The stepResult parameter ATF from test step</li>
+			<li><code>assertEqual</code>: The assertEqual parameter ATF from test step</li>
+		</p>
+		<h2>Function: runATF</h2>
+		<p>
+			<strong>Purpose:</strong> This function runs the specific function and passes all variables except script and expected value to it.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sFunction</code>: The Script Include <code>sFunction</code> to be tested.</li>
+			<li><code>oExpectedResult</code>: The expected return value from <code>sFunction</code> call.</li>
+			<li><code>arguments</code>: (Optional) The <code>arguments</code> that will be passed to the <code>sFunction</code>.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The true if test is successful or <code>undefined</code> if it failed.
+		</p>
+		<h2>Function: endATF</h2>
+		<p>
+			<strong>Purpose:</strong> This function parses the result, sets the error message if any and ends the ATF test.
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The true if test is successful or false if it failed.
+		</p>
+	</body>
+</j:jelly>]]></html>
+        <name>global_tools_manual</name>
+        <processing_script/>
+        <sys_class_name>sys_ui_page</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-09-26 18:38:45</sys_created_on>
+        <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
+        <sys_mod_count>49</sys_mod_count>
+        <sys_name>global_tools_manual</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-09-29 08:59:54</sys_updated_on>
+    </sys_ui_page>
+</record_update>

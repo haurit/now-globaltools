@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step">
+    <sys_atf_step action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <copied_from/>
+        <description>Run Server Side Validation Script</description>
+        <display_name>Run Server Side Script</display_name>
+        <inputs/>
+        <mugshots_cache_json/>
+        <notes/>
+        <order>1</order>
+        <step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config>
+        <sys_class_name>sys_atf_step</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-09-29 05:37:15</sys_created_on>
+        <sys_id>ff826c861be17510c1ecdc61ab4bcbbe</sys_id>
+        <sys_mod_count>30</sys_mod_count>
+        <sys_name>Run Server Side Script</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_atf_step_ff826c861be17510c1ecdc61ab4bcbbe</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-09-29 09:46:58</sys_updated_on>
+        <table/>
+        <test display_value="GlobalToolsTable Tests">ccd68ce11b6db110d5be777d8b4bcbe6</test>
+        <timeout/>
+        <warning_message/>
+    </sys_atf_step>
+    <sys_variable_value action="delete_multiple" query="document_key=ff826c861be17510c1ecdc61ab4bcbbe"/>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>ff826c861be17510c1ecdc61ab4bcbbe</document_key>
+        <order>100</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-09-29 05:37:15</sys_created_on>
+        <sys_id>7454a8c61be17510c1ecdc61ab4bcb31</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-09-29 05:37:15</sys_updated_on>
+        <value>3.1</value>
+        <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
+    </sys_variable_value>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>ff826c861be17510c1ecdc61ab4bcbbe</document_key>
+        <order>200</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-09-29 05:37:15</sys_created_on>
+        <sys_id>7c54a8c61be17510c1ecdc61ab4bcb31</sys_id>
+        <sys_mod_count>30</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-09-29 09:46:58</sys_updated_on>
+        <value>(function(outputs, steps, params, stepResult, assertEqual) {&#13;
+&#13;
+	var bLog = false;&#13;
+	var _gtTable = new global.GlobalToolsTable();&#13;
+	&#13;
+	var _gtATF = new global.GlobalToolsATF('GlobalToolsTable', _gtTable, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
+	var grRecord;&#13;
+&#13;
+	_gtATF.runATF('isValidTable', true, 'task');&#13;
+	_gtATF.runATF('isValidTable', undefined, 'invalidtable');&#13;
+&#13;
+	grRecord = _gtATF.getRecord('task', 'sys_class_name=task');&#13;
+	if (grRecord) {&#13;
+		_gtATF.runATF('getRecordClass', 'task', grRecord);&#13;
+	} // if record&#13;
+	grRecord = _gtATF.getRecord('task', 'sys_class_name=incident');&#13;
+	if (grRecord) {&#13;
+		_gtATF.runATF('getRecordClass', 'incident', grRecord);&#13;
+	} // if record&#13;
+	grRecord = _gtATF.getRecord('cmdb_ci', 'sys_class_name=cmdb_ci_server');&#13;
+	if (grRecord) {&#13;
+		_gtATF.runATF('getRecordClass', 'cmdb_ci_server', grRecord);&#13;
+	} // if record&#13;
+	_gtATF.runATF('getRecordClass', undefined, 'invalidrecord');&#13;
+&#13;
+	_gtATF.runATF('getAbsoluteBase', 'task', 'task');&#13;
+	_gtATF.runATF('getAbsoluteBase', 'task', 'incident');&#13;
+	_gtATF.runATF('getAbsoluteBase', 'cmdb_ci', 'cmdb_ci');&#13;
+	_gtATF.runATF('getAbsoluteBase', 'cmdb_ci', 'cmdb_ci_server');&#13;
+	_gtATF.runATF('getAbsoluteBase', undefined, 'invalidtable');&#13;
+&#13;
+	_gtATF.runATF('getTableHierarchy', ['task'], 'task');&#13;
+	_gtATF.runATF('getTableHierarchy', ['incident','task'], 'incident');&#13;
+	_gtATF.runATF('getTableHierarchy', ['cmdb_ci','cmdb'], 'cmdb_ci');&#13;
+	_gtATF.runATF('getTableHierarchy', ['cmdb_ci_server','cmdb_ci_computer','cmdb_ci_hardware','cmdb_ci','cmdb'], 'cmdb_ci_server');&#13;
+	_gtATF.runATF('getTableHierarchy', undefined, 'invalidtable');&#13;
+&#13;
+	_gtATF.runATF('getTableExtensions', '&gt;10', 'task');&#13;
+	_gtATF.runATF('getTableExtensions', 0, 'incident');&#13;
+	_gtATF.runATF('getTableExtensions', '&gt;10', 'cmdb_ci_server');&#13;
+	_gtATF.runATF('getTableExtensions', undefined, 'invalidtable');&#13;
+	_gtATF.runATF('getTableExtensions', ['incident'], 'incident', true);&#13;
+	_gtATF.runATF('getTableExtensions', undefined, 'invalidtable', true);&#13;
+&#13;
+	_gtATF.runATF('getTableScopeInfo', {'id':'global','access':null,'read':true,'create':true,'write':true,'delete':false}, 'incident');&#13;
+	_gtATF.runATF('getTableScopeInfo', undefined, 'invalidtable');&#13;
+&#13;
+	_gtATF.runATF('getDisplayField', 'number', 'task');&#13;
+	_gtATF.runATF('getDisplayField', 'number', 'incident');&#13;
+	_gtATF.runATF('getDisplayField', 'short_description', 'dmn_demand');&#13;
+	_gtATF.runATF('getDisplayField', undefined, 'cmdb_ci_server');&#13;
+	_gtATF.runATF('getDisplayField', undefined, 'invalidtable');&#13;
+&#13;
+	_gtATF.runATF('getFields', '&gt;10', 'task');&#13;
+	_gtATF.runATF('getFields', '&gt;10', 'incident');&#13;
+	_gtATF.runATF('getFields', '&gt;10', 'cmdb_ci_server'); //&#13;
+	_gtATF.runATF('getFields', ['context_map', 'level', 'message', 'source', 'source_application_family', 'source_package', 'sys_class_name', 'sys_created_by', 'sys_created_on'], 'syslog');&#13;
+	_gtATF.runATF('getFields', 0, 'invalidtable');&#13;
+	grRecord = _gtATF.getRecord('syslog', 'sys_class_name=syslog');&#13;
+	if (grRecord) {&#13;
+		_gtATF.runATF('getFields', '&gt;5', grRecord);&#13;
+	} // if record&#13;
+&#13;
+	_gtATF.runATF('getMandatoryFields', ['name', 'type'], 'sys_sg_parameter_screen'); // icon should not be shown, dict override to remove it&#13;
+	_gtATF.runATF('getMandatoryFields', ['it_application_owner','name','short_description'], 'cmdb_ci_business_app');&#13;
+	_gtATF.runATF('getMandatoryFields', undefined, 'invalidtable');&#13;
+	&#13;
+	return _gtATF.endATF();&#13;
+&#13;
+})(outputs, steps, params, stepResult, assertEqual);&#13;
+</value>
+        <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
+    </sys_variable_value>
+</record_update>
