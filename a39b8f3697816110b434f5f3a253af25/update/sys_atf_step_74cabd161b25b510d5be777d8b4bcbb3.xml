@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step">
+    <sys_atf_step action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <copied_from/>
+        <description>Run Server Side Validation Script</description>
+        <display_name>Run Server Side Script</display_name>
+        <inputs/>
+        <mugshots_cache_json/>
+        <notes/>
+        <order>1</order>
+        <step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config>
+        <sys_class_name>sys_atf_step</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-09-30 06:33:46</sys_created_on>
+        <sys_id>74cabd161b25b510d5be777d8b4bcbb3</sys_id>
+        <sys_mod_count>16</sys_mod_count>
+        <sys_name>Run Server Side Script</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_atf_step_74cabd161b25b510d5be777d8b4bcbb3</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-10-06 12:39:41</sys_updated_on>
+        <table/>
+        <test display_value="GlobalToolsRecordWriteValidate Tests">a44784251b6db110d5be777d8b4bcb92</test>
+        <timeout/>
+        <warning_message/>
+    </sys_atf_step>
+    <sys_variable_value action="delete_multiple" query="document_key=74cabd161b25b510d5be777d8b4bcbb3"/>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>74cabd161b25b510d5be777d8b4bcbb3</document_key>
+        <order>200</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-09-30 06:33:46</sys_created_on>
+        <sys_id>56dabd161b25b510d5be777d8b4bcb3a</sys_id>
+        <sys_mod_count>16</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-10-06 12:39:41</sys_updated_on>
+        <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
+&#13;
+	var bLog = false;&#13;
+	var _gtWriteValidate = new global.GlobalToolsRecordWriteValidate();&#13;
+	var _gtArray = new global.GlobalToolsArray();&#13;
+	var _gtObject = new global.GlobalToolsObject();&#13;
+&#13;
+	var _gtATF = new global.GlobalToolsATF('GlobalToolsRecordWriteValidate', _gtWriteValidate, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
+	var grRecord;&#13;
+&#13;
+	var oRecordConfig = {};&#13;
+	var oRecordValues = {};&#13;
+	var oError = {};&#13;
+	var oIREPayloadExpected = {&#13;
+		'items': [{&#13;
+			'internal_id': '',&#13;
+			'lookup': [],&#13;
+			'values': {}&#13;
+		}]};&#13;
+	var aErrorArray = [];&#13;
+&#13;
+	/*&#13;
+	_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+	aErrorArray = _gtObject.getValue('default/aErrorMessages', '', oError);&#13;
+	if((!_gtArray.isValidArray(aErrorArray)) || (_gtObject.getValue('code', '', aErrorArray[0]) != '405_001')) {&#13;
+		_gtATF.addError('validateAndWrite', 'Did not return error "405_001 - Missing record config object or sTargetTable property".');&#13;
+	} // if error&#13;
+	oError = {};&#13;
+	&#13;
+	_gtATF.runATF('validateAndReturnIREObject', oIREPayloadExpected, oRecordConfig, oRecordValues, oError);&#13;
+	aErrorArray = _gtObject.getValue('default/aErrorMessages', '', oError);&#13;
+	if((!_gtArray.isValidArray(aErrorArray)) || (_gtObject.getValue('code', '', aErrorArray[0]) != '405_001')) {&#13;
+		_gtATF.addError('validateAndReturnIREObject', 'Did not return error "405_001 - Missing record config object or sTargetTable property".');&#13;
+	} // if error&#13;
+	oError = {};&#13;
+&#13;
+	oRecordConfig['sTargetTable'] = 'incident';&#13;
+	_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+	aErrorArray = _gtObject.getValue('default/aErrorMessages', '', oError);&#13;
+	if((!_gtArray.isValidArray(aErrorArray)) || (_gtObject.getValue('code', '', aErrorArray[0]) != '400_002')) {&#13;
+		_gtATF.addError('validateAndWrite', 'Did not return error "400_002 - Missing or empty record values object".');&#13;
+	} // if error&#13;
+	oError = {};&#13;
+&#13;
+	oRecordValues['active'] = 'true';&#13;
+	_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+	aErrorArray = _gtObject.getValue('default/aErrorMessages', '', oError);&#13;
+	if((!_gtArray.isValidArray(aErrorArray)) || (_gtObject.getValue('code', '', aErrorArray[0]) != '400_016')) {&#13;
+		_gtATF.addError('validateAndWrite', 'Did not return error "400_016 - Error getting record by keys: Field "sys_id" is empty and parameter bQueryEmptyFields is not set".');&#13;
+	} // if error&#13;
+	oError = {};&#13;
+	*/&#13;
+&#13;
+	oRecordConfig['sTargetTable'] = 'incident';&#13;
+	oRecordValues['active'] = 'true';&#13;
+&#13;
+	oRecordValues['sys_id'] = '-1';&#13;
+	_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+	gs.info('tomtom oError: ' + JSON.stringify(oError));&#13;
+	aErrorArray = _gtObject.getValue('default/aErrorMessages', '', oError);&#13;
+	if((!_gtArray.isValidArray(aErrorArray)) || (_gtObject.getValue('code', '', aErrorArray[0]) != '400_016')) {&#13;
+		_gtATF.addError('validateAndWrite', 'Did not return error "400_016 - Error getting record by keys: Field "sys_id" is empty and parameter bQueryEmptyFields is not set".');&#13;
+	} // if error&#13;
+	oError = {};&#13;
+&#13;
+&#13;
+&#13;
+// 	gs.info('tomtom aErrorArray: ' + aErrorArray + ' oError: ' + JSON.stringify(aErrorArray[0]));&#13;
+///([0-9a-f]){32}/g&#13;
+&#13;
+return _gtATF.endATF();&#13;
+&#13;
+}) (outputs, steps, params, stepResult, assertEqual);&#13;
+</value>
+        <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
+    </sys_variable_value>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>74cabd161b25b510d5be777d8b4bcbb3</document_key>
+        <order>100</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-09-30 06:33:46</sys_created_on>
+        <sys_id>92dabd161b25b510d5be777d8b4bcb3a</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-09-30 06:33:46</sys_updated_on>
+        <value>3.1</value>
+        <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
+    </sys_variable_value>
+</record_update>

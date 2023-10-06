@@ -15,6 +15,7 @@ GlobalToolsATF.prototype = {
 	initialize: function (sScriptIncludeName, _ScriptIncludeRef, bLog, outputs, steps, params, stepResult, assertEqual) {
 		this._bLog = bLog;
 		this._gt = new global.GlobalTools();
+		this._gtArray = new global.GlobalToolsArray();
 		this._gtRead = new global.GlobalToolsRecordRead();
 		this._getType = this._gt.getType;
 		this._sScriptIncludeName = sScriptIncludeName;
@@ -51,15 +52,20 @@ GlobalToolsATF.prototype = {
 			var oResult = this._ScriptIncludeRef[sFunction].apply(this._ScriptIncludeRef, aArguments);
 			var sExpectedResultType = this._getType(oExpectedResult);
 			var sExpectedResultTypeComparison = '=';
-			if ((sExpectedResultType == 'string') && (oExpectedResult.indexOf('<') != -1)) {
-				sExpectedResultTypeComparison = '<';
-				oExpectedResult = oExpectedResult.replace('<', '');
-				oExpectedResult = (isNaN(oExpectedResult)) ? '' : Number(oExpectedResult);
-			} else if ((sExpectedResultType == 'string') && (oExpectedResult.indexOf('>') != -1)) {
-				sExpectedResultTypeComparison = '>';
-				oExpectedResult = oExpectedResult.replace('>', '');
-				oExpectedResult = (isNaN(oExpectedResult)) ? '' : Number(oExpectedResult);
-			} // if expeced is < > number
+			if (sExpectedResultType == 'string') {
+				var reOperatorAndCount = /^([<>]=?|=)\s*([-+]?\d*\.?\d+)$/g;
+				var aOperatorAndCount = oExpectedResult.match(reOperatorAndCount);
+				if (this._gtArray.isValidArray(aOperatorAndCount)) {
+					var reOperator = /([<>]=?|=)\s*/g;
+					var reCount = /([-+]?\d*\.?\d+)/g;
+					var aMatchOperator = oExpectedResult.match(reOperator);
+					var aMatchCount = oExpectedResult.match(reCount);
+					if ((this._gtArray.isValidArray(aMatchOperator)) && (this._gtArray.isValidArray(aMatchCount))) {
+						sExpectedResultTypeComparison = aMatchOperator[0];
+						oExpectedResult = (isNaN(aMatchCount[0])) ? '' : Number(aMatchCount[0]);
+					} // if valid comparison
+				} // is ops and count match is valid array
+			} // if expected result is string
 			var sResultType = this._getType(oResult);
 			sExpectedResultType = this._getType(oExpectedResult);
 			var iResultCount = -1;
@@ -67,7 +73,14 @@ GlobalToolsATF.prototype = {
 				iResultCount = oResult.length;
 			} else if ((sExpectedResultType == 'number') && (sResultType == 'gliderecord')) {
 				iResultCount = oResult.getRowCount();
-			} // if number then count
+			} else if ((sExpectedResultType == 'number') && (sResultType == 'string') && (!isNaN(oResult))) {
+				iResultCount = Number(oResult);
+			} else if ((sExpectedResultType == 'string') && (sResultType == 'gliderecord')) {
+				oResult = oResult.getUniqueValue();
+			} else if (sExpectedResultType == 'function') {
+				oResult = this._gt.runFunction(String(oExpectedResult), oResult, sResultType);
+				oExpectedResult = 'function';
+			} // expected type
 			if (this._bLog) {
 				gs.info(this._sScriptIncludeName + '.' + sFunction + ' expected result: ' + oExpectedResult + ' (' + sExpectedResultType + ' / ' + sExpectedResultTypeComparison + ')' + ' result: ' + oResult + ' (' + sResultType + ' / ' + iResultCount + ') with arguments: ' + JSON.stringify(aArguments));
 			} // if log
@@ -76,11 +89,17 @@ GlobalToolsATF.prototype = {
 					return true;
 				} else if ((sExpectedResultTypeComparison == '>') && (iResultCount > oExpectedResult)) {
 					return true;
+				} else if ((sExpectedResultTypeComparison == '>=') && (iResultCount >= oExpectedResult)) {
+					return true;
+				} else if ((sExpectedResultTypeComparison == '<=') && (iResultCount <= oExpectedResult)) {
+					return true;
 				} else if ((sExpectedResultTypeComparison == '=') && (iResultCount == oExpectedResult)) {
 					return true;
 				} // result count
 			} // expected number
-			if (this._gt.isEqual(oResult, oExpectedResult)) {
+			if ((this._gt.isEqual(oResult, oExpectedResult)) || ((sExpectedResultType == 'function') && (!oResult))) {
+				return true;
+			} else if ((sExpectedResultType == 'regexp') && (oExpectedResult.test(String(oResult)) === true)) {
 				return true;
 			} else {
 				if (sResultType == 'object') {
@@ -101,7 +120,7 @@ GlobalToolsATF.prototype = {
 		} // if next
 	}, // function getRecord
 
-	addError: function(sFunction, sError) {
+	addError: function (sFunction, sError) {
 		this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' ' + sError);
 	}, // function addError
 
@@ -123,13 +142,13 @@ GlobalToolsATF.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 04:35:34</sys_created_on>
         <sys_id>087310061ba17510c1ecdc61ab4bcb55</sys_id>
-        <sys_mod_count>27</sys_mod_count>
+        <sys_mod_count>48</sys_mod_count>
         <sys_name>GlobalToolsATF</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_087310061ba17510c1ecdc61ab4bcb55</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-29 13:39:05</sys_updated_on>
+        <sys_updated_on>2023-10-04 15:01:53</sys_updated_on>
     </sys_script_include>
 </record_update>

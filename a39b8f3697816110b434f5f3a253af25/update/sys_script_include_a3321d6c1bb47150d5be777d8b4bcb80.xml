@@ -132,10 +132,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 						this._getFieldsFromKeyArrays(oField['aKeys'], 'field');
 					} // if keys
 				} else {
-					this._errorHandler('400_999', 'Field object does not contain sField property: ' + JSON.stringify(oField), '', [JSON.stringify(oField)], true, false);
+					this._errorHandler('400_015', 'Field object does not contain sField property: ' + JSON.stringify(oField), '', [JSON.stringify(oField)], true, false);
 				} // if field
 			} else {
-				this._errorHandler('400_999', 'Field object \'' + JSON.stringify(oField) + '\' is invalid type: ' + sFieldType, '', [JSON.stringify(oField), sFieldType], true, false);
+				this._errorHandler('400_015', 'Field object \'' + JSON.stringify(oField) + '\' is invalid type: ' + sFieldType, '', [JSON.stringify(oField), sFieldType], true, false);
 			} // if valid field type
 		}, this); // each field
 		if (this.grRecord) {
@@ -185,7 +185,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		var aRecordByKeysError = [];
 		var grRecord = this._gtRead.getRecordByKeys(this.oRecordConfig, this.oRecordValues, aRecordByKeysError);
 		if (aRecordByKeysError.length > 0) {
-			this._errorHandler('400_999', 'Error getting record by keys: ' + aRecordByKeysError.join(', '), '', '', false, true);
+			this._errorHandler('400_016', 'Error getting record by keys: ' + aRecordByKeysError.join(', '), '', '', false, true);
 			return;
 		} // if error
 		this.bIsValidRecord = ((grRecord) && (this._gt.getType(grRecord).indexOf('gliderecord') != -1) && (grRecord.isValidRecord()) && (grRecord.getValue('sys_id') != -1)) ? true : false;
@@ -260,7 +260,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 							this.grRecord.setValue(sField, sValue.join(','));
 							bFieldDone = true;
 						} else {
-							this._errorHandler('400_999', 'Field list \'' + sField + '\' value is not a array: ' + sValue, '', [sField, sValue], true, false);
+							this._errorHandler('400_014', 'Field list \'' + sField + '\' value is not a array: ' + sValue, '', [sField, sValue], true, false);
 						} // if array
 					} // if field list
 					if ((sInternalType == 'journal_input') && (!gs.nil(sValue))) {
@@ -344,7 +344,6 @@ GlobalToolsRecordWriteValidate.prototype = {
 			} // if not class
 		}, this);
 		this.oIREPayload['items'].push(sItem);
-		gs.info('tomtom ire: ' + JSON.stringify(this.oIREPayload));
 	}, // function _createIREPayload
 
 	_runIRE: function () {
@@ -460,9 +459,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 	_validateApplyTemplate: function () {
 		if (!this.checkAccess()) { return; }
 		var bTemplateIsMandatory = this._getValue('bTemplateIsMandatory', false, this.oRecordConfig);
-		var bTemplateDeleteFieldValue = this._getValue('bTemplateDeleteFieldValue', false, this.oRecordConfig);
 		var sTemplateName = this._getValue('sTemplateName', '', this.oRecordConfig);
-		var sTemplateValueField = this._getValue('sTemplateValueField', '', this.oRecordConfig);
+		var sTemplateValueField = this._getValue('sTemplateValueField', 'template', this.oRecordConfig);
+		var bTemplateDeleteFieldValue = this._getValue('bTemplateDeleteFieldValue', false, this.oRecordConfig);
 		var sTemplateValueFieldValue = this._getValue(sTemplateValueField, '', this.oRecordValues);
 		if ((bTemplateDeleteFieldValue) && (sTemplateValueField) && (this.oRecordValues.hasOwnProperty(sTemplateValueField))) {
 			delete this.oRecordValues[sTemplateValueField];
@@ -496,9 +495,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 			if (grUser.next()) {
 				this.sImpersonateUser = grUser.getUniqueValue();
 			} else if (this._getValue('bImpersonateMandatory', false, this.oRecordConfig)) {
-				this._errorHandler('400_999', 'Invalid mandatory impersonate user: ' + sImpersonateUser, '', [sImpersonateUser], true, false);
+				this._errorHandler('403_001', 'Invalid mandatory impersonate user: ' + sImpersonateUser, '', [sImpersonateUser], true, false);
 			} else {
-				this._errorHandler('400_999', 'Invalid impersonate user: ' + sImpersonateUser, '', [sImpersonateUser], false, false);
+				this._errorHandler('403_001', 'Invalid impersonate user: ' + sImpersonateUser, '', [sImpersonateUser], false, false);
 			} // if gruser 
 		} // if user
 	}, // function _validateImpersonate
@@ -513,9 +512,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 				if (!new GlideImpersonate().isImpersonating()) {
 					this.sImpersonateUserOld = (bEndImpersonation) ? this.sImpersonateUserOld : gs.getUserID();
 					if (this._getValue('bImpersonateMandatory', false, this.oRecordConfig)) {
-						this._errorHandler('400_999', 'Error mandatory impersonating user: ' + sImpersonateUser + ' end: ' + bEndImpersonation, '', [sImpersonateUser, bEndImpersonation], true, false);
+						this._errorHandler('403_001', 'Error mandatory impersonating user: ' + sImpersonateUser + ' end: ' + bEndImpersonation, '', [sImpersonateUser, bEndImpersonation], true, false);
 					} else {
-						this._errorHandler('400_999', 'Error impersonating user: ' + sImpersonateUser + ' end: ' + bEndImpersonation, '', [sImpersonateUser, bEndImpersonation], false, false);
+						this._errorHandler('403_001', 'Error impersonating user: ' + sImpersonateUser + ' end: ' + bEndImpersonation, '', [sImpersonateUser, bEndImpersonation], false, false);
 					} // if mandatory impersonate
 				} // if impersonating
 			} // if not current user
@@ -712,10 +711,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 			} // while data policy
 		}, this); // for each table
 		if (aMandatoryFields.length > 0) {
-			this._errorHandler('400_999', 'Mandatory field in Data Policy not found: ' + aMandatoryFields.join(', '), '', [aMandatoryFields.join(', ')], true, false);
+			this._errorHandler('400_003', 'Mandatory field in Data Policy not found: ' + aMandatoryFields.join(', '), '', [aMandatoryFields.join(', ')], true, false);
 		} // if mandatory fields
 		if (aReadOnlyFields.length > 0) {
-			this._errorHandler('400_999', 'Readonly field in Data Policy changed: ' + aReadOnlyFields.join(', '), '', [aReadOnlyFields.join(', ')], true, false);
+			this._errorHandler('400_011', 'Readonly field in Data Policy changed: ' + aReadOnlyFields.join(', '), '', [aReadOnlyFields.join(', ')], true, false);
 		} // if mandatory fields
 	}, // function _validateDataPolicy
 
@@ -829,7 +828,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 						} // if user group
 					} // if reference
 				} else {
-					this._errorHandler('400_999', '_validateReferenceEntry dependent field name is not valid sTargetTable: ' + this.sTargetTable + ' sField: ' + sField + ' sDependentOnField: ' + sDependentOnField, '', [sDependentOnField], true, false);
+					this._errorHandler('400_008', 'Reference entry dependent field name is not valid sTargetTable: ' + this.sTargetTable + ' sField: ' + sField + ' sDependentOnField: ' + sDependentOnField, '', [sDependentOnField], true, false);
 					return false;
 				} // if dependent element is valid
 				if ((!bIsDependentGroup) && (grRefRecord.getValue(sDependentOnField) != this.grRecord.getValue(sDependentField))) {
@@ -967,13 +966,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>345</sys_mod_count>
+        <sys_mod_count>355</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-26 17:33:52</sys_updated_on>
+        <sys_updated_on>2023-10-06 05:24:12</sys_updated_on>
     </sys_script_include>
 </record_update>
