@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ui_message">
+    <sys_ui_message action="INSERT_OR_UPDATE">
+        <application/>
+        <code/>
+        <commented_message/>
+        <key>GlobalToolsRecordWriteValidate_400_105_ErrorDetail</key>
+        <language>en</language>
+        <message>The user {0} does not have the right to write the field(s) {1} a record on the table {2} according to the data policy.</message>
+        <sys_class_name>sys_ui_message</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-10-28 07:44:10</sys_created_on>
+        <sys_id>2677161b87ca3510211fa7980cbb35f7</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>GlobalToolsRecordWriteValidate_400_105_ErrorDetail</sys_name>
+        <sys_package display_value="Global" source="global">global</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_ui_message_2677161b87ca3510211fa7980cbb35f7</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-10-28 13:27:58</sys_updated_on>
+    </sys_ui_message>
+    <sys_claim action="INSERT_OR_UPDATE">
+        <claim_owner_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</claim_owner_scope>
+        <claim_timestamp>18b767851090000001</claim_timestamp>
+        <metadata_update_name>sys_ui_message_2677161b87ca3510211fa7980cbb35f7</metadata_update_name>
+        <previous_claim_app_version>1.0.0</previous_claim_app_version>
+        <previous_claim_name>Global Tools</previous_claim_name>
+        <previous_claim_scope>a39b8f3697816110b434f5f3a253af25</previous_claim_scope>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-10-28 13:27:58</sys_created_on>
+        <sys_id>e226a7d787ce3510211fa7980cbb358a</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-10-28 13:27:58</sys_updated_on>
+    </sys_claim>
+</record_update>
