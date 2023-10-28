@@ -750,7 +750,7 @@ bNoDomain: (Optional) if true does grRecord.queryNoDomain() (default: false)
 bKeepSysId: (Optional) if true does grRecord.setNewGuidValue(&lt;sys_id&gt;) on insert (default: false)
 oValues: (Optional) list of hardcoded field/value pairs to be set on the target record (will be overwritten if also provided in the oValues parameter)
 aTargetFields: (Optional) if set, only these fields can be set, no matter what is defined in the oValues parameter.	</pre></p>
-			<li><code>oError</code>: An object to store error information.</li>
+			<li><code>oError</code>: An object to store error information. Use sErrorReturnType property to define the returned values.</li>
 			<p>
 			<pre>001 = missing query
 002 = error updating: &lt;errormsg&gt;
@@ -821,6 +821,11 @@ bNoAutoSysFields: (Optional) if true does grRecord.autoSysFields(false) (default
 sLogLevel: (Optional) Default: error, if bLog is true you can choose info or debug for verbose logging.
 bLogPrefix: (Optional) Default: GlobalToolsRecordWriteValidate -.
 sTargetTable: The table to update inserted/updated.
+sErrorReturnType: 
+	code: array of error codes
+	message: array of error messages (detailed)
+	normal (default): array of objects with error details (code, message, messagedetail)
+	full: like normal but additionally provide message and message detail arguments
 
 bUseIRE: (Optional) Default: false, if true will use IRE to create/update records.
 bDoAction: (Optional) Default: true, if false will not run final action.
@@ -944,51 +949,73 @@ template / sTemplateValueField: (Optional), can be used to define the template t
 				</pre></p>
 			<li><code>oError</code>: An object to store error information.
 			<p><pre>
-			400_002: Missing or empty record values object
-400_003: Mandatory field in Data Policy not found: "aMandatoryFields"
-400_003: Mandatory field not found: "aMandatoryFields"
-400_003: Stateflow action "sActionName" ["sActionId"] is not valid
-400_003: Stateflow action "sActionValueFieldValue" is not found with query "sQuery"
-400_003: Stateflow action is mandatory
-400_003: Template is mandatory
-400_003: Worknotes are mandatory for action "sActionName" ["sActionId"]
-400_004: Additional fields in values: "aAddlFieldsInValues"
-400_006: Update business logic check failed with error: "sErrorMsg"
-400_007: Invalid Template: "sTemplateName"
-400_008: Field "sField" value "sRefInput" in array cannot be found in reference table "sRefTable" with error: "aRecordByKeysError"
-400_008: Reference entry dependent field name is not valid sTargetTable: "sTargetTable" sField: "sField" sDependentOnField: "sDependentOnField"
-400_008: Reference value is not valid for field: "sField"
-400_009: Field "sField" value "sValue" Choice list not found!
-400_009: Field "sField" value "sValue" is not a valid choice: "aChoiceDisplayValues"
-400_011: Invalid field found in field config: "sField"
-400_011: Invalid field found in mandatory fields: "sField"
-400_011: Invalid field found in values: "sField"
-400_011: Readonly field in Data Policy changed: "aReadOnlyFields"
-400_011: Security check failed: create
-400_011: Security check failed: delete
-400_011: Security check failed: field is not writable: "sField"
-400_011: Security check failed: write
-400_012: Field "sField" value is not a boolean: "sValue"
-400_013: User "sValue" is not a member of the depend field group: "sDependentField"
-400_014: Field list "sField" value is not a array: "sValue"
-400_015: Field object "oField" is invalid type: "sFieldType"
-400_015: Field object does not contain sField property: "oField"
-400_016: Error getting record by keys: "aRecordByKeysError"
-403_001: Error mandatory impersonating user: "sImpersonateUser" end: "bEndImpersonation"
-403_001: Invalid impersonate user: "sImpersonateUser"
-403_001: Invalid mandatory impersonate user: "sImpersonateUser"
-403_014: Error impersonating user: "sImpersonateUser" end: "bEndImpersonation"
-404_001: No record found for delete action
-404_001: Record does not exists, cannot do update action
-404_001: Record exists, cannot do insert action
-405_001: Missing record config object or "sTargetTable" property
-405_002: Invalid action properties "bDelete" and "bInsert" or "bUpdate" are true
-405_002: Invalid action properties "bInsert" and "bUpdate" or "bDelete" are false and no "sAction"
-500_002: Run business logic failed with error: "oEx"
-500_002: Stateflow action "sActionValueFieldValue" failed with error: "oEx"
-500_004: Error inserting record: "LastErrorMessage"
-500_005: Error deleting record: "LastErrorMessage"
-500_005: Error updating record: "LastErrorMessage"
+			400_001: Missing or empty record values object
+
+400_002: Template is mandatory
+400_003: Invalid Template
+
+400_004: Fields are mandatory (Data Policy)
+400_005: Fields are mandatory (Config)
+
+400_006: Stateflow action is mandatory
+400_007: Stateflow action is not valid
+400_008: Stateflow action not found
+400_009: Stateflow action worknotes are mandatory
+
+400_010: Fields that are not configured are not allowed
+
+400_011: Invalid field in config object
+400_012: Invalid field in mandatory fields
+400_013: Invalid field in values object
+
+400_014: Update business logic check failed
+
+400_015: Invalid value in reference field (not found)
+400_016: Invalid dependent reference field configuration
+400_017: Invalid value in reference field (ref qualifier)
+400_018: Invalid choice list configuration
+400_019: Invalid value in choice list field
+400_020: User is not a member of the group
+400_021: Invalid boolean value
+400_022: Invalid array value
+400_023: Invalid date/time value
+400_024: Invalid date value
+400_025: Invalid time value
+400_026: Invalid integer number value
+400_027: Invalid floating point number value
+400_028: Invalid email address
+400_029: Invalid phone number
+400_030: Invalid ip address
+
+400_031: Invalid field configuration in config object (missing field property)
+400_032: Invalid field configuration in config object (invalid field type)
+400_033: Invalid key configuration in config object
+
+400_101: Access denied: record create
+400_102: Access denied: record write
+400_103: Access denied: record delete
+400_104: Access denied: field write
+400_105: Access denied (Data Policy): field write
+
+403_001: Invalid impersonate user provided
+403_002: Impersonate user is mandatory
+403_003: Impersonating failed
+403_004: Impersonating failed and is mandatory
+
+404_001: Invalid action: record delete
+404_002: Invalid action: record insert
+404_003: Invalid action: record update
+
+405_001: Missing or empty configuration object or target table
+405_002: Invalid action: conflict
+405_003: Invalid action: empty
+
+500_001: Error processing stateflow action
+500_002: Error processing business logic
+500_003: Error inserting record
+500_004: Error updating record
+500_005: Error deleting record
+
 			</pre></p>
 			</li>
 		</p>
@@ -1087,13 +1114,13 @@ oExpectedResult is anything else it will be compared to the result (===).
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>80</sys_mod_count>
+        <sys_mod_count>83</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-26 13:10:58</sys_updated_on>
+        <sys_updated_on>2023-10-28 13:24:12</sys_updated_on>
     </sys_ui_page>
 </record_update>
