@@ -97,7 +97,7 @@ GlobalToolsRecordRead.prototype = {
 	getRecords: function (sTable, sQuery, aOrderBy, aOrderByDesc, iLimit, bWorkflow, bAutoSysFields, bQueryNoDomain) {
 		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
-			gs.error('GlobalToolsRecordRead.getRecords called with invalid table: ' + sTable);
+			gs.warn('GlobalToolsRecordRead.getRecords called with invalid table: ' + sTable);
 			return;
 		} // if no table return
 		var grRecord = new GlideRecord(sTable);
@@ -136,7 +136,7 @@ GlobalToolsRecordRead.prototype = {
 	checkRecordByField: function (sTable, sField, sValue) {
 		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sField) || (!sValue)) {
-			gs.error('GlobalToolsRecordRead.checkRecordByField table or field or value is empty!');
+			gs.warn('GlobalToolsRecordRead.checkRecordByField table or field or value is empty!');
 			return;
 		} // if table is empty
 		var grRecord = new GlideRecord(sTable);
@@ -148,7 +148,7 @@ GlobalToolsRecordRead.prototype = {
 	getSysIdByQuery: function (sTable, sQuery, bUniqueOnly) {
 		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sQuery)) {
-			gs.error('GlobalToolsRecordRead.getSysIdByQuery table or query is empty!');
+			gs.warn('GlobalToolsRecordRead.getSysIdByQuery table or query is empty!');
 			return;
 		} // if table is empty
 		var grRecord = new GlideRecord(sTable);
@@ -170,7 +170,7 @@ GlobalToolsRecordRead.prototype = {
 	checkRecordByQuery: function (sTable, sQuery) {
 		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sQuery)) {
-			gs.error('GlobalToolsRecordRead.checkRecordByQuery table or query is empty!');
+			gs.warn('GlobalToolsRecordRead.checkRecordByQuery table or query is empty!');
 			return;
 		} // if table is empty
 		var grRecord = new GlideRecord(sTable);
@@ -201,7 +201,6 @@ GlobalToolsRecordRead.prototype = {
 		if ((this._gtObject.isObject(oField)) && (oField.hasOwnProperty('sField'))) {
 			sField = oField['sField'];
 			aKeys = this._getValue('aKeys', ['sys_id'], oField);
-			sRefTable = (sRefTable) ? sRefTable : this._getValue('sRefTable', '', oField);
 		} else if ((oField) && (this._gt.getType(oField) == 'string')) {
 			sField = oField;
 			aKeys.push({ 'sInputField': sField, 'sTargetField': 'sys_id' });
@@ -228,7 +227,7 @@ GlobalToolsRecordRead.prototype = {
 		if (iArrayField) {
 			oRecordValuesTmp[sField] = oRecordValuesTmp[sField][iArrayField];
 		} // if array field
-		var grRefRecord = this.getRecordByKeys(oRecordConfigTmp, oRecordValues, aError);
+		var grRefRecord = this.getRecordByKeys(oRecordConfigTmp, oRecordValuesTmp, aError);
 		if ((grRefRecord) && (this._gt.getType(grRefRecord).indexOf('gliderecord') != -1) && (grRefRecord.isValidRecord()) && (grRefRecord.getValue('sys_id'))) {
 			return grRefRecord.getUniqueValue();
 		} // if ref record
@@ -440,13 +439,13 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>77</sys_mod_count>
+        <sys_mod_count>83</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-26 13:38:33</sys_updated_on>
+        <sys_updated_on>2023-10-30 18:41:32</sys_updated_on>
     </sys_script_include>
 </record_update>

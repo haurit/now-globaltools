@@ -5,19 +5,19 @@
         <commented_message/>
         <key>GlobalToolsRecordWriteValidate_400_015_ErrorDetail</key>
         <language>en</language>
-        <message>The reference field validation for field {0} on reference table {1} for value {2} failed with error: {3}</message>
+        <message>The reference field validation for field {0} on reference table {1} for value {2} failed, the referenced record could not be found.</message>
         <sys_class_name>sys_ui_message</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-10-27 06:39:50</sys_created_on>
         <sys_id>e22f7c0b878af110211fa7980cbb3597</sys_id>
-        <sys_mod_count>2</sys_mod_count>
+        <sys_mod_count>3</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate_400_015_ErrorDetail</sys_name>
         <sys_package display_value="Global" source="global">global</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_message_e22f7c0b878af110211fa7980cbb3597</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-28 13:27:47</sys_updated_on>
+        <sys_updated_on>2023-10-29 13:53:41</sys_updated_on>
     </sys_ui_message>
     <sys_claim action="INSERT_OR_UPDATE">
         <claim_owner_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</claim_owner_scope>
