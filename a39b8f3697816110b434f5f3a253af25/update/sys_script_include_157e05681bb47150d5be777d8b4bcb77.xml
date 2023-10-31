@@ -52,8 +52,7 @@ GlobalToolsTable.prototype = {
 		if (!this.checkAccess()) { return; }
 		try {
 			if (this.isValidTable(sTable)) {
-				var _tableUtils = new global.TableUtils(sTable);
-				return String(_tableUtils.getAbsoluteBase());
+				return String(GlideDBObjectManager.get().getAbsoluteBase(sTable));
 			} // if valid table
 		} catch (oExeption) {
 			gs.error('global.GlobalToolsTable.getAbsoluteBase Exception during function for sTable: ' + sTable + ' oExeption: ' + String(oExeption));
@@ -65,8 +64,7 @@ GlobalToolsTable.prototype = {
 		if (!this.checkAccess()) { return; }
 		try {
 			if (this.isValidTable(sTable)) {
-				var _tableUtils = new global.TableUtils(sTable);
-				return j2js(_tableUtils.getTables());
+				return j2js(GlideDBObjectManager.get().getTables(sTable));
 			} // if valid table
 		} catch (oExeption) {
 			gs.error('global.GlobalToolsTable.getTableHierarchy Exception during function for sTable: ' + sTable + ' oExeption: ' + String(oExeption));
@@ -78,11 +76,10 @@ GlobalToolsTable.prototype = {
 		if (!this.checkAccess()) { return; }
 		try {
 			if (this.isValidTable(sTable)) {
-				var _tableUtils = new global.TableUtils(sTable);
 				if (bAllExtensions) {
-					return j2js(_tableUtils.getAllExtensions());
+					return j2js(GlideDBObjectManager.get().getAllExtensions(sTable));
 				} // if all extentions
-				return j2js(_tableUtils.getTableExtensions());
+				return j2js(GlideDBObjectManager.get().getTableExtensions(sTable));
 			} // if valid table
 		} catch (oExeption) {
 			gs.error('global.GlobalToolsTable.getTableExtensions Exception during function for sTable: ' + sTable + ' oExeption: ' + String(oExeption));
@@ -131,24 +128,27 @@ GlobalToolsTable.prototype = {
 		}
 	}, // function getDisplayField
 
-	getFields: function (oTableOrRecord) {
+	getFields: function (oTableOrRecord, bOmitSysId) {
 		if (!this.checkAccess()) { return; }
 		var sType = this._gt.getType(oTableOrRecord);
 		var aResultFields = [];
 		var grTable, geField;
 		if ((sType == 'string') && (this.isValidTable(oTableOrRecord))) {
 			grTable = new GlideRecord(oTableOrRecord);
+			grTable.initialize();
 		} else if (sType.indexOf('gliderecord') != -1) {
 			grTable = oTableOrRecord;
 		} else {
 			return [];
 		} // if empty or string
-		grTable.initialize();
 		var aFields = grTable.getFields();
 		for (var i = 0; i < aFields.size(); i++) {
 			geField = aFields.get(i);
 			aResultFields.push(geField.getName());
 		} // each field
+		if ((aResultFields.indexOf('sys_id') == -1) && (grTable.isValidField('sys_id')) && (!bOmitSysId)) {
+			aResultFields.push('sys_id');
+		} // if sys id
 		return aResultFields.sort();
 	}, // function getFields    
 
@@ -169,23 +169,22 @@ GlobalToolsTable.prototype = {
 				return fDict.getValue('reference');
 			} // if dict
 		} else {
-			gs.error('global.GlobalToolsTable.getRefTableName no table or field provided!');
+			gs.warn('global.GlobalToolsTable.getRefTableName no table or field provided!');
 		} // if table and field
 	}, // function getRefTableName
 
 	// Get reference field name based on reference table
-	getRefFieldName: function (fRecord, sRefTable, bCheckRefTableHierarchy, sReturnType) {
+	getRefFieldName: function (grRecord, sRefTable, bCheckRefTableHierarchy, sReturnType) {
 		if (!this.checkAccess()) { return; }
-		var _ArrayUtil = new global.ArrayUtil();
 		var sReturnField = '';
 		var aReturnFields = [];
-		var sTable = (fRecord) ? fRecord.getTableName() : '';
-		if ((sTable) && (this.isValidTable(sTable)) && (sRefTable)) {
-			if (sTable) {
-				var aTables = _ArrayUtil.convertArray(new global.TableUtils(sTable).getTables());
+		if (((grRecord)) && (this._gt.getType(grRecord).indexOf('gliderecord') != -1)) {
+			var sTable = grRecord.getTableName();
+			if ((sTable) && (sRefTable) && (this.isValidTable(sRefTable))) {
+				var aTables = this.getTableHierarchy(sTable);
 				var aRefTables = [sRefTable];
 				if (bCheckRefTableHierarchy) {
-					aRefTables = _ArrayUtil.convertArray(new global.TableUtils(sRefTable).getHierarchy());
+					aRefTables = j2js(GlideDBObjectManager.get().getHierarchy(sRefTable));
 				} // if check extended ref tables
 				var fDict = new GlideRecord('sys_dictionary');
 				fDict.addEncodedQuery('nameIN' + aTables.join(',') + '^internal_type=reference^referenceIN' + aRefTables.join(','));
@@ -197,13 +196,13 @@ GlobalToolsTable.prototype = {
 						sReturnField = fDict.getValue('element');
 					} // if return array
 				} // while dict
-			} // if tablename
-		} // if record
-		if (sReturnType == 'array') {
-			return aReturnFields;
-		} else {
-			return sReturnField;
-		} // if return array
+				if (sReturnType == 'array') {
+					return aReturnFields;
+				} else {
+					return sReturnField;
+				} // if return array
+			} // if table and reftable
+		} // if valid record
 	}, // function getRefFieldName
 
 	/***********************************************************************************************************
@@ -291,12 +290,13 @@ GlobalToolsTable.prototype = {
 		var aMandatoryFields = [];
 		if (this.isValidTable(sTable)) {
 			var grRecord = new GlideRecord(sTable);
+			grRecord.initialize();
 			var aFields = this.getFields(grRecord);
 			var geElement, geElementDescriptor;
 			aFields.forEach(function (sField) {
 				geElement = grRecord.getElement(sField);
 				geElementDescriptor = geElement.getED();
-				if (geElementDescriptor.isMandatory()) {
+				if ((sField != 'sys_id') && (geElementDescriptor.isMandatory())) {
 					aMandatoryFields.push(sField);
 				} // if mandatory
 			}, this); // each field
@@ -305,7 +305,7 @@ GlobalToolsTable.prototype = {
 	}, // function getMandatoryFields
 
 	type: 'GlobalToolsTable',
-	version: '1.0.0',
+	version: '1.0.1',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -314,13 +314,13 @@ GlobalToolsTable.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:03:21</sys_created_on>
         <sys_id>157e05681bb47150d5be777d8b4bcb77</sys_id>
-        <sys_mod_count>68</sys_mod_count>
+        <sys_mod_count>78</sys_mod_count>
         <sys_name>GlobalToolsTable</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_157e05681bb47150d5be777d8b4bcb77</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-29 06:29:24</sys_updated_on>
+        <sys_updated_on>2023-10-30 11:02:59</sys_updated_on>
     </sys_script_include>
 </record_update>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step">
+    <sys_atf_step action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <copied_from/>
+        <description>Run Server Side Validation Script</description>
+        <display_name>Run Server Side Script</display_name>
+        <inputs/>
+        <mugshots_cache_json/>
+        <notes/>
+        <order>1</order>
+        <step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config>
+        <sys_class_name>sys_atf_step</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-09-30 06:32:56</sys_created_on>
+        <sys_id>4c9a3d161b25b510d5be777d8b4bcbfa</sys_id>
+        <sys_mod_count>20</sys_mod_count>
+        <sys_name>Run Server Side Script</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_atf_step_4c9a3d161b25b510d5be777d8b4bcbfa</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-10-31 06:21:45</sys_updated_on>
+        <table/>
+        <test display_value="GlobalToolsRecordWrite Tests">ad17c4251b6db110d5be777d8b4bcba7</test>
+        <timeout/>
+        <warning_message/>
+    </sys_atf_step>
+    <sys_variable_value action="delete_multiple" query="document_key=4c9a3d161b25b510d5be777d8b4bcbfa"/>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>4c9a3d161b25b510d5be777d8b4bcbfa</document_key>
+        <order>200</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-09-30 06:32:56</sys_created_on>
+        <sys_id>02aa7d161b25b510d5be777d8b4bcb0b</sys_id>
+        <sys_mod_count>20</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-10-31 06:21:45</sys_updated_on>
+        <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
+&#13;
+	var bLog = false;&#13;
+	var _gtWrite = new global.GlobalToolsRecordWrite();&#13;
+&#13;
+	var _gtATF = new global.GlobalToolsATF('GlobalToolsRecordWrite', _gtWrite, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
+	var grRecord;&#13;
+&#13;
+	var oRecordConfig = {}; // config&#13;
+	var oRecordValues = {}; // values&#13;
+	var oError = {};&#13;
+&#13;
+	_gtATF.runATF('doRecord', undefined, oRecordValues, oRecordConfig, oError);&#13;
+	if ((!oError) || (!oError.hasOwnProperty('code')) || (oError['code'] != '004')) {&#13;
+		_gtATF.addError('getRelatedRecordByKeys', 'Did not return error "004 - missing table".');&#13;
+	} // if error&#13;
+	oError = {};&#13;
+	oRecordConfig['sTargetTable'] = 'incident';&#13;
+	_gtATF.runATF('doRecord', undefined, oRecordValues, oRecordConfig, oError);&#13;
+	if ((!oError) || (!oError.hasOwnProperty('code')) || (oError['code'] != '001')) {&#13;
+		_gtATF.addError('getRelatedRecordByKeys', 'Did not return error "001 - missing query".');&#13;
+	} // if error&#13;
+	oError = {};&#13;
+&#13;
+	var grCaller = _gtATF.getRecord('sys_user', 'active=true');&#13;
+	var sCallerId = grCaller.getUniqueValue();&#13;
+	oRecordValues['caller_id'] = sCallerId;&#13;
+	oRecordValues['category'] = 'inquiry';&#13;
+	oRecordValues['active'] = true;&#13;
+	oRecordValues['short_description'] = 'sugus0';&#13;
+	oRecordConfig['sTargetTable'] = 'incident';&#13;
+	oRecordConfig['aQueryFields'] = ['caller_id', 'category', 'active', 'short_description'];&#13;
+	oRecordConfig['bInsert'] = false;&#13;
+	_gtATF.runATF('doRecord', undefined, oRecordValues, oRecordConfig, oError);&#13;
+	oRecordConfig['bInsert'] = true;&#13;
+	_gtATF.runATF('doRecord', /([0-9a-f]){32}/g, oRecordValues, oRecordConfig, oError);&#13;
+	oRecordConfig['bUpdate'] = false;&#13;
+	_gtATF.runATF('doRecord', undefined, oRecordValues, oRecordConfig, oError);&#13;
+	oRecordConfig['bUpdate'] = true;&#13;
+	oRecordValues['active'] = false;&#13;
+	_gtATF.runATF('doRecord', /([0-9a-f]){32}/g, oRecordValues, oRecordConfig, oError);&#13;
+	oRecordValues['active'] = true;&#13;
+	_gtATF.runATF('doRecord', /([0-9a-f]){32}/g, oRecordValues, oRecordConfig, oError);&#13;
+&#13;
+	_gtATF.runATF('updateMultiple', undefined);&#13;
+	_gtATF.runATF('updateMultiple', undefined, { 'active': false });&#13;
+	_gtATF.runATF('updateMultiple', undefined, '', { 'sTargetTable': 'incident', 'sQuery': 'caller_id=' + sCallerId + '^category=inquiry' });&#13;
+	_gtATF.runATF('updateMultiple', undefined, '', { 'sQuery': 'caller_id=' + sCallerId + '^category=inquiry' });&#13;
+	_gtATF.runATF('updateMultiple', undefined, '', { 'sTargetTable': 'incident' });&#13;
+	_gtATF.runATF('updateMultiple', true, { 'active': false }, { 'sTargetTable': 'incident', 'sQuery': 'caller_id=' + sCallerId + '^category=inquiry' });&#13;
+&#13;
+	var grIncident = _gtATF.getRecord('incident', 'active=true');&#13;
+	_gtATF.runATF('setGRValue', undefined);&#13;
+	_gtATF.runATF('setGRValue', undefined, grIncident);&#13;
+	_gtATF.runATF('setGRValue', undefined, grIncident, 'short_description');&#13;
+	_gtATF.runATF('setGRValue', undefined, grIncident, 'short_description', 'sugus0');&#13;
+&#13;
+	if (grIncident.getValue('short_description') != 'sugus0') {&#13;
+		_gtATF.addError('setGRValue', 'Did not set value to "sugus0".');&#13;
+	} // if not short desc&#13;
+&#13;
+	// abortGRAction cannot be tested&#13;
+&#13;
+	return _gtATF.endATF();&#13;
+&#13;
+})(outputs, steps, params, stepResult, assertEqual);&#13;
+</value>
+        <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
+    </sys_variable_value>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>4c9a3d161b25b510d5be777d8b4bcbfa</document_key>
+        <order>100</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-09-30 06:32:56</sys_created_on>
+        <sys_id>4eaa7d161b25b510d5be777d8b4bcb0a</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-09-30 06:32:56</sys_updated_on>
+        <value>3.1</value>
+        <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
+    </sys_variable_value>
+</record_update>

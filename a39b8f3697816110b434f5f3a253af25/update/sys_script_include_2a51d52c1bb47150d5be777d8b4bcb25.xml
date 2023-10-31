@@ -34,7 +34,7 @@ GlobalToolsRecordRead.prototype = {
 	countRecords: function (sTable, sQuery, sField, bDisplayValue, bDisplayValueOnly, bQueryNoDomain) {
 		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
-			gs.error('GlobalToolsRecordRead.countRecords called with invalid table: ' + sTable);
+			gs.warn('GlobalToolsRecordRead.countRecords called with invalid table: ' + sTable);
 			return;
 		} // if no table return
 		var gaRecord = new GlideAggregate(sTable);
@@ -97,7 +97,7 @@ GlobalToolsRecordRead.prototype = {
 	getRecords: function (sTable, sQuery, aOrderBy, aOrderByDesc, iLimit, bWorkflow, bAutoSysFields, bQueryNoDomain) {
 		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
-			gs.error('GlobalToolsRecordRead.getRecords called with invalid table: ' + sTable);
+			gs.warn('GlobalToolsRecordRead.getRecords called with invalid table: ' + sTable);
 			return;
 		} // if no table return
 		var grRecord = new GlideRecord(sTable);
@@ -136,7 +136,7 @@ GlobalToolsRecordRead.prototype = {
 	checkRecordByField: function (sTable, sField, sValue) {
 		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sField) || (!sValue)) {
-			gs.error('GlobalToolsRecordRead.checkRecordByField table or field or value is empty!');
+			gs.warn('GlobalToolsRecordRead.checkRecordByField table or field or value is empty!');
 			return;
 		} // if table is empty
 		var grRecord = new GlideRecord(sTable);
@@ -148,7 +148,7 @@ GlobalToolsRecordRead.prototype = {
 	getSysIdByQuery: function (sTable, sQuery, bUniqueOnly) {
 		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sQuery)) {
-			gs.error('GlobalToolsRecordRead.getSysIdByQuery table or query is empty!');
+			gs.warn('GlobalToolsRecordRead.getSysIdByQuery table or query is empty!');
 			return;
 		} // if table is empty
 		var grRecord = new GlideRecord(sTable);
@@ -170,7 +170,7 @@ GlobalToolsRecordRead.prototype = {
 	checkRecordByQuery: function (sTable, sQuery) {
 		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sQuery)) {
-			gs.error('GlobalToolsRecordRead.checkRecordByQuery table or query is empty!');
+			gs.warn('GlobalToolsRecordRead.checkRecordByQuery table or query is empty!');
 			return;
 		} // if table is empty
 		var grRecord = new GlideRecord(sTable);
@@ -189,7 +189,7 @@ GlobalToolsRecordRead.prototype = {
 		if (!oField) {
 			aError.push('Field is empty!');
 			if (bLog) {
-				gs.error(sLogPrefix + 'Field is empty! (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+				gs.warn(sLogPrefix + 'Field is empty! (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
 			} // if log
 			return;
 		} // if not field
@@ -201,14 +201,13 @@ GlobalToolsRecordRead.prototype = {
 		if ((this._gtObject.isObject(oField)) && (oField.hasOwnProperty('sField'))) {
 			sField = oField['sField'];
 			aKeys = this._getValue('aKeys', ['sys_id'], oField);
-			sRefTable = (sRefTable) ? sRefTable : this._getValue('sRefTable', '', oField);
 		} else if ((oField) && (this._gt.getType(oField) == 'string')) {
 			sField = oField;
 			aKeys.push({ 'sInputField': sField, 'sTargetField': 'sys_id' });
 		} else {
 			aError.push('Invalid field type or field not defined!');
 			if (bLog) {
-				gs.error(sLogPrefix + 'Invalid field type or field not defined! (oField: ' + JSON.stringify(oField) + ' type: ' + this._gt.getType(oField) + ' oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+				gs.warn(sLogPrefix + 'Invalid field type or field not defined! (oField: ' + JSON.stringify(oField) + ' type: ' + this._gt.getType(oField) + ' oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
 			} // if log
 			return;
 		} // if field is obj
@@ -228,7 +227,7 @@ GlobalToolsRecordRead.prototype = {
 		if (iArrayField) {
 			oRecordValuesTmp[sField] = oRecordValuesTmp[sField][iArrayField];
 		} // if array field
-		var grRefRecord = this.getRecordByKeys(oRecordConfigTmp, oRecordValues, aError);
+		var grRefRecord = this.getRecordByKeys(oRecordConfigTmp, oRecordValuesTmp, aError);
 		if ((grRefRecord) && (this._gt.getType(grRefRecord).indexOf('gliderecord') != -1) && (grRefRecord.isValidRecord()) && (grRefRecord.getValue('sys_id'))) {
 			return grRefRecord.getUniqueValue();
 		} // if ref record
@@ -259,7 +258,7 @@ GlobalToolsRecordRead.prototype = {
 		if (!sTable) {
 			aError.push('Table is empty!');
 			if (bLog) {
-				gs.error(sLogPrefix + 'table is empty! (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+				gs.warn(sLogPrefix + 'table is empty! (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
 			} // if log
 			return;
 		} // if table is empty
@@ -314,16 +313,16 @@ GlobalToolsRecordRead.prototype = {
 					} else {
 						aError.push('Field \'' + sKeyField + '\' is empty and parameter bQueryEmptyFields is not set');
 						if (bLog) {
-							gs.error(sLogPrefix + 'Key not found sKeyField \'' + sKeyField + '\' is empty and parameter bQueryEmptyFields is not set. (oRecordConfig: ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+							gs.warn(sLogPrefix + 'Key not found sKeyField \'' + sKeyField + '\' is empty and parameter bQueryEmptyFields is not set. (oRecordConfig: ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
 						} // if log
 					} // if value
 				} else {
 					aError.push('Field ' + sTargetField + ' does not exist in table ' + sTable);
-					gs.error('GlobalToolsRecordRead.getRecordByKeys key not found sTable: ' + sTable + ' sTargetField: ' + sTargetField + ' (oRecordConfig: ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+					gs.warn('GlobalToolsRecordRead.getRecordByKeys key not found sTable: ' + sTable + ' sTargetField: ' + sTargetField + ' (oRecordConfig: ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
 				} // if valid field
 			}, this); // each key array
 			if ((bLog) && (sLogLevel == 'debug')) {
-				gs.info(sLogPrefix + 'sTable: ' + sTable + ' oAllKey: ' + JSON.stringify(oAllKey) + ' sTargetField: ' + sTargetField + ' sTargetNonDotWalkField: ' + sTargetNonDotWalkField + ' sQuery: ' + aQuery.join('^') + ' aQuery len: ' + aQuery.length + ' aKeys len: ' + aKeys.length);
+				gs.debug(sLogPrefix + 'sTable: ' + sTable + ' oAllKey: ' + JSON.stringify(oAllKey) + ' sTargetField: ' + sTargetField + ' sTargetNonDotWalkField: ' + sTargetNonDotWalkField + ' sQuery: ' + aQuery.join('^') + ' aQuery len: ' + aQuery.length + ' aKeys len: ' + aKeys.length);
 			} // if log
 			if (aQuery.length == aKeys.length) { // only if all values are present
 				grRecord.addEncodedQuery(aQuery.join('^'));
@@ -345,8 +344,8 @@ GlobalToolsRecordRead.prototype = {
 	// Convert GlideRecord to JSON
 	// grRecord: to be converted
 	// bStringify: return JSON.stringify other wise JSON (default: JSON)
-	// bDisplayValue: get Display Value (default: true)
-	// bDisplayValueOwnField: get Display Value in own field with postfix "_dv" (default: true), otherwise return as: "value (display)"
+	// bDisplayValue: get Display Value (default: false)
+	// bDisplayValueOwnField: get Display Value in own field with postfix "_dv" (default: false), otherwise return as: "value (display)"
 	// Returns: JSON or String
 	convertGRtoJSON: function (grRecord, bStringify, bDisplayValue, bDisplayValueOwnField) {
 		if (!this.checkAccess()) { return; }
@@ -356,8 +355,8 @@ GlobalToolsRecordRead.prototype = {
 		var oResult = {},
 			sValue = '',
 			sDisplayValue = '';
-		bDisplayValue = (bDisplayValue) ? bDisplayValue : true;
-		bDisplayValueOwnField = (bDisplayValueOwnField) ? bDisplayValueOwnField : true;
+		bDisplayValue = (bDisplayValue) ? bDisplayValue : false;
+		bDisplayValueOwnField = (bDisplayValueOwnField) ? bDisplayValueOwnField : false;
 		var aFields = this._gtTable.getFields(grRecord);
 		aFields.forEach(function (sField) {
 			sValue = grRecord.getValue(sField);
@@ -432,7 +431,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function combineQueries	
 
 	type: 'GlobalToolsRecordRead',
-	version: '1.0.0',
+	version: '1.0.1',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -440,13 +439,13 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>67</sys_mod_count>
+        <sys_mod_count>84</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-26 17:33:06</sys_updated_on>
+        <sys_updated_on>2023-10-31 06:01:44</sys_updated_on>
     </sys_script_include>
 </record_update>

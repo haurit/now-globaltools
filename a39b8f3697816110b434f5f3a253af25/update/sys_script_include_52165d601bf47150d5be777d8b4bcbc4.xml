@@ -30,7 +30,7 @@ GlobalToolsObject.prototype = {
 		} // if scope is allowed
 	}, // function checkAccess
 
-	// Function to check if it is an object
+	// Function to check if it is an object, use GlobalTools.getType to distinuish different object types
 	isObject: function (oObj) {
 		if (!this.checkAccess()) { return; }
 		if ((oObj) && (typeof oObj === 'object') && (!Array.isArray(oObj))) {
@@ -43,7 +43,7 @@ GlobalToolsObject.prototype = {
 	getValue: function (sConfigPath, sReplace, oConfig) {
 		if (!this.checkAccess()) { return; }
 		if ((!sConfigPath) || (!oConfig)) {
-			return '';
+			return sReplace || '';
 		} // if no path or object
 		sConfigPath = sConfigPath.replace(/^\//, '').replace(/\/$/, ''); // remove leading and trailing /
 		var aConfigPath = sConfigPath.split('/');
@@ -150,19 +150,6 @@ GlobalToolsObject.prototype = {
 		}, this); // each path
 	}, // function setValue
 
-	// With ECMA 6 onwards use Object.assign method for shallow merges
-	ObjectAssign: function (oSource, oMerge) {
-		if (!this.checkAccess()) { return; }
-		Object.keys(oMerge).forEach(function (k) {
-			if ((typeof oMerge[k] === 'object') && (!Array.isArray(oMerge[k])) && (!oMerge[k] instanceof String)) {
-				oSource[k] = oSource[k] || {};
-				this.ObjectAssign(oSource[k], oMerge[k]);
-			} else {
-				oSource[k] = oMerge[k];
-			} // if object
-		}, this);
-	}, // function ObjectAssign
-
 	// Simple deep merge without recursion protection etc, using ECMA 5 because running in global
 	deepMerge: function (oSource, oMerge, bMergeArrays) {
 		if (!this.checkAccess()) { return; }
@@ -186,7 +173,7 @@ GlobalToolsObject.prototype = {
 	}, // function deepMerge
 
 	type: 'GlobalToolsObject',
-	version: '1.0.0',
+	version: '1.0.1',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -194,13 +181,13 @@ GlobalToolsObject.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:36:44</sys_created_on>
         <sys_id>52165d601bf47150d5be777d8b4bcbc4</sys_id>
-        <sys_mod_count>24</sys_mod_count>
+        <sys_mod_count>28</sys_mod_count>
         <sys_name>GlobalToolsObject</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_52165d601bf47150d5be777d8b4bcbc4</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-26 17:33:43</sys_updated_on>
+        <sys_updated_on>2023-10-26 13:38:52</sys_updated_on>
     </sys_script_include>
 </record_update>

@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-27 14:26:38</sys_created_on>
         <sys_id>03b908e51b6db110d5be777d8b4bcbf6</sys_id>
-        <sys_mod_count>55</sys_mod_count>
+        <sys_mod_count>67</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_03b908e51b6db110d5be777d8b4bcbf6</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-29 14:23:15</sys_updated_on>
+        <sys_updated_on>2023-10-31 05:39:02</sys_updated_on>
         <table/>
         <test display_value="GlobalTools Tests">171600e11b6db110d5be777d8b4bcbbc</test>
         <timeout/>
@@ -49,9 +49,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-27 14:26:38</sys_created_on>
         <sys_id>ff4a88e51b6db110d5be777d8b4bcb1a</sys_id>
-        <sys_mod_count>55</sys_mod_count>
+        <sys_mod_count>67</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-09-29 14:23:15</sys_updated_on>
+        <sys_updated_on>2023-10-31 05:39:02</sys_updated_on>
         <value>(function(outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = true;&#13;
@@ -68,16 +68,34 @@
 	_gtATF.runATF('nsub', true, '', true, 'boolean');&#13;
 	_gtATF.runATF('nsub', 0, 0, 1);&#13;
 &#13;
-	_gtATF.runATF('getType', 'string', 'test');&#13;
+	_gtATF.runATF('getType', 'string', 'string');&#13;
+	_gtATF.runATF('getType', 'string', '');&#13;
+	_gtATF.runATF('getType', 'string', new String());&#13;
+	_gtATF.runATF('getType', 'boolean', false);&#13;
+	_gtATF.runATF('getType', 'boolean', true);&#13;
+	_gtATF.runATF('getType', 'boolean', new Boolean());&#13;
+	_gtATF.runATF('getType', 'number', 1);&#13;
+	_gtATF.runATF('getType', 'number', 0.1);&#13;
+	_gtATF.runATF('getType', 'number', -1);&#13;
+	_gtATF.runATF('getType', 'number', new Number());&#13;
+	_gtATF.runATF('getType', 'date', new Date());&#13;
+	_gtATF.runATF('getType', 'glidedate', new GlideDate(new Date()));&#13;
+	_gtATF.runATF('getType', 'glidedatetime', new GlideDateTime());&#13;
+	_gtATF.runATF('getType', 'glidetime', new GlideTime());&#13;
+	_gtATF.runATF('getType', 'glideduration', new GlideDuration());&#13;
+	_gtATF.runATF('getType', 'array', []);&#13;
+	_gtATF.runATF('getType', 'array', new Array());&#13;
+	_gtATF.runATF('getType', 'array', ['a', 'b']);&#13;
+	_gtATF.runATF('getType', 'object', {});&#13;
+	_gtATF.runATF('getType', 'object', new Object());&#13;
+	_gtATF.runATF('getType', 'object', {'a': 'b'});&#13;
 	grRecord = _gtATF.getRecord('task', 'sys_class_name=task');&#13;
 	_gtATF.runATF('getType', 'gliderecord', grRecord);&#13;
 	_gtATF.runATF('getType', 'GlideRecord', grRecord, true);&#13;
-	_gtATF.runATF('getType', 'boolean', false);&#13;
-	_gtATF.runATF('getType', 'boolean', true);&#13;
-	_gtATF.runATF('getType', 'number', 1);&#13;
-	_gtATF.runATF('getType', 'number', 0);&#13;
-	_gtATF.runATF('getType', 'date', new Date());&#13;
-	_gtATF.runATF('getType', 'glidedate', new GlideDate(new Date()));&#13;
+	_gtATF.runATF('getType', 'gliderecordsecure', new GlideRecordSecure('incident'));&#13;
+	_gtATF.runATF('getType', 'null', null);&#13;
+	_gtATF.runATF('getType', 'undefined', undefined);&#13;
+	_gtATF.runATF('getType', 'undefined');&#13;
 &#13;
 	_gtATF.runATF('isEqual', true, 'test', 'test');&#13;
 	_gtATF.runATF('isEqual', false, 'test', 'test1');&#13;
@@ -118,30 +136,7 @@
 		_gtATF.addError('scheduleHandler', 'User record was not created correctly.');&#13;
 	} // if event found&#13;
 	_gtATF.runATF('scheduleHandler', undefined, 'atf_test_atf', null, 'stop', 'name=atf_test_atf^state=ready');&#13;
-&#13;
-	// ATF fails with: string may not be encrypted: Error occurred while trying to: SYMMETRIC_DECRYPTION&#13;
-	// var grUser = new GlideRecord('sys_user');&#13;
-	// grUser.setValue('first_name', 'xxx_atf_test_user_xxx');&#13;
-	// grUser.setValue('last_name', 'xxx_atf_test_user_xxx');&#13;
-	// grUser.setValue('user_name', 'xxx_atf_test_user_xxx');&#13;
-	// grUser.user_password.setDisplayValue('xxx_atf_test_user_xxx');&#13;
-	// var sUserId = grUser.insert();&#13;
-	// if (sUserId) {&#13;
-	// 	grRecord = _gtATF.getRecord('sys_user', 'sys_id=' + sUserId);&#13;
-	// } // if user&#13;
-	// if ((!sUserId) || (!grRecord) || (grRecord.getValue('user_name') != 'xxx_atf_test_user_xxx')) {&#13;
-	// 	_gtATF.addError('decryptPassword', 'User record was not created correctly.');&#13;
-	// } else {&#13;
-	// 	var sPasswordClear = _gt.decryptPassword(grRecord.getValue('user_password'));&#13;
-	// 	gs.info('tomtom pw: ' + grRecord.getValue('user_password') + ' dc pw: ' + sPasswordClear);&#13;
-	// 	if (sPasswordClear != 'xxx_atf_test_user_xxx') {&#13;
-	// 		_gtATF.addError('decryptPassword', 'Password was not decrypted correctly.');&#13;
-	// 	} // if not same pw&#13;
-	// } // if no id, record or wrong name&#13;
-&#13;
-	var sPassword = new GlideEncrypter().encrypt('xxx_atf_password_xxx');&#13;
-	_gtATF.runATF('decryptPassword', 'xxx_atf_password_xxx', sPassword);&#13;
-&#13;
+		&#13;
 	_gtATF.runATF('sleep', undefined, 1);&#13;
 &#13;
 	_gtATF.runATF('runFunction', 'string_string2_string3', 'function (sString, sString1, sString2) {return sString + "_" + sString1 + "_" + sString2;}', 'string', 'string2', 'string3');&#13;
@@ -149,7 +144,7 @@
 	if (gs.getProperty('glide.record.legacy_cross_scope_access_policy_in_script') == 'true') {&#13;
 		_gtATF.runATF('runFunctionInScope', 'string_string2_string3', 'function (sString, sString1, sString2) {return sString + "_" + sString1 + "_" + sString2;}', '', 'string', 'string2', 'string3');&#13;
 	} // only test if property is true, otherwise error is thrown which fails the test&#13;
-&#13;
+	&#13;
 	return _gtATF.endATF();&#13;
 &#13;
 })(outputs, steps, params, stepResult, assertEqual);&#13;
