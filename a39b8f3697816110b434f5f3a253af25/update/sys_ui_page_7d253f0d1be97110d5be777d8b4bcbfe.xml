@@ -661,7 +661,7 @@
 		<p>
 			<strong>Parameters:</strong>
 			<li><code>oRecordConfig</code>: An object containing configuration for record retrieval.
-					<p><pre>sTargetTable: table to lookup record
+				<pre>sTargetTable: table to lookup record
 aKeys: array of keys to look for to identify record (first one that produces a result is taken)
   A key (string or object) or an array with key combinations (all must match) to uniquely identify a record
     2.1 'key_field': simple key field taking the value of the respective value field (fieldname in source body and target record are the same)
@@ -670,11 +670,9 @@ aKeys: array of keys to look for to identify record (first one that produces a r
         'sInputField': 'input_field', --&gt; field from oRecordValues where the value is found
         'sTargetField': 'target_field', --&gt; field in the sTargetTable record (can be a dot walk field like caller_id.email)
         'sAddlQuery': 'active=true', --&gt; additional query to be applied to the target lookup
-        'bQueryEmptyFields': 'true/false', --&gt; if input_field is empty will add a query: input_fieldISEMPTY'
+        'bQueryEmptyFields': 'true/false', --&gt; if input_field is empty will add a query: input_fieldISEMPTY
 bQueryEmptyFields: Generic setting to query empty fields with ISEMPTY instead of returning an error for all empty fields
-</pre></p>
-
-			</li>
+</pre></li>
 			<li><code>oRecordValues</code>: An object containing field / value pairs.</li>
 			<li><code>aError</code>: An array to store error messages.</li>
 		</p>
@@ -736,8 +734,8 @@ bQueryEmptyFields: Generic setting to query empty fields with ISEMPTY instead of
 			<strong>Parameters:</strong>
 			<li><code>oValues</code>: An object containing the values to be inserted or updated.</li>
 			<li><code>oConfig</code>: A configuration object specifying the table, query, and other options for the
-				operation.</li>
-			<p><pre>bLog: (Optional) if true does verbose logging (default: false)
+				operation.
+			<pre>bLog: (Optional) if true does verbose logging (default: false)
 bQueryEmptyFields: (Optional) if true does add &lt;field&gt;ISEMTPY for empty values (default: false)
 aQueryFields: fields where the value will be used to query the record
 sTargetTable: table to be queried
@@ -750,16 +748,15 @@ bNoAutoSysFields: (Optional) if true does grRecord.autoSysFields(false) (default
 bNoDomain: (Optional) if true does grRecord.queryNoDomain() (default: false)
 bKeepSysId: (Optional) if true does grRecord.setNewGuidValue(&lt;sys_id&gt;) on insert (default: false)
 oValues: (Optional) list of hardcoded field/value pairs to be set on the target record (will be overwritten if also provided in the oValues parameter)
-aTargetFields: (Optional) if set, only these fields can be set, no matter what is defined in the oValues parameter.	</pre></p>
-			<li><code>oError</code>: An object to store error information. Use sErrorReturnType property to define the returned values.</li>
-			<p>
+aTargetFields: (Optional) if set, only these fields can be set, no matter what is defined in the oValues parameter.	</pre></li>
+			<li><code>oError</code>: An object to store error information. Use sErrorReturnType property to define the returned values.
 			<pre>001 = missing query
 002 = error updating: &lt;errormsg&gt;
 003 = error inserting: &lt;errormsg&gt;
 004 = missing table
 005 = exception: &lt;exception&gt;
 			</pre>
-			</p>
+			</li>
 		</p>
 		<p>
 			<strong>Returns:</strong>&#160;Returns the unique ID of the inserted or updated record or an error message.
@@ -771,14 +768,14 @@ aTargetFields: (Optional) if set, only these fields can be set, no matter what i
 		<p>
 			<strong>Parameters:</strong>
 			<li><code>oValues</code>: An object containing the values to be updated.</li>
-			<li><code>oConfig</code>: A configuration object specifying the table, query, and other options for the update.</li>
-			<p><pre>bLog: (Optional) if true does verbose logging (default: false)
+			<li><code>oConfig</code>: A configuration object specifying the table, query, and other options for the update.
+			<pre>bLog: (Optional) if true does verbose logging (default: false)
 sTargetTable: table to be queried
 sQuery: query to be applied
 bNoWorkflow: (Optional) if true does grRecord.setWorkflow(false) (default: false)
 bNoEngine: (Optional) if true does grRecord.setUseEngine(false) (default: false)
 bNoAutoSysFields: (Optional) if true does grRecord.autoSysFields(false) (default: false)
-		</pre></p>
+		</pre></li>
 		</p>
 		<p>
 			<strong>Returns:</strong>&#160;<code>true</code> if update executed, else <code>undefined</code>.
@@ -817,7 +814,7 @@ bNoAutoSysFields: (Optional) if true does grRecord.autoSysFields(false) (default
 			<strong>Parameters:</strong>
 			<li><code>oRecordConfig</code>: A configuration object specifying the record target table, options, and
 				other settings.
-				<p><pre>
+				<pre>
 				bLog: (Optional) Default: false, will add additional logs depending on sLogLevel defined.
 sLogLevel: (Optional) Default: error, if bLog is true you can choose info or debug for verbose logging.
 bLogPrefix: (Optional) Default: GlobalToolsRecordWriteValidate -.
@@ -855,7 +852,7 @@ bCheckDataPolicyMandatory: (Optional) Default: true, if false will not check dat
 bCheckDataPolicyReadOnly: (Optional) Default: true, if false will not check data policy for read-only fields.
 sCheckDataPolicyAdditionalQuery: (Optional), if set will apply the query when looking for data policies.
 
-aIgnoreChoiceFields': (Optional) Default: ['short_description'], if set will not check these fields for valid choices.
+aIgnoreChoiceFields: (Optional) Default: ['short_description'], if set will not check these fields for valid choices.
 
 bErrorOnAddlFieldsInValues (Legacy: bErrorOnAddlFieldsInBody): (Optional) Default: false, if true will return an error if values object contains more fields than aFields.
 
@@ -941,15 +938,15 @@ aUpdateBusinessLogicChecks: (Optional) if set is an object containing before and
 		sAfterQuery: (Optional), if set is run against the GlideRecord after all values have been applied.
 		sErrorMsg: the error message to be returned if either of the queries do not evaluate to true.
 	}
-				</pre></p>
+				</pre>
 			</li>
-			<li><code>oRecordValues</code>: An object containing the values to be written to the record.</li>
-				<p><pre>action / sActionValueField: (Optional), can be used to define the state flow action to be applied.
+			<li><code>oRecordValues</code>: An object containing the values to be written to the record.
+				<pre>action / sActionValueField: (Optional), can be used to define the state flow action to be applied.
 user / sImpersonateValueField: (Optional),  can be used to define the impersonate user to be used.
 template / sTemplateValueField: (Optional), can be used to define the template to be applied.
-				</pre></p>
+				</pre></li>
 			<li><code>oError</code>: An object to store error information.
-			<p><pre>
+			<pre>
 			400_001: Missing or empty record values object
 
 400_002: Template is mandatory
@@ -1021,7 +1018,7 @@ template / sTemplateValueField: (Optional), can be used to define the template t
 500_004: Error updating record
 500_005: Error deleting record
 500_006: Error getting reference field value
-			</pre></p>
+			</pre>
 			</li>
 		</p>
 		<p>
@@ -1066,13 +1063,13 @@ template / sTemplateValueField: (Optional), can be used to define the template t
 			<strong>Parameters:</strong>
 			<li><code>sFunction</code>: The Script Include <code>sFunction</code> to be tested.</li>
 			<li><code>oExpectedResult</code>: The expected return value from <code>sFunction</code> call.
-			<p><pre>oExpectedResult is a number or a string containing a comparison and a number (&quot;&lt;10&quot;, &quot;&gt;10&quot;, &quot;&lt;=10&quot;, &quot;&gt;=10&quot;) and the result is of type, number, array or gliderecord it will return an error if the comparison is not true (e.g. if the number is 1 and the array does not contain exactly 1 element or the gliderecord count is not 1).
+			<pre>oExpectedResult is a number or a string containing a comparison and a number (&quot;&lt;10&quot;, &quot;&gt;10&quot;, &quot;&lt;=10&quot;, &quot;&gt;=10&quot;) and the result is of type, number, array or gliderecord it will return an error if the comparison is not true (e.g. if the number is 1 and the array does not contain exactly 1 element or the gliderecord count is not 1).
 oExpectedResult is a string and the oResult is a gliderecord then grRecord.getUniqueValue() will be compared against the string.
 oExpectedResult is a regex the then the result will converted to string and is tested against the regex.
 oExpectedResult is a function the then the function will be called with parameters:
 	oResult and sResultType and an error will be added if the function returns a value: (sErrorMessage)
 oExpectedResult is anything else it will be compared to the result (===).
-			</pre></p>
+			</pre>
 			</li>
 			<li><code>arguments</code>: (Optional) The <code>arguments</code> that will be passed to the
 				<code>sFunction</code>.</li>
@@ -1119,13 +1116,13 @@ oExpectedResult is anything else it will be compared to the result (===).
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>90</sys_mod_count>
+        <sys_mod_count>92</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-30 15:54:36</sys_updated_on>
+        <sys_updated_on>2023-10-31 08:51:12</sys_updated_on>
     </sys_ui_page>
 </record_update>

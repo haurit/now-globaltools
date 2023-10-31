@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>74cabd161b25b510d5be777d8b4bcbb3</sys_id>
-        <sys_mod_count>105</sys_mod_count>
+        <sys_mod_count>109</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_74cabd161b25b510d5be777d8b4bcbb3</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-30 18:55:34</sys_updated_on>
+        <sys_updated_on>2023-10-31 07:41:07</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRecordWriteValidate Tests">a44784251b6db110d5be777d8b4bcb92</test>
         <timeout/>
@@ -35,9 +35,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>56dabd161b25b510d5be777d8b4bcb3a</sys_id>
-        <sys_mod_count>105</sys_mod_count>
+        <sys_mod_count>109</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-30 18:55:34</sys_updated_on>
+        <sys_updated_on>2023-10-31 07:41:07</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -420,19 +420,56 @@
 &#13;
 	*/&#13;
 &#13;
-&#13;
+	grRecord = _gtATF.getRecord('incident', 'active=true');&#13;
 &#13;
 	oRecordConfig = {&#13;
 		'sTargetTable': 'incident',&#13;
+		'aKeys': ['number'],&#13;
+		'bActionIsMandatory': true,&#13;
+		'bUseGlideRecordSecure': true,&#13;
 		'aMandatoryFields': ['number'],&#13;
 		//'sErrorReturnType': 'code',&#13;
-		'sAction': 'insert',&#13;
-		//'aFields': [{'sField': 'assignment_group', 'aKeys': ['name']}, {'sField': 'assigned_to', 'aKeys': ['user_name']}],&#13;
+		'aIgnoreChoiceFields': [],&#13;
+		'bErrorOnAddlFieldsInValues': '',&#13;
+		'aKeysDefaultReferenceFields': 'user_name',&#13;
+		'bKeysDefaultReferenceDisplayField': true,&#13;
+		'sAction': 'update',&#13;
+		'aFields': [{'sField': 'short_description', 'sPrefix': 'PRE - ', 'sPostfix': ' - POST'}, {'sField': 'assigned_to', 'sDefaultValue': 'sugus007'}, {'sField': 'caller_id', 'sRefLookupScript': 'function (oParams) {if (oParams["sValue"] == "sugus4") {return "beth.anglin"}}'}, 'assigment_group'],&#13;
+		'oTransformConfig': {&#13;
+			'oFieldMap':  {&#13;
+				'impact': {&#13;
+					'sugus5': '1'&#13;
+				}&#13;
+			},&#13;
+			'oTypeMap': {&#13;
+				'boolean': {&#13;
+					'sugus6': true,&#13;
+				},&#13;
+				'reference': {&#13;
+					'sys_user_group': {&#13;
+						'sRefLookupScript': 'function (oParams) {if (oParams["sValue"] == "sugus7") {return "Hardware"}}',&#13;
+					}&#13;
+				}&#13;
+			}&#13;
+		},&#13;
+		'aUpdateBusinessLogicChecks': {&#13;
+			'sBeforeQuery': 'activeISEMPTY',&#13;
+			'sAfterQuery': '',&#13;
+			'sErrorMsg': 'raider1'&#13;
+		}&#13;
 	}; // config&#13;
 &#13;
 	oRecordValues = {&#13;
 		'sys_id': '-1',&#13;
-		&#13;
+		'number': grRecord.getDisplayValue(),&#13;
+		'template': 'sugus0',&#13;
+		'user': 'sugus1',&#13;
+		'action': 'sugus2',&#13;
+		'short_description': 'sugus3',&#13;
+		'caller_id': 'sugus4',&#13;
+		'impact': 'sugus5',&#13;
+		'needs_attention': 'sugus6',&#13;
+		'assignment_group': 'sugus7',&#13;
 	}; // values&#13;
 &#13;
 	oError = {};&#13;
@@ -443,7 +480,6 @@
 		oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
 		_gtATF.addError('validateAndWrite', 'Did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
 	} // if same error&#13;
-&#13;
 	&#13;
 	gs.info('tomtom validateAndWrite oError: ' + JSON.stringify(oError));&#13;
 	&#13;

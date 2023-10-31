@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 05:37:15</sys_created_on>
         <sys_id>ff826c861be17510c1ecdc61ab4bcbbe</sys_id>
-        <sys_mod_count>49</sys_mod_count>
+        <sys_mod_count>50</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_ff826c861be17510c1ecdc61ab4bcbbe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-30 18:27:05</sys_updated_on>
+        <sys_updated_on>2023-10-31 05:53:53</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsTable Tests">ccd68ce11b6db110d5be777d8b4bcbe6</test>
         <timeout/>
@@ -49,9 +49,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 05:37:15</sys_created_on>
         <sys_id>7c54a8c61be17510c1ecdc61ab4bcb31</sys_id>
-        <sys_mod_count>49</sys_mod_count>
+        <sys_mod_count>50</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-30 18:27:05</sys_updated_on>
+        <sys_updated_on>2023-10-31 05:53:53</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -84,9 +84,9 @@
 	_gtATF.runATF('getAbsoluteBase', undefined, 'invalidtable');&#13;
 &#13;
 	_gtATF.runATF('getTableHierarchy', ['task'], 'task');&#13;
-	_gtATF.runATF('getTableHierarchy', ['incident','task'], 'incident');&#13;
-	_gtATF.runATF('getTableHierarchy', ['cmdb_ci','cmdb'], 'cmdb_ci');&#13;
-	_gtATF.runATF('getTableHierarchy', ['cmdb_ci_server','cmdb_ci_computer','cmdb_ci_hardware','cmdb_ci','cmdb'], 'cmdb_ci_server');&#13;
+	_gtATF.runATF('getTableHierarchy', ['incident', 'task'], 'incident');&#13;
+	_gtATF.runATF('getTableHierarchy', ['cmdb_ci', 'cmdb'], 'cmdb_ci');&#13;
+	_gtATF.runATF('getTableHierarchy', ['cmdb_ci_server', 'cmdb_ci_computer', 'cmdb_ci_hardware', 'cmdb_ci', 'cmdb'], 'cmdb_ci_server');&#13;
 	_gtATF.runATF('getTableHierarchy', undefined, 'invalidtable');&#13;
 &#13;
 	_gtATF.runATF('getTableExtensions', '&gt;10', 'task');&#13;
@@ -96,7 +96,7 @@
 	_gtATF.runATF('getTableExtensions', ['incident'], 'incident', true);&#13;
 	_gtATF.runATF('getTableExtensions', undefined, 'invalidtable', true);&#13;
 &#13;
-	_gtATF.runATF('getTableScopeInfo', {'id':'global','access':null,'read':true,'create':true,'write':true,'delete':false}, 'incident');&#13;
+	_gtATF.runATF('getTableScopeInfo', { 'id': 'global', 'access': null, 'read': true, 'create': true, 'write': true, 'delete': false }, 'incident');&#13;
 	_gtATF.runATF('getTableScopeInfo', undefined, 'invalidtable');&#13;
 &#13;
 	_gtATF.runATF('getDisplayField', 'number', 'task');&#13;
@@ -145,15 +145,15 @@
 	_gtATF.runATF('getDictOrOverrideValue', null, 'vtb_task', 'short_description', 'display_override');&#13;
 	_gtATF.runATF('getDictOrOverrideValue', 'origin_table', 'incident', 'origin_id', 'dependent');&#13;
 &#13;
-	_gtATF.runATF('getFieldChoices', [[],[],[]]);&#13;
-	_gtATF.runATF('getFieldChoices', [[],[],[]], 'invalidtable');&#13;
-	_gtATF.runATF('getFieldChoices', [[],[],[]], 'incident', 'invalidfield');&#13;
-	_gtATF.runATF('getFieldChoices', [['inquiry','software','hardware','network','database'],[,,,,,],['inquiry (Inquiry / Help)','software (Software)','hardware (Hardware)','network (Network)','database (Database)']], 'incident', 'category');&#13;
-	_gtATF.runATF('getFieldChoices', [['antivirus','cpu','db2','dhcp','disk','dns','email','email','internal application','ip address','keyboard','memory','monitor','mouse','sql server','os','oracle','vpn','wireless'],['inquiry','hardware','database','network','hardware','network','software','inquiry','inquiry','network','hardware','hardware','hardware','hardware','database','software','database','network','network'],['antivirus (Antivirus)','cpu (CPU)','db2 (DB2)','dhcp (DHCP)','disk (Disk)','dns (DNS)','email (Email)','email (Email)','internal application (Internal Application)','ip address (IP Address)','keyboard (Keyboard)','memory (Memory)','monitor (Monitor)','mouse (Mouse)','sql server (MS SQL Server)','os (Operating System)','oracle (Oracle)','vpn (VPN)','wireless (Wireless)']], 'incident', 'subcategory');&#13;
-	_gtATF.runATF('getFieldChoices', [['antivirus','email','internal application'],['inquiry','inquiry','inquiry'],['antivirus (Antivirus)','email (Email)','internal application (Internal Application)']], 'incident', 'subcategory', 'inquiry');&#13;
-	&#13;
+	_gtATF.runATF('getFieldChoices', [[], [], []]);&#13;
+	_gtATF.runATF('getFieldChoices', [[], [], []], 'invalidtable');&#13;
+	_gtATF.runATF('getFieldChoices', [[], [], []], 'incident', 'invalidfield');&#13;
+	_gtATF.runATF('getFieldChoices', [['inquiry', 'software', 'hardware', 'network', 'database'], [, , , , ,], ['inquiry (Inquiry / Help)', 'software (Software)', 'hardware (Hardware)', 'network (Network)', 'database (Database)']], 'incident', 'category');&#13;
+	_gtATF.runATF('getFieldChoices', [['antivirus', 'cpu', 'db2', 'dhcp', 'disk', 'dns', 'email', 'email', 'internal application', 'ip address', 'keyboard', 'memory', 'monitor', 'mouse', 'sql server', 'os', 'oracle', 'vpn', 'wireless'], ['inquiry', 'hardware', 'database', 'network', 'hardware', 'network', 'software', 'inquiry', 'inquiry', 'network', 'hardware', 'hardware', 'hardware', 'hardware', 'database', 'software', 'database', 'network', 'network'], ['antivirus (Antivirus)', 'cpu (CPU)', 'db2 (DB2)', 'dhcp (DHCP)', 'disk (Disk)', 'dns (DNS)', 'email (Email)', 'email (Email)', 'internal application (Internal Application)', 'ip address (IP Address)', 'keyboard (Keyboard)', 'memory (Memory)', 'monitor (Monitor)', 'mouse (Mouse)', 'sql server (MS SQL Server)', 'os (Operating System)', 'oracle (Oracle)', 'vpn (VPN)', 'wireless (Wireless)']], 'incident', 'subcategory');&#13;
+	_gtATF.runATF('getFieldChoices', [['antivirus', 'email', 'internal application'], ['inquiry', 'inquiry', 'inquiry'], ['antivirus (Antivirus)', 'email (Email)', 'internal application (Internal Application)']], 'incident', 'subcategory', 'inquiry');&#13;
+&#13;
 	_gtATF.runATF('getMandatoryFields', ['name', 'type'], 'sys_sg_parameter_screen'); // icon should not be shown, dict override to remove it&#13;
-	_gtATF.runATF('getMandatoryFields', ['cmdb_software_product_model', 'it_application_owner','name','short_description'], 'cmdb_ci_business_app');&#13;
+	_gtATF.runATF('getMandatoryFields', ['cmdb_software_product_model', 'it_application_owner', 'name', 'short_description'], 'cmdb_ci_business_app');&#13;
 	_gtATF.runATF('getMandatoryFields', undefined, 'invalidtable');&#13;
 &#13;
 	return _gtATF.endATF();&#13;

@@ -73,7 +73,7 @@ GlobalToolsRecordWrite.prototype = {
 					grRecord.addEncodedQuery(sQuery);
 				} else {
 					if (bLog) {
-						gs.error('GlobalToolsRecordWrite.doRecord missing query (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
+						gs.warn('GlobalToolsRecordWrite.doRecord missing query (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
 					} // if log
 					oError['code'] = '001';
 					oError['message'] = 'missing query';
@@ -114,7 +114,7 @@ GlobalToolsRecordWrite.prototype = {
 							oError['code'] = '002';
 							oError['message'] = 'error updating: ' + grRecord.getLastErrorMessage();
 							if (bLog) {
-								gs.error('GlobalToolsRecordWrite.doRecord error updating record: ' + sId + ' with msg: ' + grRecord.getLastErrorMessage() + ' (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
+								gs.warn('GlobalToolsRecordWrite.doRecord error updating record: ' + sId + ' with msg: ' + grRecord.getLastErrorMessage() + ' (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
 							} // if log
 						} // if error updating
 					} else if ((bInsert) && (!bFound)) {
@@ -126,7 +126,7 @@ GlobalToolsRecordWrite.prototype = {
 							oError['code'] = '003';
 							oError['message'] = 'error inserting: ' + grRecord.getLastErrorMessage();
 							if (bLog) {
-								gs.error('GlobalToolsRecordWrite.doRecord error inserting record with msg: ' + grRecord.getLastErrorMessage() + ' (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
+								gs.warn('GlobalToolsRecordWrite.doRecord error inserting record with msg: ' + grRecord.getLastErrorMessage() + ' (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
 							} // if log
 						} // if error inserting
 					} // if insert
@@ -137,7 +137,7 @@ GlobalToolsRecordWrite.prototype = {
 				oError['code'] = '004';
 				oError['message'] = 'missing table';
 				if (bLog) {
-					gs.error('GlobalToolsRecordWrite.doRecord missing target table (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
+					gs.warn('GlobalToolsRecordWrite.doRecord missing target table (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
 				} // if log
 			} // if target table
 		} catch (ex) {
@@ -184,12 +184,12 @@ GlobalToolsRecordWrite.prototype = {
 				return true;
 			} else {
 				if (bLog) {
-					gs.error('GlobalToolsRecordWrite.updateMultiple no field value set (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
+					gs.warn('GlobalToolsRecordWrite.updateMultiple no field value set (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
 				} // if log
 			} // if update
 		} else {
 			if (bLog) {
-				gs.error('GlobalToolsRecordWrite.updateMultiple missing table,query or value (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
+				gs.warn('GlobalToolsRecordWrite.updateMultiple missing table,query or value (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
 			} // if log
 		} // if query
 	}, // function updateMultiple
@@ -217,13 +217,13 @@ GlobalToolsRecordWrite.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 09:59:44</sys_created_on>
         <sys_id>c0adcda41bb47150d5be777d8b4bcbd1</sys_id>
-        <sys_mod_count>12</sys_mod_count>
+        <sys_mod_count>14</sys_mod_count>
         <sys_name>GlobalToolsRecordWrite</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_c0adcda41bb47150d5be777d8b4bcbd1</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-26 13:38:16</sys_updated_on>
+        <sys_updated_on>2023-10-31 06:22:01</sys_updated_on>
     </sys_script_include>
 </record_update>

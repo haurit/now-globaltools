@@ -34,7 +34,7 @@ GlobalToolsRecordRead.prototype = {
 	countRecords: function (sTable, sQuery, sField, bDisplayValue, bDisplayValueOnly, bQueryNoDomain) {
 		if (!this.checkAccess()) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
-			gs.error('GlobalToolsRecordRead.countRecords called with invalid table: ' + sTable);
+			gs.warn('GlobalToolsRecordRead.countRecords called with invalid table: ' + sTable);
 			return;
 		} // if no table return
 		var gaRecord = new GlideAggregate(sTable);
@@ -189,7 +189,7 @@ GlobalToolsRecordRead.prototype = {
 		if (!oField) {
 			aError.push('Field is empty!');
 			if (bLog) {
-				gs.error(sLogPrefix + 'Field is empty! (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+				gs.warn(sLogPrefix + 'Field is empty! (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
 			} // if log
 			return;
 		} // if not field
@@ -207,7 +207,7 @@ GlobalToolsRecordRead.prototype = {
 		} else {
 			aError.push('Invalid field type or field not defined!');
 			if (bLog) {
-				gs.error(sLogPrefix + 'Invalid field type or field not defined! (oField: ' + JSON.stringify(oField) + ' type: ' + this._gt.getType(oField) + ' oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+				gs.warn(sLogPrefix + 'Invalid field type or field not defined! (oField: ' + JSON.stringify(oField) + ' type: ' + this._gt.getType(oField) + ' oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
 			} // if log
 			return;
 		} // if field is obj
@@ -258,7 +258,7 @@ GlobalToolsRecordRead.prototype = {
 		if (!sTable) {
 			aError.push('Table is empty!');
 			if (bLog) {
-				gs.error(sLogPrefix + 'table is empty! (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+				gs.warn(sLogPrefix + 'table is empty! (oRecordConfig: + ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
 			} // if log
 			return;
 		} // if table is empty
@@ -313,16 +313,16 @@ GlobalToolsRecordRead.prototype = {
 					} else {
 						aError.push('Field \'' + sKeyField + '\' is empty and parameter bQueryEmptyFields is not set');
 						if (bLog) {
-							gs.error(sLogPrefix + 'Key not found sKeyField \'' + sKeyField + '\' is empty and parameter bQueryEmptyFields is not set. (oRecordConfig: ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+							gs.warn(sLogPrefix + 'Key not found sKeyField \'' + sKeyField + '\' is empty and parameter bQueryEmptyFields is not set. (oRecordConfig: ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
 						} // if log
 					} // if value
 				} else {
 					aError.push('Field ' + sTargetField + ' does not exist in table ' + sTable);
-					gs.error('GlobalToolsRecordRead.getRecordByKeys key not found sTable: ' + sTable + ' sTargetField: ' + sTargetField + ' (oRecordConfig: ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
+					gs.warn('GlobalToolsRecordRead.getRecordByKeys key not found sTable: ' + sTable + ' sTargetField: ' + sTargetField + ' (oRecordConfig: ' + JSON.stringify(oRecordConfig) + ' oRecordValues: ' + JSON.stringify(oRecordValues) + ')');
 				} // if valid field
 			}, this); // each key array
 			if ((bLog) && (sLogLevel == 'debug')) {
-				gs.info(sLogPrefix + 'sTable: ' + sTable + ' oAllKey: ' + JSON.stringify(oAllKey) + ' sTargetField: ' + sTargetField + ' sTargetNonDotWalkField: ' + sTargetNonDotWalkField + ' sQuery: ' + aQuery.join('^') + ' aQuery len: ' + aQuery.length + ' aKeys len: ' + aKeys.length);
+				gs.debug(sLogPrefix + 'sTable: ' + sTable + ' oAllKey: ' + JSON.stringify(oAllKey) + ' sTargetField: ' + sTargetField + ' sTargetNonDotWalkField: ' + sTargetNonDotWalkField + ' sQuery: ' + aQuery.join('^') + ' aQuery len: ' + aQuery.length + ' aKeys len: ' + aKeys.length);
 			} // if log
 			if (aQuery.length == aKeys.length) { // only if all values are present
 				grRecord.addEncodedQuery(aQuery.join('^'));
@@ -439,13 +439,13 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>83</sys_mod_count>
+        <sys_mod_count>84</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-30 18:41:32</sys_updated_on>
+        <sys_updated_on>2023-10-31 06:01:44</sys_updated_on>
     </sys_script_include>
 </record_update>
