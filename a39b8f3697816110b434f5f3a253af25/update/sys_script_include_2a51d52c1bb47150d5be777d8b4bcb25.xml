@@ -185,7 +185,7 @@ GlobalToolsRecordRead.prototype = {
 	getRelatedRecordByKeys: function (oRecordConfig, oRecordValues, aError, oField, sRefTable, iArrayField) {
 		if (!this.checkAccess()) { return; }
 		var bLog = this._getValue('bLog', false, oRecordConfig);
-		var sLogPrefix = this._getValue('sLogPrefix', 'GlobalToolsRecordRead.getRelatedRecordByKeys ', oRecordConfig);
+		var sLogPrefix = (bLog) ? this._getValue('sLogPrefix', 'GlobalToolsRecordRead.getRelatedRecordByKeys ', oRecordConfig) : '';
 		if (!oField) {
 			aError.push('Field is empty!');
 			if (bLog) {
@@ -201,6 +201,9 @@ GlobalToolsRecordRead.prototype = {
 		if ((this._gtObject.isObject(oField)) && (oField.hasOwnProperty('sField'))) {
 			sField = oField['sField'];
 			aKeys = this._getValue('aKeys', ['sys_id'], oField);
+			if (!this._isValidArray(aKeys)) {
+				aKeys = [aKeys];
+			} // if not array
 		} else if ((oField) && (this._gt.getType(oField) == 'string')) {
 			sField = oField;
 			aKeys.push({ 'sInputField': sField, 'sTargetField': 'sys_id' });
@@ -253,8 +256,8 @@ GlobalToolsRecordRead.prototype = {
 		if (!this.checkAccess()) { return; }
 		var sTable = this._getValue('sTargetTable', '', oRecordConfig);
 		var bLog = this._getValue('bLog', false, oRecordConfig);
-		var sLogLevel = this._getValue('sLogLevel', 'error', oRecordConfig);
-		var sLogPrefix = this._getValue('sLogPrefix', 'GlobalToolsRecordRead.getRecordByKeys ', oRecordConfig);
+		var sLogLevel = (bLog) ? this._getValue('sLogLevel', 'error', oRecordConfig) : '';
+		var sLogPrefix = (bLog) ? this._getValue('sLogPrefix', 'GlobalToolsRecordRead.getRecordByKeys ', oRecordConfig) : '';
 		if (!sTable) {
 			aError.push('Table is empty!');
 			if (bLog) {
@@ -439,13 +442,13 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>84</sys_mod_count>
+        <sys_mod_count>87</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-31 06:01:44</sys_updated_on>
+        <sys_updated_on>2023-10-31 18:32:44</sys_updated_on>
     </sys_script_include>
 </record_update>

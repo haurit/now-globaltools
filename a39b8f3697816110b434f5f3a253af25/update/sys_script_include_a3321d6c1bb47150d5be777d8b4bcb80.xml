@@ -40,50 +40,58 @@ GlobalToolsRecordWriteValidate.prototype = {
 
 	validateAndWrite: function (oRecordConfig, oRecordValues, oError) {
 		if (!this.checkAccess()) { return; }
-		this._setGlobals(oRecordConfig, oRecordValues, oError);
-		this._errorHandlerInit();
-		this._getFields();
-		this._applyFieldValueConfiguration();
-		this._validate();
+		this._errorHandlerInit(oRecordConfig, oError);
+		this._setGlobals(oRecordConfig, oRecordValues);
 		if (this._canContinue()) {
-			this._apply();
-			this._runBusinessLogic();
-			this._validateDataPolicy();
-			if ((this.bLog) && (this.sLogLevel == 'debug')) {
-				gs.debug(this.bLogPrefix + ' sTargetTable: ' + this.sTargetTable + ' canDoAction: ' + this._canDoAction() + ' bDoAction: ' + this._getValue('bDoAction', true, this.oRecordConfig));
-			} // if log and debug
-			if ((this._canDoAction()) && (this._getValue('bDoAction', true, this.oRecordConfig))) {
-				if (this._getValue('bUseIRE', false, this.oRecordConfig)) {
-					this._createIREPayload();
-					this._runIRE();
-				} else {
-					this._writeRecord();
-				} // if IRE
-			} // if can write
-			this._runImpersonate(true); // end impersonation
-		} // if validation passed
+			this._getFields();
+			this._applyFieldValueConfiguration();
+			this._validate();
+			if (this._canContinue()) {
+				this._apply();
+				this._runBusinessLogic();
+				this._validateDataPolicy();
+				if ((this.bLog) && (this.sLogLevel == 'debug')) {
+					gs.debug(this.bLogPrefix + ' sTargetTable: ' + this.sTargetTable + ' canDoAction: ' + this._canDoAction() + ' bDoAction: ' + this._getValue('bDoAction', true, this.oRecordConfig));
+				} // if log and debug
+				if ((this._canDoAction()) && (this._getValue('bDoAction', true, this.oRecordConfig))) {
+					if (this._getValue('bUseIRE', false, this.oRecordConfig)) {
+						this._createIREPayload();
+						this._runIRE();
+					} else {
+						this._writeRecord();
+					} // if IRE
+				} // if can write
+			} // if validation passed
+			if (new GlideImpersonate().isImpersonating()) {
+				this._runImpersonate(true); // end impersonation
+			} // if impersonating
+		} // if invalid globals
 		return this.sRecordId;
 	}, // function validateAndWrite
 
 	validateAndReturnIREObject: function (oRecordConfig, oRecordValues, oError) {
 		if (!this.checkAccess()) { return; }
-		this._setGlobals(oRecordConfig, oRecordValues, oError);
-		this._errorHandlerInit();
-		this._getFields();
-		this._applyFieldValueConfiguration();
-		this._validate();
+		this._errorHandlerInit(oRecordConfig, oError);
+		this._setGlobals(oRecordConfig, oRecordValues);
 		if (this._canContinue()) {
-			this._apply();
-			this._runBusinessLogic();
-			this._validateDataPolicy();
-			if ((this.bLog) && (this.sLogLevel == 'debug')) {
-				gs.debug(this.bLogPrefix + ' sTargetTable: ' + this.sTargetTable + ' canDoAction: ' + this._canDoAction() + ' bDoAction: ' + this._getValue('bDoAction', true, this.oRecordConfig));
-			} // if log and debug
-			if ((this._canDoAction()) && (this._getValue('bDoAction', true, this.oRecordConfig))) {
-				this._createIREPayload();
-			} // if can write
-			this._runImpersonate(true); // end impersonation
-		} // if validation passed
+			this._getFields();
+			this._applyFieldValueConfiguration();
+			this._validate();
+			if (this._canContinue()) {
+				this._apply();
+				this._runBusinessLogic();
+				this._validateDataPolicy();
+				if ((this.bLog) && (this.sLogLevel == 'debug')) {
+					gs.debug(this.bLogPrefix + ' sTargetTable: ' + this.sTargetTable + ' canDoAction: ' + this._canDoAction() + ' bDoAction: ' + this._getValue('bDoAction', true, this.oRecordConfig));
+				} // if log and debug
+				if ((this._canDoAction()) && (this._getValue('bDoAction', true, this.oRecordConfig))) {
+					this._createIREPayload();
+				} // if can write
+			} // if validation passed
+			if (new GlideImpersonate().isImpersonating()) {
+				this._runImpersonate(true); // end impersonation
+			} // if impersonating
+		} // if invalid globals
 		return this.oIREPayload;
 	}, // function validateAndReturnObject
 
@@ -91,33 +99,34 @@ GlobalToolsRecordWriteValidate.prototype = {
 	*	First level functions
 	************************************************************************************************************/
 
-	_setGlobals: function (oRecordConfig, oRecordValues, oError) {
+	_setGlobals: function (oRecordConfig, oRecordValues) {
 		if (!this.checkAccess()) { return; }
-		this.sUserId = gs.getUserID();
-		this.sUserLoginId = gs.getUserID();
+		this.sUserCurrentId = gs.getUserID();
+		this.sUserInitialId = gs.getUserID();
 		this.oRecordConfig = oRecordConfig;
 		this.oRecordValues = oRecordValues;
-		this.oError = oError;
-		this.sErrorReturnType = this._getValue('sErrorReturnType', 'normal', oRecordConfig);
-		this.bLog = this._getValue('bLog', false, oRecordConfig);
-		this.sLogLevel = this._getValue('sLogLevel', 'error', oRecordConfig);
-		this.bLogPrefix = this._getValue('bLogPrefix', 'GlobalToolsRecordWriteValidate - ', oRecordConfig);
-		this.sTargetTable = this._getValue('sTargetTable', '', oRecordConfig);
+		this.sRecordId = '-1';
+		this.sTargetTable = this._getValue('sTargetTable', '', this.oRecordConfig);
+		this._validateInput();
+		if (!this._canContinue()) {
+			return;
+		} // if invalid input
+		this.bLog = this._getValue('bLog', false, this.oRecordConfig);
+		this.sLogLevel = this._getValue('sLogLevel', 'error', this.oRecordConfig);
+		this.bLogPrefix = this._getValue('bLogPrefix', 'GlobalToolsRecordWriteValidate - ', this.oRecordConfig);
 		this.grRecord = (this._gtTable.isValidTable(this.sTargetTable)) ? new GlideRecord(this.sTargetTable) : '';
 		this.bIsValidRecord = false;
-		this.sAction = '';
-		this.sRecordId = '-1';
-		this.sImpersonateUser = '';
-		this.sImpersonateUserOld = '';
-		this.aAllRecordValueFields = Object.keys(oRecordValues);
+		this.sAction = this._setAction();
+		this.sImpersonateUserId = '';
+		this.aAllRecordValueFields = Object.keys(this.oRecordValues);
 		this.aRecordValueFields = [];
-		this.aFields = this._getValue('aFields', [], oRecordConfig);
+		this.aFields = this._getValue('aFields', [], this.oRecordConfig);
 		this.aFieldsSimple = [];
 		this.oFieldsObjects = {};
 		this.aFieldsComplex = [];
 		this.aFieldsKeyFields = [];
 		this.aRecordKeyFields = [];
-		this.aMandatoryFields = (this._getValue('bCheckDictionaryMandatory', true, oRecordConfig)) ? this._unique([].concat(this._getValue('aMandatoryFields', [], oRecordConfig), this._gtTable.getMandatoryFields(this.sTargetTable)), true) : this._getValue('aMandatoryFields', [], oRecordConfig);
+		this.aMandatoryFields = (this._getValue('bCheckDictionaryMandatory', true, this.oRecordConfig)) ? this._unique([].concat(this._getValue('aMandatoryFields', [], this.oRecordConfig), this._gtTable.getMandatoryFields(this.sTargetTable)), true) : this._getValue('aMandatoryFields', [], this.oRecordConfig);
 		this.aAllFields = [];
 		this.aAllRecordFields = [];
 		if ((this.bLog) && (this.sLogLevel == 'debug')) {
@@ -155,6 +164,19 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this._getFieldsFromKeyArrays(this._getValue('aKeys', [], this.oRecordConfig), 'record');
 		this.aAllFields = this._unique([].concat(this.aAllRecordValueFields, this.aFieldsSimple, this.aFieldsComplex, this.aRecordKeyFields, this.aFieldsKeyFields, this.aMandatoryFields), true);
 		this.aAllRecordFields = this._unique([].concat(this.aRecordValueFields, this.aFieldsSimple, this.aFieldsComplex), true);
+		this.aTemporaryValueFields = [];
+		var sTemplateValueField = this._getValue('sTemplateValueField', '', this.oRecordConfig);
+		if ((sTemplateValueField) && (this._getValue('bTemplateDeleteFieldValue', false, this.oRecordConfig))) {
+			this.aTemporaryValueFields.push(sTemplateValueField);
+		} // if template value field
+		var sActionValueField = this._getValue('oAction/sActionValueField', 'action', this.oRecordConfig);
+		if ((sActionValueField) && (this._getValue('bActionDeleteFieldValue', false, this.oRecordConfig))) {
+			this.aTemporaryValueFields.push(sActionValueField);
+		} // if action value field
+		var sImpersonateValueField = this._getValue('sImpersonateValueField', 'user', this.oRecordConfig);
+		if ((sImpersonateValueField) && (this._getValue('bImpersonateDeleteFieldValue', false, this.oRecordConfig))) {
+			this.aTemporaryValueFields.push(sImpersonateValueField);
+		} // if impersonate value field
 		if ((this.bLog) && (this.sLogLevel == 'debug')) {
 			gs.debug(this.bLogPrefix + ' aAllRecordValueFields: ' + this.aAllRecordValueFields + ' aRecordValueFields: ' + this.aRecordValueFields + ' aFields: ' + JSON.stringify(this.aFields) + ' aFieldsSimple: ' + this.aFieldsSimple + ' aFieldsComplex: ' + this.aFieldsComplex + ' aFieldsKeyFields: ' + this.aFieldsKeyFields + ' aRecordKeyFields: ' + this.aRecordKeyFields + ' aMandatoryFields: ' + this.aMandatoryFields + ' aAllFields: ' + this.aAllFields + ' aAllRecordFields: ' + this.aAllRecordFields + ' this.oFieldsObjects: ' + JSON.stringify(this.oFieldsObjects));
 		} // if log and debug
@@ -186,17 +208,25 @@ GlobalToolsRecordWriteValidate.prototype = {
 
 	_validate: function () {
 		if (!this.checkAccess()) { return; }
-		if (!this._validateInput(this.oRecordConfig, this.oRecordValues)) {
-			return;
-		} // if invalid input
-		var aRecordByKeysError = [];
-		var grRecord = this._gtRead.getRecordByKeys(this.oRecordConfig, this.oRecordValues, aRecordByKeysError);
-		if (aRecordByKeysError.length > 0) {
-			this._errorHandler('400_033', 'Invalid key configuration in config object', '', [aRecordByKeysError.join(', ')], false, true);
-			return;
-		} // if error
-		this.bIsValidRecord = ((grRecord) && (this._gt.getType(grRecord).indexOf('gliderecord') != -1) && (grRecord.isValidRecord()) && (grRecord.getValue('sys_id') != -1)) ? true : false;
-		if (!this._validateRecordAction(grRecord.getUniqueValue())) {
+		if ((this.sAction == 'insert') && (!this._getValue('aKeys', undefined, this.oRecordConfig))) {
+			this.bIsValidRecord = false;
+		} else {
+			var aRecordByKeysError = [];
+			var grRecord = this._gtRead.getRecordByKeys(this.oRecordConfig, this.oRecordValues, aRecordByKeysError);
+			if (aRecordByKeysError.length > 0) {
+				this._errorHandler('400_033', 'Invalid key configuration in config object', '', [aRecordByKeysError.join(', ')], false, true);
+				return;
+			} // if error
+			this.bIsValidRecord = ((grRecord) && (this._gt.getType(grRecord).indexOf('gliderecord') != -1) && (grRecord.isValidRecord()) && (grRecord.getValue('sys_id') != -1)) ? true : false;
+			if (this.bIsValidRecord) {
+				this.sRecordId = grRecord.getUniqueValue();
+				this.grRecord = grRecord;
+				this.grRecordOld = new GlideRecord(this.sTargetTable);
+				this.grRecordOld.get(this.sRecordId);
+			} // if is valid record
+		} // if action insert
+		this._validateRecordAction();
+		if (!this._canContinue()) {
 			return;
 		} // if validate record action
 		if (!this.bIsValidRecord) {
@@ -204,11 +234,6 @@ GlobalToolsRecordWriteValidate.prototype = {
 			if ((this.grRecord.isValidField('sys_class_name')) && (!this.grRecord.getValue('sys_class_name'))) {
 				this.grRecord.setValue('sys_class_name', this.sTargetTable);
 			} // if sys class name is empty on glide record --> workaround for reference qualifiers looking for the class name
-		} else {
-			this.sRecordId = grRecord.getUniqueValue();
-			this.grRecord = grRecord;
-			this.grRecordOld = new GlideRecord(this.sTargetTable);
-			this.grRecordOld.get(this.sRecordId);
 		} // if insert
 		this._validateApplyTemplate();
 		this._validateImpersonate();
@@ -216,7 +241,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 		if (this._getValue('bUseGlideRecordSecure', false, this.oRecordConfig)) {
 			this._validateRecordSecurity();
 		} // if glide record secure
-		this._validateFields();
+		if (this._canContinue()) {
+			this._validateFields();
+		} // if can continue
 	}, // function _validate
 
 	_apply: function () {
@@ -373,7 +400,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 							if (isNaN(parseInt(sValue))) {
 								this._errorHandler('400_026', 'Invalid integer number value', '', [sField, sValue], true, false);
 							} else {
-								this.grRecord.setValue(parseInt(sValue));
+								this.grRecord.setValue(sField, parseInt(sValue));
 							} // if not integer
 							bFieldDone = true;
 						} // if type is integer
@@ -381,7 +408,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 							if (isNaN(parseFloat(sValue))) {
 								this._errorHandler('400_027', 'Invalid floating point number value', '', [sField, sValue], true, false);
 							} else {
-								this.grRecord.setValue(parseFloat(sValue));
+								this.grRecord.setValue(sField, parseFloat(sValue));
 							} // if not float
 							bFieldDone = true;
 						} // if type is float
@@ -499,20 +526,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	*	Second level functions
 	************************************************************************************************************/
 
-	_validateInput: function () {
-		if (!this.checkAccess()) { return; }
-		if ((!this.oRecordConfig) || (!this.sTargetTable)) {
-			this._errorHandler('405_001', 'Missing record config object or sTargetTable property', '', '', false, true);
-			return;
-		} // if no record config or target table
-		if ((!this.oRecordValues) || (Object.keys(this.oRecordValues).length < 1)) {
-			this._errorHandler('400_001', 'Missing or empty record values object', '', '', false, true);
-			return;
-		} // if no record values
-		return true;
-	}, // function _validateInput
-
-	_validateRecordAction: function (sRecordId) {
+	_setAction: function () {
 		if (!this.checkAccess()) { return; }
 		var sAction = this._getValue('sAction', '', this.oRecordConfig);
 		if (sAction == 'insert') {
@@ -531,38 +545,52 @@ GlobalToolsRecordWriteValidate.prototype = {
 			this._setValue('bInsert', false, this.oRecordConfig);
 			this._setValue('bUpdate', false, this.oRecordConfig);
 			this._setValue('bDelete', true, this.oRecordConfig);
-		} // if action
-		var bInsert = this._getValue('bInsert', false, this.oRecordConfig);
-		var bUpdate = this._getValue('bUpdate', false, this.oRecordConfig);
-		var bDelete = this._getValue('bDelete', false, this.oRecordConfig);
-		if ((bDelete) && ((bInsert) || (bUpdate))) {
-			this._errorHandler('405_002', 'Invalid action: conflict', '', '', false, true);
-			return;
-		} else if ((!bInsert) && (!bUpdate) && (!bDelete)) {
-			this._errorHandler('405_003', 'Invalid action: empty', '', '', false, true);
-			return;
-		} // if invalid actions
-		if ((!this.bIsValidRecord) && (bDelete)) {
-			this._errorHandler('404_001', 'Invalid action: record delete', '', [this.sTargetTable], false, true);
-		} else if ((this.bIsValidRecord) && (bInsert) && (!bUpdate)) {
-			this._errorHandler('404_002', 'Invalid action: record insert', '', [this.sTargetTable, sRecordId], false, true);
-		} else if ((!this.bIsValidRecord) && (!bInsert) && (bUpdate)) {
-			this._errorHandler('404_003', 'Invalid action: record update', '', [this.sTargetTable], false, true);
 		} else {
-			if (!sAction) {
-				if ((bInsert) && (bUpdate) && (!bDelete)) {
-					sAction = 'save';
-				} else if ((bInsert) && (!bUpdate) && (!bDelete)) {
-					sAction = 'insert';
-				} else if ((!bInsert) && (bUpdate) && (!bDelete)) {
-					sAction = 'update';
-				} else if (bDelete) {
-					sAction = 'delete';
-				} // if insert, update or delete
-			} // if no sAction
-			this.sAction = sAction;
-			return true;
-		} // if valid record and action
+			var bInsert = this._getValue('bInsert', false, this.oRecordConfig);
+			var bUpdate = this._getValue('bUpdate', false, this.oRecordConfig);
+			var bDelete = this._getValue('bDelete', false, this.oRecordConfig);
+			if ((bDelete) && ((bInsert) || (bUpdate))) {
+				this._errorHandler('405_002', 'Invalid action: conflict', '', '', false, true);
+				return;
+			} else if ((!bInsert) && (!bUpdate) && (!bDelete)) {
+				this._errorHandler('405_003', 'Invalid action: empty', '', '', false, true);
+				return;
+			} // if invalid actions
+			if ((bInsert) && (bUpdate) && (!bDelete)) {
+				sAction = 'save';
+			} else if ((bInsert) && (!bUpdate) && (!bDelete)) {
+				sAction = 'insert';
+			} else if ((!bInsert) && (bUpdate) && (!bDelete)) {
+				sAction = 'update';
+			} else if (bDelete) {
+				sAction = 'delete';
+			} // if insert, update or delete
+		} // if action
+		return sAction;
+	}, // function _setAction
+
+
+	_validateInput: function () {
+		if (!this.checkAccess()) { return; }
+		if ((!this.oRecordConfig) || (!this.sTargetTable)) {
+			this._errorHandler('405_001', 'Missing record config object or sTargetTable property', '', '', false, true);
+			return;
+		} // if no record config or target table
+		if ((!this.oRecordValues) || (Object.keys(this.oRecordValues).length < 1)) {
+			this._errorHandler('400_001', 'Missing or empty record values object', '', '', false, true);
+			return;
+		} // if no record values
+	}, // function _validateInput
+
+	_validateRecordAction: function () {
+		if (!this.checkAccess()) { return; }
+		if ((!this.bIsValidRecord) && (this.sAction == 'delete')) {
+			this._errorHandler('404_001', 'Invalid action: record delete', '', [this.sTargetTable], false, true);
+		} else if ((this.bIsValidRecord) && (this.sAction == 'insert')) {
+			this._errorHandler('404_002', 'Invalid action: record insert', '', [this.sTargetTable, this.sRecordId], false, true);
+		} else if ((!this.bIsValidRecord) && (this.sAction == 'update')) {
+			this._errorHandler('404_003', 'Invalid action: record update', '', [this.sTargetTable], false, true);
+		} // if invalid record and action
 	}, // function _validateRecordAction
 
 	_validateApplyTemplate: function () {
@@ -608,28 +636,26 @@ GlobalToolsRecordWriteValidate.prototype = {
 		aImpersonateUsers.some(function (sImpersonateUser) {
 			var grUser = this._gtRead.getRecords('sys_user', 'user_name=' + sImpersonateUser + '^ORsys_id=' + sImpersonateUser + '^ORemail=' + sImpersonateUser, '', '', 1, '', '', this._getValue('bNoDomain', false, this.oRecordConfig));
 			if (grUser.next()) {
-				this.sImpersonateUser = grUser.getUniqueValue();
+				this.sImpersonateUserId = grUser.getUniqueValue();
 				return true;
 			} else {
 				this._errorHandler('403_001', 'Invalid impersonate user provided', '', [sImpersonateUser], false, false);
 			} // if user 
 		}, this); // take first impersonate users
-		if ((!this.sImpersonateUser) && (this._getValue('bImpersonateMandatory', false, this.oRecordConfig))) {
+		if ((!this.sImpersonateUserId) && (this._getValue('bImpersonateMandatory', false, this.oRecordConfig))) {
 			this._errorHandler('403_002', 'Impersonate user is mandatory', '', [sImpersonateDefaultUser, sImpersonateValueFieldValue], true, false);
 		} // if not impersonated and mandatory impersonate
 	}, // function _validateImpersonate
 
 	_runImpersonate: function (bEndImpersonation) {
 		if (!this.checkAccess()) { return; }
-		var sImpersonateUser = (bEndImpersonation) ? this.sImpersonateUserOld : this.sImpersonateUser;
+		var sImpersonateUser = (bEndImpersonation) ? this.sUserInitialId : this.sImpersonateUserId;
 		if (sImpersonateUser) {
-			if (sImpersonateUser != this.sUserId) {
-				this.sImpersonateUserOld = ((bEndImpersonation) || (this.sImpersonateUserOld)) ? this.sImpersonateUserOld : sImpersonateUser;
+			if (sImpersonateUser != this.sUserCurrentId) {
 				gs.getSession().impersonate(sImpersonateUser);
 				if (new GlideImpersonate().isImpersonating()) {
-					this.sUserId = this.sImpersonateUser;
+					this.sUserCurrentId = this.sImpersonateUserId;
 				} else {
-					this.sImpersonateUserOld = (bEndImpersonation) ? this.sImpersonateUserOld : this.sUserLoginId;
 					if ((this._getValue('bImpersonateMandatory', false, this.oRecordConfig)) && (!bEndImpersonation)) {
 						this._errorHandler('403_004', 'Impersonating failed and is mandatory', '', [sImpersonateUser], true, false);
 					} else {
@@ -644,18 +670,17 @@ GlobalToolsRecordWriteValidate.prototype = {
 		if (!this.checkAccess()) { return; }
 		if ((this.sAction == 'insert') || ((this.sAction == 'save') && (!this.bIsValidRecord))) {
 			if (!this.grRecord.canCreate()) {
-				this._errorHandler('400_101', 'Access denied: record create', '', [this.sUserId, this.sTargetTable], true, false);
+				this._errorHandler('400_101', 'Access denied: record create', '', [this.sUserCurrentId, this.sTargetTable], false, true);
 			} // if no create
 		} else if ((this.sAction == 'update') || ((this.sAction == 'save') && (this.bIsValidRecord))) {
 			if (!this.grRecord.canWrite()) {
-				this._errorHandler('400_102', 'Access denied: record write', '', [this.sUserId, this.sTargetTable], true, false);
+				this._errorHandler('400_102', 'Access denied: record write', '', [this.sUserCurrentId, this.sTargetTable], false, true);
 			} // if no write
 		} else if (this.sAction == 'delete') {
 			if (!this.grRecord.canDelete()) {
-				this._errorHandler('400_103', 'Access denied: record delete', '', [this.sUserId, this.sTargetTable], true, false);
+				this._errorHandler('400_103', 'Access denied: record delete', '', [this.sUserCurrentId, this.sTargetTable], false, true);
 			} // if no delete
 		} // if action
-		// _validateFieldSecurity
 	}, // function _validateRecordSecurity
 
 	_validateStateFlowAction: function () {
@@ -736,14 +761,14 @@ GlobalToolsRecordWriteValidate.prototype = {
 			if (!sField) {
 				return;
 			} // if field is empty
-			if ((bErrorOnAddlFieldsInValues) && (this.aFieldsSimple.indexOf(sField) == -1) && (this.aMandatoryFields.indexOf(sField) == -1) && (this.aFieldsComplex.indexOf(sField) == -1)) {
+			if ((bErrorOnAddlFieldsInValues) && (this.aFieldsSimple.indexOf(sField) == -1) && (this.aMandatoryFields.indexOf(sField) == -1) && (this.aFieldsComplex.indexOf(sField) == -1) && (this.aTemporaryValueFields.indexOf(sField) == -1)) {
 				aAddlFieldsInValues.push(sField);
 			} // if addl field in body
 			if (grRecordTest.isValidField(sField)) {
 				if (this._getValue('bUseGlideRecordSecure', false, this.oRecordConfig)) {
 					this._validateFieldSecurity(sField);
 				} // if glide record secure
-			} else if (this.aFieldsKeyFields.indexOf(sField) == -1) {
+			} else if ((this.aFieldsKeyFields.indexOf(sField) == -1) && (this.aTemporaryValueFields.indexOf(sField) == -1)) {
 				if (this.aMandatoryFields.indexOf(sField) != -1) {
 					this._errorHandler('400_012', 'Invalid field in mandatory fields', '', [sField], true, false);
 				} else if (this.aAllRecordValueFields.indexOf(sField) != -1) {
@@ -767,9 +792,17 @@ GlobalToolsRecordWriteValidate.prototype = {
 
 	_validateFieldSecurity: function (sField) {
 		if (!this.checkAccess()) { return; }
-		if ((!this.grRecord[sField].canRead()) || (!this.grRecord[sField].canWrite())) {
-			this._errorHandler('400_104', 'Access denied: field write', '', [this.sUserId, sField, this.sTargetTable], true, false);
-		} // no write field
+		if ((this.grRecord) && (sField) && (!this.grRecord[sField])) {
+			if ((this.sAction == 'insert') || ((this.sAction == 'save') && (!this.bIsValidRecord))) {
+				if (!this.grRecord[sField].canCreate()) {
+					this._errorHandler('400_106', 'Access denied: field create', '', [this.sUserCurrentId, sField, this.sTargetTable], false, true);
+				} // if no create
+			} else if ((this.sAction == 'update') || ((this.sAction == 'save') && (this.bIsValidRecord))) {
+				if (!this.grRecord[sField].canWrite()) {
+					this._errorHandler('400_104', 'Access denied: field write', '', [this.sUserCurrentId, sField, this.sTargetTable], false, true);
+				} // if no write
+			} // if action
+		} // if record and field is readable
 	}, // function _validateFieldSecurity
 
 	_validateDataPolicy: function () {
@@ -801,9 +834,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 			while (grDataPolicy.next()) {
 				sDataPolicyCondition = grDataPolicy.getValue('conditions');
 				if (sDataPolicyCondition) {
-					gfDataPolicyCondition = new GlideFilter(sDataPolicyCondition, '');
+					gfDataPolicyCondition = new GlideFilter(sDataPolicyCondition, 'dpcheck');
 					gfDataPolicyCondition.setCaseSensitive(false);
-					bDataPolicyMatch = (gfDataPolicyCondition.match(this.grRecord, true));
+					bDataPolicyMatch = gfDataPolicyCondition.match(this.grRecord, true);
 				} else {
 					bDataPolicyMatch = true;
 				} // if condition
@@ -814,13 +847,13 @@ GlobalToolsRecordWriteValidate.prototype = {
 					while (grDataPolicyRule.next()) {
 						sField = grDataPolicyRule.getValue('field');
 						if (bCheckDataPolicyMandatory) {
-							bMandatory = ((grDataPolicyRule.getValue('mandatory') == 'true') || ((grDataPolicy.getValue('reverse_if_false') == '1') && (!bDataPolicyMatch) && (grDataPolicyRule.getValue('mandatory') == 'false'))) ? true : false;
+							bMandatory = (((bDataPolicyMatch) && (grDataPolicyRule.getValue('mandatory') == 'true')) || ((!bDataPolicyMatch) && (grDataPolicy.getValue('reverse_if_false') == '1') && (grDataPolicyRule.getValue('mandatory') == 'false'))) ? true : false;
 							if ((bMandatory) && (this.grRecord[sField].nil())) {
 								aMandatoryFields.push(sField);
 							} // if mandatory
 						} // if check mandatory
 						if (bCheckDataPolicyReadOnly) {
-							bReadOnly = ((grDataPolicyRule.getValue('disabled') == 'true') || ((grDataPolicy.getValue('reverse_if_false') == '1') && (!bDataPolicyMatch) && (grDataPolicyRule.getValue('disabled') == 'false'))) ? true : false;
+							bReadOnly = (((bDataPolicyMatch) && (grDataPolicyRule.getValue('disabled') == 'true')) || ((!bDataPolicyMatch) && (grDataPolicy.getValue('reverse_if_false') == '1') && (grDataPolicyRule.getValue('disabled') == 'false'))) ? true : false;
 							if ((bReadOnly) && (this.grRecord.getValue(sField) != this.grRecordOld.getValue(sField))) {
 								aReadOnlyFields.push(sField);
 							} // if readonly
@@ -833,7 +866,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 			this._errorHandler('400_004', 'Fields are mandatory (Data Policy)', '', [aMandatoryFields.join(', ')], true, false);
 		} // if mandatory fields
 		if (aReadOnlyFields.length > 0) {
-			this._errorHandler('400_105', 'Access denied (Data Policy): field write', '', [this.sUserId, aReadOnlyFields.join(', '), this.sTargetTable], true, false);
+			this._errorHandler('400_105', 'Access denied (Data Policy): field write', '', [this.sUserCurrentId, aReadOnlyFields.join(', '), this.sTargetTable], true, false);
 		} // if mandatory fields
 	}, // function _validateDataPolicy
 
@@ -981,6 +1014,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		if (!this.checkAccess()) { return; }
 		try {
 			var aUpdateBusinessLogicChecks = this._getValue('aUpdateBusinessLogicChecks', [], this.oRecordConfig);
+			aUpdateBusinessLogicChecks = (this._isValidArray(aUpdateBusinessLogicChecks)) ? aUpdateBusinessLogicChecks : [aUpdateBusinessLogicChecks];
 			var sBeforeQuery = '',
 				bBeforeMatch = false,
 				sAfterQuery = '',
@@ -994,12 +1028,12 @@ GlobalToolsRecordWriteValidate.prototype = {
 				if (sBeforeQuery) {
 					var gfBeforeQuery = new GlideFilter(sBeforeQuery, '');
 					gfBeforeQuery.setCaseSensitive(false);
-					bBeforeMatch = (gfBeforeQuery.match(this.grRecordOld, true));
+					bBeforeMatch = gfBeforeQuery.match(this.grRecordOld, true);
 				} // if before query
 				if (sAfterQuery) {
 					var gfAfterQuery = new GlideFilter(sAfterQuery, '');
 					gfAfterQuery.setCaseSensitive(false);
-					bAfterMatch = (gfAfterQuery.match(this.grRecord, true));
+					bAfterMatch = gfAfterQuery.match(this.grRecord, true);
 				} // if after query
 				if ((sBeforeQuery) && (sAfterQuery)) {
 					if ((bBeforeMatch) && (bAfterMatch)) {
@@ -1026,9 +1060,11 @@ GlobalToolsRecordWriteValidate.prototype = {
 	*	Error handling functions
 	************************************************************************************************************/
 
-	_errorHandlerInit: function () {
+	_errorHandlerInit: function (oRecordConfig, oError) {
 		if (!this.checkAccess()) { return; }
-		this.sTableSequenceId = this._getValue('sTableSequenceId', 'default', this.oRecordConfig);
+		this.oError = oError;
+		this.sErrorReturnType = this._getValue('sErrorReturnType', 'normal', oRecordConfig);
+		this.sTableSequenceId = this._getValue('sTableSequenceId', 'default', oRecordConfig);
 		if (!this._gtObject.isObject(this.oError)) {
 			this.oError = {};
 		} // if error obj
@@ -1095,13 +1131,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>459</sys_mod_count>
+        <sys_mod_count>519</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-30 18:42:05</sys_updated_on>
+        <sys_updated_on>2023-11-04 07:58:05</sys_updated_on>
     </sys_script_include>
 </record_update>
