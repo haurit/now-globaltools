@@ -27,6 +27,7 @@ GlobalToolsATF.prototype = {
 		this._stepResult = stepResult;
 		this._assertEqual = assertEqual;
 		this._bContinue = true;
+		this._iTestCount = 0;
 		if ((this._getType(sScriptIncludeName) != 'string') || (this._getType(_ScriptIncludeRef) != 'object')) {
 			gs.warn('GlobalToolsATF.initialize invalid parameters sScriptIncludeName is not an string or _ScriptIncludeRef is not an object.');
 			this._bContinue = false;
@@ -44,6 +45,7 @@ GlobalToolsATF.prototype = {
 
 	runATF: function (sFunction, oExpectedResult) {
 		if ((this._bContinue === false) || (!this.checkAccess())) { return; }
+		this._iTestCount++;
 		if ((sFunction) && (this._getType(sFunction) == 'string')) {
 			var aArguments = [];
 			for (var i = 2; i < arguments.length; i++) {
@@ -103,9 +105,9 @@ GlobalToolsATF.prototype = {
 				return true;
 			} else {
 				if (sResultType == 'object') {
-					this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' expected result: ' + JSON.stringify(oExpectedResult) + ' (' + sExpectedResultType + ')' + ' result: ' + JSON.stringify(oResult) + ' (' + sResultType + ') with arguments: ' + JSON.stringify(aArguments));
+					this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' test counter ' + this._iTestCount + ' expected result: ' + JSON.stringify(oExpectedResult) + ' (' + sExpectedResultType + ')' + ' result: ' + JSON.stringify(oResult) + ' (' + sResultType + ') with arguments: ' + JSON.stringify(aArguments));
 				} else {
-					this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' expected result: ' + oExpectedResult + ' (' + sExpectedResultType + ')' + ' result: ' + oResult + ' (' + sResultType + ') with arguments: ' + JSON.stringify(aArguments));
+					this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' test counter ' + this._iTestCount + ' expected result: ' + oExpectedResult + ' (' + sExpectedResultType + ')' + ' result: ' + oResult + ' (' + sResultType + ') with arguments: ' + JSON.stringify(aArguments));
 				} // if obj
 			} // if results match
 		} else {
@@ -142,13 +144,13 @@ GlobalToolsATF.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 04:35:34</sys_created_on>
         <sys_id>087310061ba17510c1ecdc61ab4bcb55</sys_id>
-        <sys_mod_count>50</sys_mod_count>
+        <sys_mod_count>51</sys_mod_count>
         <sys_name>GlobalToolsATF</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_087310061ba17510c1ecdc61ab4bcb55</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-31 05:56:18</sys_updated_on>
+        <sys_updated_on>2023-11-04 07:08:32</sys_updated_on>
     </sys_script_include>
 </record_update>
