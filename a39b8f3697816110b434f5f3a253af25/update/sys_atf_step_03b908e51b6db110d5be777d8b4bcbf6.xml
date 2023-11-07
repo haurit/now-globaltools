@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-27 14:26:38</sys_created_on>
         <sys_id>03b908e51b6db110d5be777d8b4bcbf6</sys_id>
-        <sys_mod_count>67</sys_mod_count>
+        <sys_mod_count>79</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_03b908e51b6db110d5be777d8b4bcbf6</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-31 05:39:02</sys_updated_on>
+        <sys_updated_on>2023-11-07 16:52:13</sys_updated_on>
         <table/>
         <test display_value="GlobalTools Tests">171600e11b6db110d5be777d8b4bcbbc</test>
         <timeout/>
@@ -49,12 +49,12 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-27 14:26:38</sys_created_on>
         <sys_id>ff4a88e51b6db110d5be777d8b4bcb1a</sys_id>
-        <sys_mod_count>67</sys_mod_count>
+        <sys_mod_count>79</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-31 05:39:02</sys_updated_on>
+        <sys_updated_on>2023-11-07 16:52:13</sys_updated_on>
         <value>(function(outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
-	var bLog = true;&#13;
+	var bLog = false;&#13;
 	var _gt = new global.GlobalTools();&#13;
 	var _gtATF = new global.GlobalToolsATF('GlobalTools', _gt, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
 	var grRecord;&#13;
@@ -120,6 +120,20 @@
 	_gtATF.runATF('decodeTagToNewLine', 'test', 'test');&#13;
 	_gtATF.runATF('decodeTagToNewLine', '', '');&#13;
 	_gtATF.runATF('decodeTagToNewLine', 'test\ntest1\ntest2', 'test!^br^!test1!^br^!test2');&#13;
+&#13;
+	_gtATF.runATF('replacePlaceholders', undefined);&#13;
+	_gtATF.runATF('replacePlaceholders', 'test, [sugus1]', 'test, [sugus1]');&#13;
+	_gtATF.runATF('replacePlaceholders', 'test, value1', 'test, [sugus1]', {'sugus1': 'value1'});&#13;
+	_gtATF.runATF('replacePlaceholders', 'test, [sugus1], value2', 'test, [sugus1], [sugus2]', {'sugus2': 'value2'});&#13;
+	_gtATF.runATF('replacePlaceholders', 'test, value1, value2', 'test, [sugus1], [sugus2]', {'sugus1': 'value1','sugus2': 'value2'});&#13;
+	_gtATF.runATF('replacePlaceholders', '{"test":"value0","test1":"value1","test2":"value2"}', {'test': 'value0', 'test1': '[sugus1]', 'test2': '[sugus2]'}, {'sugus1': 'value1','sugus2': 'value2'});&#13;
+	_gtATF.runATF('replacePlaceholders', '{"test": "value0", "test1": value1}', '{"test": "value0", "test1": [sugus1]}', {'sugus1': 'value1','sugus2': 'value2'}, true);&#13;
+	grRecord = _gtATF.getRecord('incident', 'active=true');&#13;
+	_gtATF.runATF('replacePlaceholders', 'test, ' + grRecord.getValue('number'), 'test, [number]', grRecord);&#13;
+&#13;
+	_gtATF.runATF('convertUnderscoretoCamelCase', undefined);&#13;
+	_gtATF.runATF('convertUnderscoretoCamelCase', 'Test', 'test');&#13;
+	_gtATF.runATF('convertUnderscoretoCamelCase', 'TestSugus0Sugus1Sugus2', 'test_sugus0_sugus1_sugus2');&#13;
 	&#13;
 	var sScheduledScriptId = _gt.scheduleScript('GlobalTools', 'getType', 1, ['string'], [], 'atf_test_atf');&#13;
 	if (sScheduledScriptId) {&#13;

@@ -171,7 +171,31 @@
 		<p>
 			<strong>Returns:</strong>&#160;The <code>sValue</code> with the "!^br^!" tag replaced by newline characters.
 		</p>
-
+		<h2>Function: replacePlaceholders</h2>
+		<p>
+			<strong>Purpose:</strong>&#160;This function replaces placeholders in a string [field_name] with the respective field values from an object or GlideRecord.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sInputValue</code>: The string containing the placeholders.</li>
+			<li><code>oRecord</code>: An object or valid GlideRecord where the field values are looked up.</li>
+			<li><code>sValue</code>: A value that will replace the <code>sValue</code> in the input string.</li>
+			<li><code>bJSON</code>: If the input string is a JSON string this needs to be set to true.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The input string with all the placeholders replaced with actual values.
+		</p>
+		<h2>Function: convertUnderscoretoCamelCase</h2>
+		<p>
+			<strong>Purpose:</strong>&#160;This function replaces _ (underscore) values and puts the string in camel case.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sInputValue</code>: The string containing the original value.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;The input string in camel case.
+		</p>
 		<h2>Function: scheduleScript</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function schedules the execution of a script include function.
@@ -313,6 +337,17 @@
 			<li><code>add</code>: An array of elements to add to the target array.</li>
 			<li><code>remove</code>: An array of elements to remove from the target array.</li>
 			<li><code>same</code>: A boolean indicating whether the arrays are already identical.</li>
+		</p>
+		<h2>Function: convertCommaSepStringToArray</h2>
+		<p>
+			<strong>Purpose:</strong>&#160;This function cleans an comma separated string and returns an array.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sCommaSepString</code>: The comma separated string.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;An array with elements from the comma separated string.
 		</p>
 		<h1>Script Include: global.GlobalToolsObject</h1>
 		<h2>Function: isObject</h2>
@@ -1117,13 +1152,13 @@ oExpectedResult is anything else it will be compared to the result (===).
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>93</sys_mod_count>
+        <sys_mod_count>94</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-03 07:24:48</sys_updated_on>
+        <sys_updated_on>2023-11-07 15:54:15</sys_updated_on>
     </sys_ui_page>
 </record_update>

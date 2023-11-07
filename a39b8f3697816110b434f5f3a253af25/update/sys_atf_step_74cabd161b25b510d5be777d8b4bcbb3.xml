@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>74cabd161b25b510d5be777d8b4bcbb3</sys_id>
-        <sys_mod_count>229</sys_mod_count>
+        <sys_mod_count>254</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_74cabd161b25b510d5be777d8b4bcbb3</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-04 11:56:37</sys_updated_on>
+        <sys_updated_on>2023-11-07 19:59:03</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRecordWriteValidate Tests">a44784251b6db110d5be777d8b4bcb92</test>
         <timeout/>
@@ -35,9 +35,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>56dabd161b25b510d5be777d8b4bcb3a</sys_id>
-        <sys_mod_count>229</sys_mod_count>
+        <sys_mod_count>254</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-04 11:56:37</sys_updated_on>
+        <sys_updated_on>2023-11-07 19:59:03</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -283,7 +283,7 @@
 			'sTemplateName': 'sugus11',&#13;
 			'bTemplateIsMandatory': true,&#13;
 			'aFields': ['sugus12', { 'aKeys': ['name'] }, 1],&#13;
-			'sImpersonateDefaultUser': 'sugus14',&#13;
+			'sImpersonateDefaultUser': 'sugus13',&#13;
 			'bImpersonateMandatory': true,&#13;
 			'bErrorOnAddlFieldsInValues': true,&#13;
 			'aUpdateBusinessLogicChecks': [{ 'sBeforeQuery': {} }],&#13;
@@ -295,21 +295,20 @@
 			'last_login': 'sugus1',&#13;
 			'last_login_time': 'sugus2',&#13;
 			'failed_attempts': 'sugus3',&#13;
-			'latitude': 'sugus4',&#13;
-			'email': 'sugus5',&#13;
-			'phone': 'sugus6',&#13;
-			'company': 'sugus7',&#13;
-			'agent_status': 'sugus8',&#13;
-			'notification': 'sugus9',&#13;
-			'sugus13': 'sugus13'&#13;
+			'email': 'sugus4',&#13;
+			'phone': 'sugus5',&#13;
+			'company': 'sugus6',&#13;
+			'notification': 'sugus8',&#13;
+			'sugus13': 'sugus9'&#13;
 		}; // values&#13;
 &#13;
 		oError = {};&#13;
 		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
 		aErrorArray = _gtObject.getValue('default/aErrorMessages', '', oError);&#13;
-		var aErrorsExpected = ['400_005', '400_010', '400_011', '400_021', '400_024', '400_023', '400_026', '400_027', '400_028', '400_029', '400_015', '400_019', '400_019', '400_002', '400_003', '400_012', '400_013', '400_031', '403_001', '403_002', '400_032', '500_002'];&#13;
+		var aErrorsExpected = ['400_005', '400_010', '400_011', '400_021', '400_024', '400_023', '400_026', '400_028', '400_029', '400_015', '400_019', '400_002', '400_003', '400_012', '400_013', '400_031', '403_001', '403_002', '400_032', '500_002'];&#13;
 		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
 			var oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			gs.info('tomtom: ' + JSON.stringify(oErrorDiff) + ' aErrorsExpected: ' + aErrorsExpected + ' aErrorArray: ' + aErrorArray);&#13;
 			_gtATF.addError('validateAndWrite', 'Test 101 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
 		} // if same error&#13;
 &#13;
@@ -331,12 +330,10 @@
 			'last_login': '2023-12-31',&#13;
 			'last_login_time': '31.12.2022 17:00',&#13;
 			'failed_attempts': '10',&#13;
-			'latitude': '1.0123',&#13;
 			'email': 'tom@hauri.biz',&#13;
 			'phone': '+41787979787',&#13;
 			'company': '93d4ecfac0a8000b6294d71b733977fb', // ServiceNow&#13;
 			'manager': grUser.getValue('user_name'),&#13;
-			'agent_status': 'on_shift',&#13;
 			'notification': 1&#13;
 		};&#13;
 &#13;
@@ -384,6 +381,8 @@
 			_gtATF.addError('validateAndWrite', 'Test 104 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
 		} // if same error&#13;
 &#13;
+		grRecord = _gtATF.getRecord('core_company', 'vendor=false');&#13;
+&#13;
 		oRecordConfig = {&#13;
 			'sTargetTable': 'cmdb_ci_server',&#13;
 			'aMandatoryFields': ['name'],&#13;
@@ -394,7 +393,7 @@
 		oRecordValues = {&#13;
 			'sys_id': '-1',&#13;
 			'ip_address': 'sugus0',&#13;
-			'vendor': '86837a386f0331003b3c498f5d3ee4ca', // Boxeo is not a vendor&#13;
+			'vendor': grRecord.getUniqueValue(),&#13;
 		}; // values&#13;
 &#13;
 		oError = {};&#13;
@@ -470,15 +469,15 @@
 		} // if same error&#13;
 &#13;
 		oRecordConfig = {&#13;
-			'sTargetTable': 'cert_instance',&#13;
-			'aMandatoryFields': ['number'],&#13;
+			'sTargetTable': 'request_filter',&#13;
+			'aMandatoryFields': ['short_description'],&#13;
 			'sErrorReturnType': 'code',&#13;
 			'sAction': 'insert',&#13;
 		}; // config&#13;
 &#13;
 		oRecordValues = {&#13;
 			'sys_id': '-1',&#13;
-			'fields': 'sugus0',&#13;
+			'secondary_display': 'sugus0',&#13;
 		}; // values&#13;
 &#13;
 		oError = {};&#13;
@@ -490,9 +489,16 @@
 			_gtATF.addError('validateAndWrite', 'Test 109 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
 		} // if same error&#13;
 &#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'request_filter',&#13;
+			'aMandatoryFields': ['short_description'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
 		oRecordValues = {&#13;
 			'sys_id': '-1',&#13;
-			'fields': ['sugus0'],&#13;
+			'secondary_display': ['sugus0'],&#13;
 		}; // values&#13;
 &#13;
 		oError = {};&#13;
@@ -564,14 +570,13 @@
 			'short_description': 'sugus3',&#13;
 			'caller_id': 'sugus4',&#13;
 			'impact': 'sugus5',&#13;
-			'needs_attention': 'sugus6',&#13;
-			'assignment_group': 'sugus7',&#13;
+			'assignment_group': 'sugus6',&#13;
 		}; // values&#13;
 &#13;
 		oError = {};&#13;
 		_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
 		aErrorArray = _gtObject.getValue('default/aErrorMessages', '', oError);&#13;
-		aErrorsExpected = ['400_003', '403_001', '400_007'];&#13;
+		aErrorsExpected = ['400_003', '403_001', '400_011', '400_015', '400_020'];&#13;
 &#13;
 		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
 			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
@@ -667,25 +672,26 @@
 			_gtATF.addError('validateAndWrite', 'Test 114 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
 		} // if same error&#13;
 &#13;
-		grRecord = _gtATF.getRecord('interaction', 'state=closed_complete^ORstate=closed_abandoned');&#13;
-&#13;
 		oRecordConfig = {&#13;
 			'sTargetTable': 'interaction',&#13;
-			'aKeys': ['number'],&#13;
+			//'aKeys': ['number'],&#13;
 			'sErrorReturnType': 'code',&#13;
-			'sAction': 'update',&#13;
+			'sAction': 'insert',&#13;
 			'aMandatoryFields': ['caller_id'],&#13;
 		}; // config&#13;
 &#13;
 		oRecordValues = {&#13;
-			'number': grRecord.getDisplayValue(),&#13;
+			//'number': grRecord.getDisplayValue(),&#13;
 			'short_description': 'sugus0',&#13;
+			'state_reason': 'sugus1',&#13;
+			'type': 'video',&#13;
+			'sys_mod_count': 1,&#13;
 		}; // values&#13;
 &#13;
 		oError = {};&#13;
-		_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
 		aErrorArray = _gtObject.getValue('default/aErrorMessages', '', oError);&#13;
-		aErrorsExpected = ['400_005', '400_012', '400_105'];&#13;
+		aErrorsExpected = ['400_005', '400_004', '400_012', '400_105', '400_019'];&#13;
 		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
 			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
 			_gtATF.addError('validateAndWrite', 'Test 115 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
@@ -738,6 +744,47 @@
 			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
 			_gtATF.addError('validateAndWrite', 'Test 117 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
 		} // if same error&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'cmn_location',&#13;
+			'sErrorReturnType': 'code',&#13;
+			'aMandatoryFields': ['name'],&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'latitude': 'sugus1',&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtObject.getValue('default/aErrorMessages', '', oError);&#13;
+		aErrorsExpected = ['400_005', '400_027'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 118 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'cmn_location',&#13;
+			'sErrorReturnType': 'code',&#13;
+			'aMandatoryFields': ['name'],&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'latitude': '1.0123',&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtObject.getValue('default/aErrorMessages', '', oError);&#13;
+		aErrorsExpected = ['400_005'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 119 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
 	} // if not add new test&#13;
 &#13;
 	/* TODO TESTS:&#13;
@@ -751,12 +798,33 @@
 					sStateActionId: SysId of the state flow action.&#13;
 					bWorkNotesMandatory: if this action, worknotes are mandatory.&#13;
 			}&#13;
-		}		&#13;
+		}	&#13;
+	// In a baseline instance without CSM there is no state mgmt&#13;
+	400_006: Stateflow action is mandatory&#13;
+	400_007: Stateflow action is not valid&#13;
+	400_008: Stateflow action not found&#13;
+	400_009: Stateflow action worknotes are mandatory&#13;
+&#13;
+	// This is a mis-configuration that occurs only on wrongly customized instances, difficult to test&#13;
+	400_016: Invalid dependent reference field configuration&#13;
+	400_018: Invalid choice list configuration&#13;
+&#13;
+	400_101: Access denied: record create&#13;
+&#13;
+	// These failures are hard to tests against a working setup&#13;
+	403_003: Impersonating failed&#13;
+	403_004: Impersonating failed and is mandatory&#13;
+&#13;
+	500_001: Error processing stateflow action&#13;
+	500_002: Error processing business logic&#13;
+	500_003: Error inserting record&#13;
+	500_004: Error updating record&#13;
+	500_005: Error deleting record&#13;
+	500_006: Error getting reference field value&#13;
+&#13;
 	*/&#13;
 &#13;
 	if (bAddNewTest) {&#13;
-&#13;
-&#13;
 &#13;
 		if (grRecord) {&#13;
 			gs.info('GlobalToolsRecordWriteValidate Tests record: ' + grRecord.getDisplayValue() + ' oError: ' + JSON.stringify(oError));&#13;
