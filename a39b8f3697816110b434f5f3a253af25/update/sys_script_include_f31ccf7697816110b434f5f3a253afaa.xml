@@ -10,7 +10,9 @@ Functions are only available for global scope and specific scopes defined in the
         <name>GlobalTools</name>
         <script><![CDATA[var GlobalTools = Class.create();
 GlobalTools.prototype = {
-	initialize: function () { },
+	initialize: function () {
+		this._unique = new GlobalToolsArray().unique;
+	}, // function initialize
 
 	checkAccess: function () {
 		var sCallerScope = gs.getCallerScopeName();
@@ -144,14 +146,63 @@ GlobalTools.prototype = {
 		if (!this.checkAccess()) { return; }
 		var sResult = (sValue) ? String(sValue).replace(/\n/g, '!^br^!') : '';
 		return sResult;
-	}, // function encodeNewLineToTag 
+	}, // function encodeNewLineToTag
 
 	// Decode tag to new line
 	decodeTagToNewLine: function (sValue) {
 		if (!this.checkAccess()) { return; }
 		var sResult = String(sValue).replace(/!\^br\^!/g, '\n');
 		return sResult;
-	}, // function decodeTagToNewLine 
+	}, // function decodeTagToNewLine
+
+	// Function to replace placeholders
+	replacePlaceholders: function(sInputValue, oRecord, sValue, bJSON) {
+		if ((sInputValue) && (oRecord)) {
+			var bIsRecord = (this.getType(oRecord).indexOf('gliderecord') != -1);
+			var reGetFields = /(\[[A-Za-z_0-9]*\])(?!.*")/gi;
+			if (this.getType(sInputValue) == 'object') {
+				sInputValue = JSON.stringify(sInputValue);
+				bJSON = true;
+			} // if object
+			if (bJSON) {
+				reGetFields = /(\[[A-Za-z_0-9]*\])/gi;
+			} // if json
+			var aReResults = String(sInputValue).match(reGetFields);
+			var reReplace = new RegExp('placeholder'); 
+			var sFieldName = '', sReplaceValue = '', sReplace = '';
+			if ((aReResults) && (Array.isArray(aReResults))) {
+				this._unique(aReResults);
+				aReResults.forEach(function(sReResult) {
+					sFieldName = sReResult.replace(/\[|\]/g, '');
+					if (sFieldName == 'sValue') {
+						sReplaceValue = sValue;
+					} else if (bIsRecord) {
+						sReplaceValue = oRecord.getValue(sFieldName);
+					} else {
+						sReplaceValue = oRecord[sFieldName];
+					} // if fieldname is value
+					if (sReplaceValue) {
+						sReplace = sReResult.replace('[', '\\[').replace(']', '\\]');
+						reReplace = new RegExp(sReplace, 'gi');
+						sInputValue = sInputValue.replace(reReplace, sReplaceValue);
+					} // if value
+				}, this); // each re result
+			} // if reResult
+		} // if input 
+		return sInputValue;
+	}, // function replacePlaceholders
+
+	convertUnderscoretoCamelCase: function(sInputValue) {
+        if (sInputValue) {
+            var aResult = [];
+            sInputValue.split('_').forEach(function(sWord) {
+                sWord = sWord.replace(/[^a-zA-Z0-9]/g, '');
+                aResult.push(sWord.charAt(0).toUpperCase() + sWord.substr(1).toLowerCase());
+            }); // each word
+            return aResult.join('');
+        } // if name
+        return sInputValue;
+    }, // function convertUnderscoretoCamelCase
 
 	// Schedule ScriptInclude Function
 	scheduleScript: function (sScriptInclude, sFunction, iSeconds, aFunctionArgs, aClassArgs, sScheduleName) {
@@ -322,13 +373,13 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>87</sys_mod_count>
+        <sys_mod_count>96</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
-        <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2023-11-06 06:42:56</sys_updated_on>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-11-07 16:52:36</sys_updated_on>
     </sys_script_include>
 </record_update>
