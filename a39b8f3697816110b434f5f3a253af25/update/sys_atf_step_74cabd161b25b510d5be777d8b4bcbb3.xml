@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>74cabd161b25b510d5be777d8b4bcbb3</sys_id>
-        <sys_mod_count>254</sys_mod_count>
+        <sys_mod_count>255</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_74cabd161b25b510d5be777d8b4bcbb3</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-07 19:59:03</sys_updated_on>
+        <sys_updated_on>2023-11-08 09:23:24</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRecordWriteValidate Tests">a44784251b6db110d5be777d8b4bcb92</test>
         <timeout/>
@@ -35,9 +35,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>56dabd161b25b510d5be777d8b4bcb3a</sys_id>
-        <sys_mod_count>254</sys_mod_count>
+        <sys_mod_count>255</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-07 19:59:03</sys_updated_on>
+        <sys_updated_on>2023-11-08 09:23:24</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -519,11 +519,14 @@
 			'aMandatoryFields': ['number'],&#13;
 			'sErrorReturnType': 'code',&#13;
 			'bTemplateDeleteFieldValue': true,&#13;
-			'bActionDeleteFieldValue': true,&#13;
+			'bStateFlowActionDeleteFieldValue': true,&#13;
 			'bImpersonateDeleteFieldValue': true,&#13;
-			'oAction': {&#13;
-				'bActionIsMandatory': true,&#13;
-				'sActionValueField': 'test_action',&#13;
+			'bStateFlowActionIsMandatory': true,&#13;
+			'sStateFlowActionValueField': 'test_action',&#13;
+			'oStateFlowAction': {&#13;
+				'sugus7': {&#13;
+					'sStateAction': 'sugus8'&#13;
+				}&#13;
 			},&#13;
 			'sImpersonateValueField': 'test_imp_user',&#13;
 			'sTemplateValueField': 'test_template',&#13;
@@ -788,17 +791,7 @@
 	} // if not add new test&#13;
 &#13;
 	/* TODO TESTS:&#13;
-		- bKeepSysId&#13;
-	&#13;
-		oActions: (Optional), object with state flow actions:&#13;
-			{&#13;
-			sStateFlowAction: Name of the state flow action:&#13;
-			{&#13;
-					sStateAction: &#13;
-					sStateActionId: SysId of the state flow action.&#13;
-					bWorkNotesMandatory: if this action, worknotes are mandatory.&#13;
-			}&#13;
-		}	&#13;
+&#13;
 	// In a baseline instance without CSM there is no state mgmt&#13;
 	400_006: Stateflow action is mandatory&#13;
 	400_007: Stateflow action is not valid&#13;

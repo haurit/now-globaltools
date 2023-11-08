@@ -169,9 +169,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 		if ((sTemplateValueField) && (this._getValue('bTemplateDeleteFieldValue', false, this.oRecordConfig))) {
 			this.aTemporaryValueFields.push(sTemplateValueField);
 		} // if template value field
-		var sActionValueField = this._getValue('oAction/sActionValueField', 'action', this.oRecordConfig);
-		if ((sActionValueField) && (this._getValue('bActionDeleteFieldValue', false, this.oRecordConfig))) {
-			this.aTemporaryValueFields.push(sActionValueField);
+		var sStateFlowActionValueField = this._getValue('sStateFlowActionValueField', 'action', this.oRecordConfig);
+		if ((sStateFlowActionValueField) && (this._getValue('bStateFlowActionDeleteFieldValue', false, this.oRecordConfig))) {
+			this.aTemporaryValueFields.push(sStateFlowActionValueField);
 		} // if action value field
 		var sImpersonateValueField = this._getValue('sImpersonateValueField', 'user', this.oRecordConfig);
 		if ((sImpersonateValueField) && (this._getValue('bImpersonateDeleteFieldValue', false, this.oRecordConfig))) {
@@ -495,7 +495,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	_writeRecord: function () {
 		if (!this.checkAccess()) { return; }
 		var bSaveActionDone = false;
-		if ((this.bIsValidRecord) && (this._getValue('oAction', '', this.oRecordConfig))) {
+		if ((this.bIsValidRecord) && (this._getValue('oStateFlowActionConfig', '', this.oRecordConfig))) {
 			bSaveActionDone = this._validateStateFlowAction();
 		} // if state flow action
 		if (!bSaveActionDone) {
@@ -685,21 +685,21 @@ GlobalToolsRecordWriteValidate.prototype = {
 
 	_validateStateFlowAction: function () {
 		if (!this.checkAccess()) { return; }
-		var sActionValueField = this._getValue('oAction/sActionValueField', 'action', this.oRecordConfig);
-		var sActionValueFieldValue = this._getValue(sActionValueField, '', this.oRecordValues);
-		var bActionIsMandatory = this._getValue('oActions/bActionIsMandatory', false, this.oRecordConfig);
-		var bActionDeleteFieldValue = this._getValue('oActions/bActionDeleteFieldValue', false, this.oRecordConfig);
-		var sActionName = this._getValue('oActions/' + sActionValueFieldValue + '/sStateAction', '', this.oRecordConfig);
-		var sActionId = this._getValue('oActions/' + sActionValueFieldValue + '/sStateActionId', '', this.oRecordConfig);
-		var bWorkNotesMandatory = this._getValue('oActions/' + sActionValueFieldValue + '/bWorkNotesMandatory', false, this.oRecordConfig);
-		if ((bActionDeleteFieldValue) && (sActionValueField) && (this.oRecordValues.hasOwnProperty(sActionValueField))) {
-			delete this.oRecordValues[sActionValueField];
+		var sStateFlowActionValueField = this._getValue('sStateFlowActionValueField', 'action', this.oRecordConfig);
+		var sStateFlowActionValueFieldValue = this._getValue(sStateFlowActionValueField, '', this.oRecordValues);
+		var bStateFlowActionIsMandatory = this._getValue('bStateFlowActionIsMandatory', false, this.oRecordConfig);
+		var bStateFlowActionDeleteFieldValue = this._getValue('bStateFlowActionDeleteFieldValue', false, this.oRecordConfig);
+		var sActionName = this._getValue('oStateFlowActionConfig/' + sStateFlowActionValueFieldValue + '/sStateAction', '', this.oRecordConfig);
+		var sActionId = this._getValue('oStateFlowActionConfig/' + sStateFlowActionValueFieldValue + '/sStateActionId', '', this.oRecordConfig);
+		var bWorkNotesMandatory = this._getValue('oStateFlowActionConfig/' + sStateFlowActionValueFieldValue + '/bWorkNotesMandatory', false, this.oRecordConfig);
+		if ((bStateFlowActionDeleteFieldValue) && (sStateFlowActionValueField) && (this.oRecordValues.hasOwnProperty(sStateFlowActionValueField))) {
+			delete this.oRecordValues[sStateFlowActionValueField];
 		} // if delete action value field
-		if ((bActionIsMandatory) && (!sActionId) && (!sActionName)) {
+		if ((bStateFlowActionIsMandatory) && (!sActionId) && (!sActionName)) {
 			this._errorHandler('400_006', 'Stateflow action is mandatory', '', '', true, false);
 		} // if no action id
 		if ((bWorkNotesMandatory) && (!this._getValue('work_notes', '', this.oRecordValues))) {
-			this._errorHandler('400_009', 'Stateflow action worknotes are mandatory', '', [sActionName, sActionId, sActionValueFieldValue], true, false);
+			this._errorHandler('400_009', 'Stateflow action worknotes are mandatory', '', [sActionName, sActionId, sStateFlowActionValueFieldValue], true, false);
 		} // if mandatory work notes
 		var aQuery = [];
 		if (sActionId) {
@@ -716,13 +716,13 @@ GlobalToolsRecordWriteValidate.prototype = {
 					new global.StateFlow().processFlow(this.grRecord, sActionId, 'manual');
 					return true;
 				} else {
-					this._errorHandler('400_007', 'Stateflow action is not valid', '', [sActionName, sActionId, sActionValueFieldValue], true, false);
+					this._errorHandler('400_007', 'Stateflow action is not valid', '', [sActionName, sActionId, sStateFlowActionValueFieldValue], true, false);
 				} // if action
 			} catch (oEx) {
-				this._errorHandler('500_001', 'Error processing stateflow action', '', [sActionValueFieldValue, String(oEx)], true, false);
+				this._errorHandler('500_001', 'Error processing stateflow action', '', [sStateFlowActionValueFieldValue, String(oEx)], true, false);
 			} // try stateflow
 		} else {
-			this._errorHandler('400_008', 'Stateflow action not found', '', [sActionValueFieldValue, aQuery.join('^OR')], true, false);
+			this._errorHandler('400_008', 'Stateflow action not found', '', [sStateFlowActionValueFieldValue, aQuery.join('^OR')], true, false);
 		} // if state flow
 	}, // function _validateStateFlowAction
 
@@ -1131,13 +1131,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>523</sys_mod_count>
+        <sys_mod_count>526</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-07 19:47:53</sys_updated_on>
+        <sys_updated_on>2023-11-08 08:44:59</sys_updated_on>
     </sys_script_include>
 </record_update>

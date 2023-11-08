@@ -891,28 +891,22 @@ aIgnoreChoiceFields: (Optional) Default: ['short_description'], if set will not 
 
 bErrorOnAddlFieldsInValues (Legacy: bErrorOnAddlFieldsInBody): (Optional) Default: false, if true will return an error if values object contains more fields than aFields.
 
-oActions: (Optional), object with state flow actions:
-	{
-		bActionIsMandatory: (Optional) Default: false, if true, either sStateAction or sStateActionId must be valid (lookup of the sActionValueField must have a valid sStateFlowAction in the values object provided).
-		sActionValueField: (Optional) Default: "action", if set uses this field to retrieve the sStateFlowAction name from the values object.
-		bActionDeleteFieldValue: (Optional) Default: false, if true will remove the action field from the payload before running throught the values.
-		
-		sStateFlowAction: Name of the state flow action:
-		{
-				sStateAction: 
+bStateFlowActionIsMandatory: (Optional) Default: false, if true, either sStateAction or sStateActionId must be valid (lookup of the sActionValueField must have a valid sStateFlowAction in the values object provided).
+sStateFlowActionValueField: (Optional) Default: "action", if set uses this field to retrieve the sStateFlowAction name from the values object.
+bStateFlowActionDeleteFieldValue: (Optional) Default: false, if true will remove the action field from the payload before running throught the values.
+oStateFlowActionConfig: (Optional), object with state flow actions:
+		sStateFlowAction: Value from the sStateFlowActionValueField in the values object:
+				sStateAction: Name of the state flow action.
 				sStateActionId: SysId of the state flow action.
 				bWorkNotesMandatory: if this action, worknotes are mandatory.
-		}
-	}
 
 aKeysDefaultReferenceFields: (Optional), if set will use aKeysDefaultReferenceFields as keys if "aKeys" is empty.
 bKeysDefaultReferenceDisplayField: (Optional) Default: false, if true will use the grRefRecord.getDisplayField from the reference table as key if "aKeys" is empty.
 
 aKeys: (Optional for insert, mandatory for update/delete) Default: see GlobalToolsRecordRead.getRecordByKeys for documentation.
-aFields: (Optional), if set is a list of allowed fields to be updated including special field configurations for value mapping and lookup.
+aFields: (Optional), if set is an array of fields to be updated including special field configurations for value mapping and lookup.
 	sField: string with the effective field name.
 	oField: object with a specific field configuration.
-		{
 			sField: name of the field in the table.
 			sRefTable: (Optional), if set will use this table for lookup, if empty the sField dictionary reference table is used.
 			aKeys: see GlobalToolsRecordRead.getRecordByKeys for documentation.
@@ -932,35 +926,17 @@ aFields: (Optional), if set is a list of allowed fields to be updated including 
 					grRecord: current record.
 					oRecordConfig: configuration object.
 					oRecordValues: values object.
-			
-		}
-
 
 oTransformConfig: (Optional), if set is an object containing transform instructions.
-	{
-		oFieldMap: (Optional), if set is an object containing value pairs for a specific field, if the key is found the value is replaced.
-			{
-				"field_name": 
-				{
-					oMap: {"old_value": "new_value"}
-				}
-			}
+	oFieldMap: (Optional), if set is an object containing value pairs for a specific field, if the key is found the value is replaced.
+		"field_name": 
+			oMap: {"old_value": "new_value"}
 		oTypeMap: (Optional), if set is an object containing value pairs for a specific field, if the key is found the value is replaced.
-			{
-				"internal_field_type": 
-				{
-					oMap: {"old_value": "new_value"}
-				}
-				
-				"reference": 
-				{
-					"sRefTable": 
-					{
-						sRefLookupScript: (Optional), if set, uses this function to retrieve the reference value (same parameters as the function under aFields/oField config object)
-					}
-				}
-			}
-	}
+			"internal_field_type": 
+				oMap: {"old_value": "new_value"}
+			"reference": 
+				"sRefTable": 
+					sRefLookupScript: (Optional), if set, uses this function to retrieve the reference value (same parameters as the function under aFields/oField config object)
 
 bImpersonateMandatory: (Optional) Default: false, if true, either sImpersonateDefaultUser or sImpersonateValueField must be set (and sImpersonateValueField must have a valid user in the values object provided).
 sImpersonateDefaultUser (Legacy: sDefaultUser): (Optional), if set a lookup is made on the sys_user table on sys_id, user_name and email.
@@ -968,12 +944,10 @@ sImpersonateValueField: (Optional), Default "user", if set is used to find the p
 bImpersonateDeleteFieldValue: (Optional) Default: false, if true will remove the "sImpersonateValueField" field from the payload before running throught the values.
 
 aUpdateBusinessLogicChecks: (Optional) if set is an object containing before and after queries that if not fulfilled, will generate the error specified.
-	{
-		sBeforeQuery: (Optional), if set is run against the GlideRecord as retrieved by the aKeys definition.
-		sAfterQuery: (Optional), if set is run against the GlideRecord after all values have been applied.
-		sErrorMsg: the error message to be returned if either of the queries do not evaluate to true.
-	}
-				</pre>
+	sBeforeQuery: (Optional), if set is run against the GlideRecord as retrieved by the aKeys definition.
+	sAfterQuery: (Optional), if set is run against the GlideRecord after all values have been applied.
+	sErrorMsg: the error message to be returned if either of the queries do not evaluate to true.
+</pre>
 			</li>
 			<li><code>oRecordValues</code>: An object containing the values to be written to the record.
 				<pre>action / sActionValueField: (Optional), can be used to define the state flow action to be applied.
@@ -1152,13 +1126,13 @@ oExpectedResult is anything else it will be compared to the result (===).
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>94</sys_mod_count>
+        <sys_mod_count>97</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-07 15:54:15</sys_updated_on>
+        <sys_updated_on>2023-11-08 08:54:11</sys_updated_on>
     </sys_ui_page>
 </record_update>
