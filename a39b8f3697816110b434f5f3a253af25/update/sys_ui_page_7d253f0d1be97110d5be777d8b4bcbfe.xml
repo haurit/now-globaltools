@@ -786,8 +786,8 @@ oValues: (Optional) list of hardcoded field/value pairs to be set on the target 
 aTargetFields: (Optional) if set, only these fields can be set, no matter what is defined in the oValues parameter.	</pre></li>
 			<li><code>oError</code>: An object to store error information. Use sErrorReturnType property to define the returned values.
 			<pre>001 = missing query
-002 = error updating: &lt;errormsg&gt;
-003 = error inserting: &lt;errormsg&gt;
+002 = error updating: &lt;errormessage&gt;
+003 = error inserting: &lt;errormessage&gt;
 004 = missing table
 005 = exception: &lt;exception&gt;
 			</pre>
@@ -822,7 +822,7 @@ bNoAutoSysFields: (Optional) if true does grRecord.autoSysFields(false) (default
 		<p>
 			<strong>Parameters:</strong>
 			<li><code>grRecord</code>: The GlideRecord object to be updated.</li>
-			<li><code>sFieldName</code>: The name of the field to update.</li>
+			<li><code>sField</code>: The name of the field to update.</li>
 			<li><code>oValue</code>: The value to set for the field.</li>
 		</p>
 		<p>
@@ -946,7 +946,7 @@ bImpersonateDeleteFieldValue: (Optional) Default: false, if true will remove the
 aUpdateBusinessLogicChecks: (Optional) if set is an object containing before and after queries that if not fulfilled, will generate the error specified.
 	sBeforeQuery: (Optional), if set is run against the GlideRecord as retrieved by the aKeys definition.
 	sAfterQuery: (Optional), if set is run against the GlideRecord after all values have been applied.
-	sErrorMsg: the error message to be returned if either of the queries do not evaluate to true.
+	sErrorMessage: the error message to be returned if either of the queries do not evaluate to true.
 </pre>
 			</li>
 			<li><code>oRecordValues</code>: An object containing the values to be written to the record.
@@ -997,6 +997,7 @@ template / sTemplateValueField: (Optional), can be used to define the template t
 400_035: Invalid document id or table
 400_036: Invalid table
 400_037: Invalid GUID value
+400_038: Input values check failed
 
 400_031: Invalid field configuration in config object (missing field property)
 400_032: Invalid field configuration in config object (invalid field type)
@@ -1028,6 +1029,7 @@ template / sTemplateValueField: (Optional), can be used to define the template t
 500_004: Error updating record
 500_005: Error deleting record
 500_006: Error getting reference field value
+500_007: Error processing input values check script
 			</pre>
 			</li>
 		</p>
@@ -1126,13 +1128,13 @@ oExpectedResult is anything else it will be compared to the result (===).
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>97</sys_mod_count>
+        <sys_mod_count>100</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-08 08:54:11</sys_updated_on>
+        <sys_updated_on>2023-11-09 07:30:43</sys_updated_on>
     </sys_ui_page>
 </record_update>

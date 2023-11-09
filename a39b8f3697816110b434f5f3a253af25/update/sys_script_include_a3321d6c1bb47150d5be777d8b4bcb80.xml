@@ -126,7 +126,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this.aFieldsComplex = [];
 		this.aFieldsKeyFields = [];
 		this.aRecordKeyFields = [];
-		this.aMandatoryFields = (this._getValue('bCheckDictionaryMandatory', true, this.oRecordConfig)) ? this._unique([].concat(this._getValue('aMandatoryFields', [], this.oRecordConfig), this._gtTable.getMandatoryFields(this.sTargetTable)), true) : this._getValue('aMandatoryFields', [], this.oRecordConfig);
+		this.aMandatoryFields = this._getValue('aMandatoryFields', [], this.oRecordConfig);
+		this.bCheckDictionaryMandatory = this._getValue('bCheckDictionaryMandatory', true, this.oRecordConfig);
+		this.bAllFieldsMandatory = ((this._isValidArray(this.aMandatoryFields)) && (this.aMandatoryFields[0] == 'allfields')) ? true : false;
 		this.aAllFields = [];
 		this.aAllRecordFields = [];
 		if ((this.bLog) && (this.sLogLevel == 'debug')) {
@@ -162,8 +164,16 @@ GlobalToolsRecordWriteValidate.prototype = {
 			}, this); // each record value field
 		} // if record
 		this._getFieldsFromKeyArrays(this._getValue('aKeys', [], this.oRecordConfig), 'record');
-		this.aAllFields = this._unique([].concat(this.aAllRecordValueFields, this.aFieldsSimple, this.aFieldsComplex, this.aRecordKeyFields, this.aFieldsKeyFields, this.aMandatoryFields), true);
 		this.aAllRecordFields = this._unique([].concat(this.aRecordValueFields, this.aFieldsSimple, this.aFieldsComplex), true);
+		if (this.bAllFieldsMandatory) {
+			this.aAllFields = this._unique([].concat(this.aAllRecordValueFields, this.aFieldsSimple, this.aFieldsComplex, this.aRecordKeyFields, this.aFieldsKeyFields), true);
+			this.aMandatoryFields = this.aAllFields;
+		} else {
+			this.aAllFields = this._unique([].concat(this.aAllRecordValueFields, this.aFieldsSimple, this.aFieldsComplex, this.aRecordKeyFields, this.aFieldsKeyFields, this.aMandatoryFields), true);
+		} // if all fields mandatory
+		if (this.bCheckDictionaryMandatory) {
+			this.aMandatoryFields = this._unique([].concat(this.aMandatoryFields, this._gtTable.getMandatoryFields(this.sTargetTable)), true);
+		} // if check dict mandatory fields
 		this.aTemporaryValueFields = [];
 		var sTemplateValueField = this._getValue('sTemplateValueField', '', this.oRecordConfig);
 		if ((sTemplateValueField) && (this._getValue('bTemplateDeleteFieldValue', false, this.oRecordConfig))) {
@@ -226,6 +236,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 			} // if is valid record
 		} // if action insert
 		this._validateRecordAction();
+		this._runDynamicFieldConfiguration();
 		if (!this._canContinue()) {
 			return;
 		} // if validate record action
@@ -569,7 +580,6 @@ GlobalToolsRecordWriteValidate.prototype = {
 		return sAction;
 	}, // function _setAction
 
-
 	_validateInput: function () {
 		if (!this.checkAccess()) { return; }
 		if ((!this.oRecordConfig) || (!this.sTargetTable)) {
@@ -580,7 +590,52 @@ GlobalToolsRecordWriteValidate.prototype = {
 			this._errorHandler('400_001', 'Missing or empty record values object', '', '', false, true);
 			return;
 		} // if no record values
+		var aInputValueChecks = this._getValue('aInputValueChecks', [], this.oRecordConfig);
+		if (this._isValidArray(aInputValueChecks)) {
+			aInputValueChecks.forEach(function (oInputValueCheck) {
+				this._runFieldValueCheck(oInputValueCheck);
+			}, this); // each input value check
+		} // if valid input value checks
 	}, // function _validateInput
+
+	_runFieldValueCheck: function (oFieldValueCheck, bReturnFalseIfNotFound) {
+		var sField = this._getValue('sField', '', oFieldValueCheck);
+		var sValue = this._getValue(sField, '', this.oRecordValues);
+		var sErrorMessage = gs.getMessage(this._getValue('sErrorMessage', '', oFieldValueCheck), [sField, sValue]);
+		var sRegExpPattern = this._getValue('sRegExpPattern', '', oFieldValueCheck);
+		var sRegExpFlags = this._getValue('sRegExpFlags', '', oFieldValueCheck);
+		var sScript = this._getValue('sScript', '', oFieldValueCheck);
+		var bCheckValid = (bReturnFalseIfNotFound) ? false : true;
+		var oResult = {};
+		if (sRegExpPattern) {
+			var rePattern = new RegExp(sRegExpPattern, sRegExpFlags);
+			bCheckValid = rePattern.test(String(sValue));
+		} else if (sScript) {
+			sScript = sScript.replaceAll('sValue', sValue);
+			oResult = new GlideScriptEvaluator().evaluateString(sScript, true);
+			if ((oResult) && (JSON.stringify(oResult).indexOf('error') != -1)) {
+				this._errorHandler('500_007', 'Error processing input values check script', '', [JSON.stringify(oResult)], true, false);
+			} else if ((oResult) && (oResult.hasOwnProperty('bValid'))) {
+				bCheckValid = oResult['bValid'];
+				if (oResult.hasOwnProperty('sErrorMessage')) {
+					sErrorMessage = oResult['sErrorMessage'];
+				} // if result has error
+			} else {
+				bCheckValid = (String(oResult) == 'true') ? true : false;
+			} // if results object
+		} // if regex or script
+		if ((this.bLog) && (this.sLogLevel == 'debug')) {
+			gs.debug(this.bLogPrefix + '_runFieldValueCheck oFieldValueCheck: ' + JSON.stringify(oFieldValueCheck) + ' bReturnFalseIfNotFound: ' + bReturnFalseIfNotFound + ' sValue: ' + sValue + ' bCheckValid: ' + bCheckValid);
+		} // if log
+		if (bReturnFalseIfNotFound) {
+			return bCheckValid;
+		} // if return result
+		if (!bCheckValid) {
+			if (sErrorMessage) {
+				this._errorHandler('400_038', 'Input values check failed', '', [sErrorMessage], true, false);
+			} // if error msg
+		} // if not valid
+	}, // function _runFieldValueCheck
 
 	_validateRecordAction: function () {
 		if (!this.checkAccess()) { return; }
@@ -592,6 +647,35 @@ GlobalToolsRecordWriteValidate.prototype = {
 			this._errorHandler('404_003', 'Invalid action: record update', '', [this.sTargetTable], false, true);
 		} // if invalid record and action
 	}, // function _validateRecordAction
+
+	_runDynamicFieldConfiguration: function () {
+		var aDynamicFieldConfig = this._getValue('aDynamicFieldConfig', [], this.oRecordConfig);
+		if (this._isValidArray(aDynamicFieldConfig)) {
+			var sQueryCondition = '';
+			var bMatch = false;
+			aDynamicFieldConfig.forEach(function (oDynamicFieldConfig) {
+				sQueryCondition = this._getValue('sQueryCondition', '', oDynamicFieldConfig);
+				if (sQueryCondition) {
+					if (this.grRecordOld) {
+						var gfQueryCondition = new GlideFilter(sQueryCondition, '');
+						gfQueryCondition.setCaseSensitive(false);
+						bMatch = (gfQueryCondition.match(this.grRecordOld, true));
+					} // if old record
+				} else {
+					bMatch = this._runFieldValueCheck(oDynamicFieldConfig, true);
+				} // if before query
+				if (bMatch) {
+					this.aFieldsSimple = this._gtArray.addRemoveFromArray(this.aFieldsSimple, this._getValue('aFields', [], oDynamicFieldConfig), this._getValue('aFieldsRemoval', [], oDynamicFieldConfig));
+					this.aFieldsComplex = this._gtArray.addRemoveFromArray(this.aFieldsComplex, [], this._getValue('aFieldsRemoval', [], oDynamicFieldConfig));
+					this.aAllRecordFields = this._gtArray.addRemoveFromArray(this.aAllRecordFields, this._getValue('aFields', [], oDynamicFieldConfig), this._getValue('aFieldsRemoval', [], oDynamicFieldConfig));
+					this.aMandatoryFields = this._gtArray.addRemoveFromArray(this.aMandatoryFields, this._getValue('aMandatoryFields', [], oDynamicFieldConfig), this._getValue('aMandatoryFieldsRemoval', [], oDynamicFieldConfig));
+				} // if match
+				if ((this.bLog) && (this.sLogLevel == 'debug')) {
+					gs.debug(this.bLogPrefix + '_runDynamicFieldConfiguration oDynamicFieldConfig: ' + JSON.stringify(oDynamicFieldConfig) + ' bMatch: ' + bMatch);
+				} // if log
+			}, this); // field cfg condition
+		} // if is valid array
+	}, // function _runDynamicFieldConfiguration
 
 	_validateApplyTemplate: function () {
 		if (!this.checkAccess()) { return; }
@@ -1019,12 +1103,12 @@ GlobalToolsRecordWriteValidate.prototype = {
 				bBeforeMatch = false,
 				sAfterQuery = '',
 				bAfterMatch = false,
-				sErrorMsg = '',
+				sErrorMessage = '',
 				bError = false;
 			aUpdateBusinessLogicChecks.forEach(function (oUpdateBusinessLogicCheck) {
 				sBeforeQuery = this._getValue('sBeforeQuery', '', oUpdateBusinessLogicCheck);
 				sAfterQuery = this._getValue('sAfterQuery', '', oUpdateBusinessLogicCheck);
-				sErrorMsg = this._getValue('sErrorMsg', '', oUpdateBusinessLogicCheck);
+				sErrorMessage = this._getValue('sErrorMessage', '', oUpdateBusinessLogicCheck);
 				if (sBeforeQuery) {
 					var gfBeforeQuery = new GlideFilter(sBeforeQuery, '');
 					gfBeforeQuery.setCaseSensitive(false);
@@ -1047,7 +1131,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 					} // if error
 				} // if before and after
 				if (bError) {
-					this._errorHandler('400_014', 'Update business logic check failed', '', [gs.getMessage(sErrorMsg)], true, false);
+					this._errorHandler('400_014', 'Update business logic check failed', '', [gs.getMessage(sErrorMessage)], true, false);
 				} // if error
 			}, this); // bl check
 		} catch (oEx) {
@@ -1131,13 +1215,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>526</sys_mod_count>
+        <sys_mod_count>542</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-08 08:44:59</sys_updated_on>
+        <sys_updated_on>2023-11-09 19:43:30</sys_updated_on>
     </sys_script_include>
 </record_update>
