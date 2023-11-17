@@ -391,6 +391,20 @@
 		<p>
 			<strong>Returns:</strong>&#160;None. It modifies the input object <code>oConfig</code> in place.
 		</p>
+		<h2>Function: hasValue</h2>
+		<p>
+			<strong>Purpose:</strong>&#160;This function checks if a configuration value in an object exists, allowing up to 8 levels of
+			depth.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>sConfigPath</code>: A string representing the path where the value should be checked, separated by
+				'/'.</li>
+			<li><code>oConfig</code>: The object in which to check the configuration value.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;If the last node exists returns<code>true</code>, else <code>false</code>.
+		</p>
 		<h2>Function: deepMerge</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function performs a simple deep merge of two objects with an option to merge
@@ -1129,13 +1143,13 @@ oExpectedResult is anything else it will be compared to the result (===).
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>101</sys_mod_count>
+        <sys_mod_count>103</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-17 07:19:05</sys_updated_on>
+        <sys_updated_on>2023-11-17 09:48:42</sys_updated_on>
     </sys_ui_page>
 </record_update>
