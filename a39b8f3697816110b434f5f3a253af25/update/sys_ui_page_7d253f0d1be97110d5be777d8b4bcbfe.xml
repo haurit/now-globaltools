@@ -419,6 +419,14 @@
 		<p>
 			<strong>Returns:</strong>&#160;The merged object.
 		</p>
+		<h2>Function: getDepth</h2>
+<p><strong>Purpose:</strong>&#160;This function returns the depth of a nested object.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>oObj</code>: The object where the depth should be evaluated.</li>
+</ul>
+<p><strong>Returns:</strong>&#160;The depth of the object as integer (-1 if it's not an object, 0 if the object is empty).</p>
+<p>&#160;</p>
 		<h1>Script Include: global.GlobalToolsTable</h1>
 		<h2>isValidTable</h2>
 		<p>
@@ -1143,13 +1151,13 @@ oExpectedResult is anything else it will be compared to the result (===).
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>103</sys_mod_count>
+        <sys_mod_count>104</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-17 09:48:42</sys_updated_on>
+        <sys_updated_on>2023-11-20 19:22:04</sys_updated_on>
     </sys_ui_page>
 </record_update>
