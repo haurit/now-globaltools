@@ -1130,7 +1130,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 			gs.debug(this.bLogPrefix + '_validateReferenceEntry sTargetTable: ' + this.sTargetTable + ' sField: ' + sField + ' sValue: ' + sValue + ' bMatch: ' + bMatch + ' isValidRecord: ' + grRefRecord.isValidRecord());
 		} // if log
 		if ((!grRefRecord.isValidRecord()) || (!bMatch)) {
-			this._errorHandler('400_017', 'Invalid value in reference field (ref qualifier)', '', [sField, sRefTable, sValue], true, false);
+			var sDisplayValue = (grRefRecord.isValidRecord()) ? grRefRecord.getDisplayValue() : '';
+			sDisplayValue = (sDisplayValue) ? sDisplayValue + ' [' + sValue + ']' : sValue;
+			this._errorHandler('400_017', 'Invalid value in reference field (ref qualifier)', '', [sField, sRefTable, sDisplayValue], true, false);
 			return false;
 		} // if ref not valid
 		return true;
@@ -1285,13 +1287,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>574</sys_mod_count>
+        <sys_mod_count>575</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-22 06:10:25</sys_updated_on>
+        <sys_updated_on>2023-11-22 06:19:27</sys_updated_on>
     </sys_script_include>
 </record_update>
