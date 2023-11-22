@@ -217,17 +217,14 @@ GlobalToolsRecordWriteValidate.prototype = {
 				return -1;
 			} // if dependent field
 		}; // sort function
-		var aNonDependent = [];
 		var aDependent = [];
 		this.aAllRecordFields.forEach(function (sKey) {
-			if (this.oDependentFields.hasOwnProperty(sKey)) {
+			if ((this.oDependentFields.hasOwnProperty(sKey)) && (this.aAllRecordFields.indexOf(this.oDependentFields[sKey]) != -1)) {
 				aDependent.push(this.oDependentFields[sKey]);
-			} else {
-				aNonDependent.push(sKey);
 			} // if dependent
 		}, this); // each field
 		aDependent.sort(_sortFieldsByDependent);
-		this.aAllRecordFields = [].concat(aDependent, aNonDependent);
+		this.aAllRecordFields = this._unique([].concat(aDependent, this.aAllRecordFields), true);
 	}, // function _sortAllRecordFieldsByDependent
 
 	_applyFieldValueConfiguration: function () {
@@ -313,7 +310,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 			aDependentValues,
 			aChoiceDisplayValues,
 			bMatch;
-		this.aAllRecordFields.forEach(function (sField, i) {
+		this.aAllRecordFields.forEach(function (sField) {
+			gs.info('tomtom: ' + sField);
 			oField = this._getValue(sField, {}, this.oFieldsObjects);
 			if (oField.hasOwnProperty('sSourceField')) {
 				sValue = this._getValue(oField['sSourceField'], '', this.oRecordValues);
@@ -351,6 +349,13 @@ GlobalToolsRecordWriteValidate.prototype = {
 							this._errorHandler('400_022', 'Invalid array value', '', [sField, sValue], true, false);
 						} // if array
 					} // if field list
+					if ((sInternalType == 'string') && (sValueType == 'array') && (!gs.nil(sValue))) {
+						if (edElementDescriptor.getLength() > 255) {
+							sValue = sValue.join('\n');
+						} else {
+							sValue = sValue.join(', ');
+						} // if length > 255 assume multiline
+					} // if string and value is array
 					if ((sInternalType == 'journal_input') && (!gs.nil(sValue))) {
 						if (sValueType == 'array') {
 							this.grRecord[sField].setJournalEntry(sValue.join('\n'));
@@ -1287,13 +1292,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>575</sys_mod_count>
+        <sys_mod_count>585</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-22 06:19:27</sys_updated_on>
+        <sys_updated_on>2023-11-22 07:50:10</sys_updated_on>
     </sys_script_include>
 </record_update>
