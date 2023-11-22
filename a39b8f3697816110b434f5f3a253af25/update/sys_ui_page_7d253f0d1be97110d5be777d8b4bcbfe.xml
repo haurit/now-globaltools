@@ -1053,6 +1053,7 @@ template / sTemplateValueField: (Optional), can be used to define the template t
 500_005: Error deleting record
 500_006: Error getting reference field value
 500_007: Error processing input values check script
+500_008: Error processing business rules and engine
 			</pre>
 			</li>
 		</p>
@@ -1151,13 +1152,13 @@ oExpectedResult is anything else it will be compared to the result (===).
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>104</sys_mod_count>
+        <sys_mod_count>105</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-20 19:22:04</sys_updated_on>
+        <sys_updated_on>2023-11-22 06:12:55</sys_updated_on>
     </sys_ui_page>
 </record_update>

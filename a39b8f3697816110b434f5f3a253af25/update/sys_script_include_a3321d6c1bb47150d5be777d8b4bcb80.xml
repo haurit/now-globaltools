@@ -14,6 +14,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		if (!this.checkAccess()) {
 			return;
 		}
+		gs.include('j2js');
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
 		this._unique = this._gtArray.unique;
@@ -168,7 +169,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 			}, this); // each record value field
 		} // if record
 		this._getFieldsFromKeyArrays(this._getValue('aKeys', [], this.oRecordConfig), 'record');
-		this.aAllRecordFields = this._unique([].concat(this.aRecordValueFields, this.aFieldsSimple, this.aFieldsComplex), true);
+		this.aAllRecordFields = this._unique([].concat(this.aFieldsSimple, this.aFieldsComplex, this.aRecordValueFields), true);
+		this.oDependentFields = this._getDependentFields();
+		this._sortAllRecordFieldsByDependent();
 		if (this.bAllFieldsMandatory) {
 			this.aAllFields = this._unique([].concat(this.aAllRecordValueFields, this.aFieldsSimple, this.aFieldsComplex, this.aRecordKeyFields, this.aFieldsKeyFields), true);
 			this.aMandatoryFields = this.aAllFields;
@@ -195,6 +198,37 @@ GlobalToolsRecordWriteValidate.prototype = {
 			gs.debug(this.bLogPrefix + ' aAllRecordValueFields: ' + this.aAllRecordValueFields + ' aRecordValueFields: ' + this.aRecordValueFields + ' aFields: ' + JSON.stringify(this.aFields) + ' aFieldsSimple: ' + this.aFieldsSimple + ' aFieldsComplex: ' + this.aFieldsComplex + ' aFieldsKeyFields: ' + this.aFieldsKeyFields + ' aRecordKeyFields: ' + this.aRecordKeyFields + ' aMandatoryFields: ' + this.aMandatoryFields + ' aAllFields: ' + this.aAllFields + ' aAllRecordFields: ' + this.aAllRecordFields + ' this.oFieldsObjects: ' + JSON.stringify(this.oFieldsObjects));
 		} // if log and debug
 	}, // function _getFields
+
+	_getDependentFields: function () {
+		var oDependentFields = {};
+		var sDependentField = '';
+		this.aAllRecordFields.forEach(function (sField) {
+			sDependentField = this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'dependent');
+			if (sDependentField) {
+				oDependentFields[sField] = sDependentField;
+			} // if dependent field
+		}, this); // each record field
+		return oDependentFields;
+	}, // function _getDependentFields
+
+	_sortAllRecordFieldsByDependent: function () {
+		var _sortFieldsByDependent = function (oFirstElement, oSecondElement) {
+			if ((this.oDependentFields.hasOwnProperty(oFirstElement)) && (!this.oDependentFields.hasOwnProperty(oSecondElement))) {
+				return -1;
+			} // if dependent field
+		}; // sort function
+		var aNonDependent = [];
+		var aDependent = [];
+		this.aAllRecordFields.forEach(function (sKey) {
+			if (this.oDependentFields.hasOwnProperty(sKey)) {
+				aDependent.push(this.oDependentFields[sKey]);
+			} else {
+				aNonDependent.push(sKey);
+			} // if dependent
+		}, this); // each field
+		aDependent.sort(_sortFieldsByDependent);
+		this.aAllRecordFields = [].concat(aDependent, aNonDependent);
+	}, // function _sortAllRecordFieldsByDependent
 
 	_applyFieldValueConfiguration: function () {
 		if (!this.checkAccess()) { return; }
@@ -279,7 +313,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 			aDependentValues,
 			aChoiceDisplayValues,
 			bMatch;
-		this.aAllRecordFields.forEach(function (sField) {
+		this.aAllRecordFields.forEach(function (sField, i) {
 			oField = this._getValue(sField, {}, this.oFieldsObjects);
 			if (oField.hasOwnProperty('sSourceField')) {
 				sValue = this._getValue(oField['sSourceField'], '', this.oRecordValues);
@@ -341,7 +375,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 						this.grRecord.setValue(sField, sValue);
 						bFieldDone = true;
 					} else if ((edElementDescriptor.isChoiceTable()) && (this._getValue('aIgnoreChoiceFields', ['short_description'], this.oRecordConfig).indexOf(sField) == -1)) {
-						sDependentField = this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'dependent');
+						sDependentField = (this.oDependentFields.hasOwnProperty(sField)) ? this.oDependentFields[sField] : '';
 						sDependentFieldValue = '';
 						if (sDependentField) {
 							sDependentFieldValue = this._getValue(sDependentField, this.grRecord.getValue(sDependentField), this.oRecordValues);
@@ -465,7 +499,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 							} // if not valid GUID
 						} // if type is GUID
 						if (sInternalType == 'document_id') {
-							sDependentField = this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'dependent');
+							sDependentField = (this.oDependentFields.hasOwnProperty(sField)) ? this.oDependentFields[sField] : '';
 							var sDocumentIdTable = this._getValue(sDependentField, '', this.oRecordValues);
 							sDocumentIdTable = (sDocumentIdTable) ? sDocumentIdTable : this.grRecord.getValue(sDependentField);
 							if ((!sDocumentIdTable) || (!this._gtTable.isValidTable(sDocumentIdTable)) || (!this._gtRead.checkRecordByField(sDocumentIdTable, 'sys_id', sValue))) {
@@ -524,15 +558,21 @@ GlobalToolsRecordWriteValidate.prototype = {
 				} // if keep sys_id
 				this.sRecordId = this.grRecord.insert();
 				if (!this.sRecordId) {
-					this._errorHandler('500_003', 'Error inserting record', '', [this.grRecord.getLastErrorMessage()], false, true);
+					if (!this._parseRecordError()) {
+						this._errorHandler('500_003', 'Error inserting record', '', [this.grRecord.getLastErrorMessage()], false, true);
+					} // if parse error not succesful
 				} // if error
 			} else if (((this.sAction == 'update') || (this.sAction == 'save')) && (this.bIsValidRecord)) {
 				if (!this.grRecord.update()) {
-					this._errorHandler('500_004', 'Error updating record', '', [this.grRecord.getLastErrorMessage()], false, true);
+					if (!this._parseRecordError()) {
+						this._errorHandler('500_004', 'Error updating record', '', [this.grRecord.getLastErrorMessage()], false, true);
+					} // if parse error not succesful
 				} // if update
 			} else if ((this.sAction == 'delete') && (this.bIsValidRecord)) {
 				if ((this.grRecord.canDelete()) && (!this.grRecord.deleteRecord())) {
-					this._errorHandler('500_005', 'Error deleting record', '', [this.grRecord.getLastErrorMessage()], false, true);
+					if (!this._parseRecordError()) {
+						this._errorHandler('500_005', 'Error deleting record', '', [this.grRecord.getLastErrorMessage()], false, true);
+					} // if parse error not succesful
 				} // if delete
 			} // if action
 		} // if action done
@@ -865,7 +905,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 				if (this.aMandatoryFields.indexOf(sField) != -1) {
 					this._errorHandler('400_012', 'Invalid field in mandatory fields', '', [sField], true, false);
 					iMandatoryField = aMandatoryFields.indexOf(sField);
-					aMandatoryFields.splice(iMandatoryField, 1);	
+					aMandatoryFields.splice(iMandatoryField, 1);
 				} else if ((this.aAllRecordValueFields.indexOf(sField) != -1) && (this.aValueSourceFields.indexOf(sField) == -1)) {
 					this._errorHandler('400_013', 'Invalid field in values object', '', [sField], true, false);
 				} else if (this.aValueSourceFields.indexOf(sField) == -1) {
@@ -1017,7 +1057,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 
 	_validateReferenceEntry: function (sField, sValue, sRefTable, geElement, edElementDescriptor, sInternalType) {
 		if (!this.checkAccess()) { return; }
-		var sDependentField = this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'dependent');
+		var sDependentField = (this.oDependentFields.hasOwnProperty(sField)) ? this.oDependentFields[sField] : '';
 		var bMatch = true,
 			grRefRecord,
 			sReferenceQualifier = '';
@@ -1059,6 +1099,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 				if (grDict.get(edElementDescriptor.getUniqueID())) {
 					sDependentOnField = grDict.getValue('dependent_on_field');
 				} // if dict
+				sDependentOnField = (sDependentOnField) ? sDependentOnField : sDependentField;
 				if (this.grRecord.isValidField(sDependentOnField)) {
 					var geDependentElement = this.grRecord.getElement(sDependentField);
 					var edDependentElementDescriptor = geDependentElement.getED();
@@ -1157,6 +1198,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 
 	_errorHandlerInit: function (oRecordConfig, oError) {
 		if (!this.checkAccess()) { return; }
+		gs.flushMessages(); // flush messages before transaction
 		this.oError = oError;
 		this.sErrorReturnType = this._getValue('sErrorReturnType', 'normal', oRecordConfig);
 		this.sTableSequenceId = this._getValue('sTableSequenceId', 'default', oRecordConfig);
@@ -1216,6 +1258,23 @@ GlobalToolsRecordWriteValidate.prototype = {
 		return !this.oError[this.sTableSequenceId]['bNoActionError'];
 	}, // function _canContinue
 
+	_parseRecordError: function () {
+		var aGSErrorMessages = j2js(gs.getErrorMessages());
+		if (aGSErrorMessages.length > 0) {
+			var reTranslate = /&(nbsp|amp|quot|lt|gt);/g;
+			var oTranslate = {'nbsp': ' ', 'amp': '&', 'quot': '"', 'lt': '<', 'gt': '>'};
+			var sErrorMessage = aGSErrorMessages.join('\n').replace(reTranslate, function (aMatch, sEntity) {
+				return oTranslate[sEntity];
+			}).replace(/&#(\d+);/gi, function (aMatch, iStr) {
+				var iNum = parseInt(iStr, 10);
+				return String.fromCharCode(iNum);
+			}); // replace
+			this._errorHandler('500_008', 'Error processing business rules and engine', '', [String(sErrorMessage)], false, true);
+			gs.flushMessages(); // flush messages after transaction
+			return true;
+		} // if gs error messages
+	}, // function _parseRecordError
+
 	type: 'GlobalToolsRecordWriteValidate',
 	version: '1.0.1',
 	author: 'Tom Hauri',
@@ -1226,13 +1285,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>546</sys_mod_count>
+        <sys_mod_count>574</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-17 07:29:51</sys_updated_on>
+        <sys_updated_on>2023-11-22 06:10:25</sys_updated_on>
     </sys_script_include>
 </record_update>
