@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:30:27</sys_created_on>
         <sys_id>39f9bdd21b25b510d5be777d8b4bcbab</sys_id>
-        <sys_mod_count>26</sys_mod_count>
+        <sys_mod_count>27</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_39f9bdd21b25b510d5be777d8b4bcbab</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-23 15:42:36</sys_updated_on>
+        <sys_updated_on>2023-11-23 20:04:54</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsObject Tests">4db64ce11b6db110d5be777d8b4bcb19</test>
         <timeout/>
@@ -35,9 +35,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:30:27</sys_created_on>
         <sys_id>711a75161b25b510d5be777d8b4bcb42</sys_id>
-        <sys_mod_count>26</sys_mod_count>
+        <sys_mod_count>27</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-23 15:42:36</sys_updated_on>
+        <sys_updated_on>2023-11-23 20:04:54</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -109,6 +109,12 @@
 	//var oObjRecursive = {'sugus0': 'sugus2'};&#13;
 	//oObjRecursive['sugus1'] = oObjRecursive;&#13;
 	//_gtATF.runATF('getDepth', -2, oObjRecursive);&#13;
+&#13;
+	_gtATF.runATF('parseJSON', undefined);&#13;
+	_gtATF.runATF('parseJSON', undefined, 'teststring');&#13;
+	_gtATF.runATF('parseJSON', undefined, 1);&#13;
+	_gtATF.runATF('parseJSON', {}, '{}');&#13;
+	_gtATF.runATF('parseJSON', {'test': 'sugus0'}, '{"test": "sugus0"}');&#13;
 &#13;
 	return _gtATF.endATF();&#13;
 &#13;

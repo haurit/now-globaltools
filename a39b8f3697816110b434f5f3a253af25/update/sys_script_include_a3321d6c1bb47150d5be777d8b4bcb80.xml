@@ -534,11 +534,21 @@ GlobalToolsRecordWriteValidate.prototype = {
 	_runIRE: function () {
 		if (!this.checkAccess()) { return; }
 		var sIREPayload = JSON.stringify(this.oIREPayload);
-		var sIREOutput = sn_cmdb.IdentificationEngine.createOrUpdateCI('ServiceNow', sIREPayload);
+		this._getValue('bUseIRE', false, this.oRecordConfig)
+		var sDataSourceIRE = this._getValue('sDataSourceIRE', 'ServiceNow', this.oRecordConfig);
+		var sIREOutput = sn_cmdb.IdentificationEngine.createOrUpdateCI(sDataSourceIRE, sIREPayload);
+		var oIREOutput = this._gtObject.parseJSON(sIREOutput);
 		if ((this.bLog) && (this.sLogLevel == 'debug')) {
-			gs.debug(this.bLogPrefix + 'sTable: ' + this.sTargetTable + ' sIREPayload: ' + JSON.stringify(JSON.parse(sIREOutput), null, 2));
+			gs.debug(this.bLogPrefix + 'sTable: ' + this.sTargetTable + ' sIREPayload: ' + JSON.stringify(oIREOutput, null, 2));
 		} // if log and debug
-
+		var aItems = this._getValue('items', [], oIREOutput);
+		if ((this._gtArray.isValidArray(aItems)) && (this._gtObject.isObject(aItems[0]))) {
+			this.sRecordId = this._getValue('sysId', '-1', aItems[0]);
+			if (this.sRecordId == 'Unknown') {
+				this.sRecordId = '-1';
+			} // if unknown
+		} // if item
+		gs.error('tomtom ' + this.bLogPrefix + 'sTable: ' + this.sTargetTable + ' this.sRecordId: ' + this.sRecordId + ' sIREPayload: ' + JSON.stringify(JSON.parse(sIREOutput), null, 2));
 	}, // function _runIRE
 
 	_writeRecord: function () {
@@ -1283,13 +1293,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>590</sys_mod_count>
+        <sys_mod_count>601</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-23 07:19:33</sys_updated_on>
+        <sys_updated_on>2023-11-23 20:02:44</sys_updated_on>
     </sys_script_include>
 </record_update>
