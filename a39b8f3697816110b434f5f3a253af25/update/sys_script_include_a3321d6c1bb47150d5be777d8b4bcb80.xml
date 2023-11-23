@@ -120,7 +120,6 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this.sAction = this._setAction();
 		this.sImpersonateUserId = '';
 		this.aAllRecordValueFields = Object.keys(this.oRecordValues);
-		this.aValueSourceFields = [];
 		this.aRecordValueFields = [];
 		this.aFields = this._getValue('aFields', [], this.oRecordConfig);
 		this.aFieldsSimple = [];
@@ -151,9 +150,6 @@ GlobalToolsRecordWriteValidate.prototype = {
 					if (oField.hasOwnProperty('aKeys')) {
 						this._getFieldsFromKeyArrays(oField['aKeys'], 'field');
 					} // if keys
-					if (oField.hasOwnProperty('sSourceField')) {
-						this.aValueSourceFields.push(oField['sSourceField']);
-					} // source fields
 				} else {
 					this._errorHandler('400_031', 'Invalid field configuration in config object (missing field property)', '', [JSON.stringify(oField)], true, false);
 				} // if field
@@ -311,13 +307,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 			aChoiceDisplayValues,
 			bMatch;
 		this.aAllRecordFields.forEach(function (sField) {
-			gs.info('tomtom: ' + sField);
 			oField = this._getValue(sField, {}, this.oFieldsObjects);
-			if (oField.hasOwnProperty('sSourceField')) {
-				sValue = this._getValue(oField['sSourceField'], '', this.oRecordValues);
-			} else {
-				sValue = this._getValue(sField, '', this.oRecordValues);
-			} // if source field		
+			sValue = this._getValue(sField, '', this.oRecordValues);
 			aValues = [];
 			sValueType = this._gt.getType(sValue);
 			sInternalType = 'NA';
@@ -911,9 +902,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 					this._errorHandler('400_012', 'Invalid field in mandatory fields', '', [sField], true, false);
 					iMandatoryField = aMandatoryFields.indexOf(sField);
 					aMandatoryFields.splice(iMandatoryField, 1);
-				} else if ((this.aAllRecordValueFields.indexOf(sField) != -1) && (this.aValueSourceFields.indexOf(sField) == -1)) {
+				} else if (this.aAllRecordValueFields.indexOf(sField) != -1) {
 					this._errorHandler('400_013', 'Invalid field in values object', '', [sField], true, false);
-				} else if (this.aValueSourceFields.indexOf(sField) == -1) {
+				} else {
 					this._errorHandler('400_011', 'Invalid field in config object', '', [sField], true, false);
 				} // if field in array
 			} // if field is valid or key input field
@@ -1292,13 +1283,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>585</sys_mod_count>
+        <sys_mod_count>590</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-22 07:50:10</sys_updated_on>
+        <sys_updated_on>2023-11-23 07:19:33</sys_updated_on>
     </sys_script_include>
 </record_update>
