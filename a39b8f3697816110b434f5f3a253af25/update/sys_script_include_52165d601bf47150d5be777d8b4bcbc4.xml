@@ -18,7 +18,8 @@ GlobalToolsObject.prototype = {
 		if (!this.checkAccess()) {
 			return;
 		}
-		this._gtArray = new GlobalToolsArray();
+		this._gt = new global.GlobalTools();
+		this._gtArray = new global.GlobalToolsArray();
 	}, // function initialize
 
 	checkAccess: function () {
@@ -150,6 +151,65 @@ GlobalToolsObject.prototype = {
 		}, this); // each path
 	}, // function setValue
 
+	// Function to retrieve up to 8 levels of config
+	// For recursive configs pass sub object
+	hasValue: function (sConfigPath, sReplace, oConfig) {
+		if (!oConfig) {
+			oConfig = this.oConfig;
+		} // if no object
+		sConfigPath = sConfigPath.replace(/^\//, '').replace(/\/$/, ''); // remove leading and trailing /
+		var aConfigPath = sConfigPath.split('/');
+		var iMaxLength = (Array.isArray(aConfigPath)) ? aConfigPath.length : 0;
+		if ((iMaxLength > 0) && (oConfig) && (oConfig.hasOwnProperty(aConfigPath[0]))) {
+			if (iMaxLength == 1) {
+				return true;
+			} else {
+				if ((iMaxLength > 1) && (oConfig[aConfigPath[0]].hasOwnProperty(aConfigPath[1]))) {
+					if (iMaxLength == 2) {
+						return true;
+					} else {
+						if ((iMaxLength > 2) && (oConfig[aConfigPath[0]][aConfigPath[1]].hasOwnProperty(aConfigPath[2]))) {
+							if (iMaxLength == 3) {
+								return true;
+							} else {
+								if ((iMaxLength > 3) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]].hasOwnProperty(aConfigPath[3]))) {
+									if (iMaxLength == 4) {
+										return true;
+									} else {
+										if ((iMaxLength > 4) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]].hasOwnProperty(aConfigPath[4]))) {
+											if (iMaxLength == 5) {
+												return true;
+											} else {
+												if ((iMaxLength > 5) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]].hasOwnProperty(aConfigPath[5]))) {
+													if (iMaxLength == 6) {
+														return true;
+													} else {
+														if ((iMaxLength > 6) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]].hasOwnProperty(aConfigPath[6]))) {
+															if (iMaxLength == 7) {
+																return true;
+															} else {
+																if ((iMaxLength > 8) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]].hasOwnProperty(aConfigPath[7]))) {
+																	if (iMaxLength == 9) {
+																		return true;
+																	} // if found 8 level
+																} // if 8 level
+															} // if found 7 level
+														} // if 7 level
+													} // if found 6 level
+												} // if 6 level
+											} // if found 5 level
+										} // if 5 level
+									} // if found 4 level
+								} // if 4 level
+							} // if found 3 level
+						} // if 3 level
+					} // if found 2 level
+				} // if 2 level
+			} // if found 1 level
+		} // if 1 level
+		return false;
+	}, // function hasValue
+
 	// Simple deep merge without recursion protection etc, using ECMA 5 because running in global
 	deepMerge: function (oSource, oMerge, bMergeArrays) {
 		if (!this.checkAccess()) { return; }
@@ -172,6 +232,42 @@ GlobalToolsObject.prototype = {
 		return oSource;
 	}, // function deepMerge
 
+	// Simple object depth calc (does not check for cyclic objects as this is handled by Rhino: Cyclic {0} value not allowed.)
+	getDepth: function (oObj) {
+		if (!this.checkAccess()) { return; }
+		if (!this.isObject(oObj)) {
+			return -1;
+		} else if (Object.keys(oObj).length == 0) {
+			return 0;
+		} // if no obj
+		var aStack = [oObj];
+		var aTemp = [];
+		var iDepthMax = 0;
+		do {
+			iDepthMax++;
+			aTemp = [];
+			aStack.forEach(function (oStackObj) {
+				Object.keys(oStackObj).some(function (sKey) {
+					if ((this.isObject(oStackObj[sKey])) && (Object.keys(oStackObj[sKey]).length > 0)) {
+						aTemp.push(oStackObj[sKey]);
+					} // if stacked obj prop is object
+				}, this); // each obj key
+			}, this); // each stack obj
+			aStack = aTemp;
+		} while (aStack.length); // while nested objects
+		return iDepthMax;
+	}, // function getDepth
+
+	parseJSON: function(sJSON) {
+		if ((sJSON) && (this._gt.getType(sJSON) == 'string')) {
+			try {
+				return JSON.parse(sJSON);
+			} catch (oEx) {
+				// do nothing
+			} // catch error
+		} // if is string
+	}, // function parseJSON
+
 	type: 'GlobalToolsObject',
 	version: '1.0.1',
 	author: 'Tom Hauri',
@@ -181,13 +277,13 @@ GlobalToolsObject.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:36:44</sys_created_on>
         <sys_id>52165d601bf47150d5be777d8b4bcbc4</sys_id>
-        <sys_mod_count>28</sys_mod_count>
+        <sys_mod_count>47</sys_mod_count>
         <sys_name>GlobalToolsObject</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_52165d601bf47150d5be777d8b4bcbc4</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-26 13:38:52</sys_updated_on>
+        <sys_updated_on>2023-11-23 19:55:42</sys_updated_on>
     </sys_script_include>
 </record_update>
