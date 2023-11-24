@@ -919,7 +919,10 @@ bNoAutoSysFields: (Optional) if true does grRecord.autoSysFields(false) (default
 				bLog: (Optional) Default: false, will add additional logs depending on sLogLevel defined.
 sLogLevel: (Optional) Default: error, if bLog is true you can choose info or debug for verbose logging.
 bLogPrefix: (Optional) Default: GlobalToolsRecordWriteValidate -.
+
 sTargetTable: The table to update inserted/updated.
+sTableSequenceId: (Optional) Default: default, if provided will use this id in error object and as IRE internal_id.
+
 sErrorReturnType: 
 	code: array of error codes
 	message: array of error messages (detailed)
@@ -927,6 +930,9 @@ sErrorReturnType:
 	full: like normal but additionally provide message and message detail arguments
 
 bUseIRE: (Optional) Default: false, if true will use IRE to create/update records.
+bLogIREOutput: (Optional) Default: false, if true will log the IRE engine output to the system log.
+sDataSourceIRE: (Optional) Default: "Other Automated", first parameter for the IdentificationEngine.createOrUpdateCI function.
+
 bDoAction: (Optional) Default: true, if false will not run final action.
 sAction: insert (only), update (only), save (insert/update) or delete.
 bInsert: (Optional) Default: false, is overwritten by sAction.
@@ -961,38 +967,57 @@ bStateFlowActionIsMandatory: (Optional) Default: false, if true, either sStateAc
 sStateFlowActionValueField: (Optional) Default: "action", if set uses this field to retrieve the sStateFlowAction name from the values object.
 bStateFlowActionDeleteFieldValue: (Optional) Default: false, if true will remove the action field from the payload before running throught the values.
 oStateFlowActionConfig: (Optional), object with state flow actions:
-		sStateFlowAction: Value from the sStateFlowActionValueField in the values object:
-				sStateAction: Name of the state flow action.
-				sStateActionId: SysId of the state flow action.
-				bWorkNotesMandatory: if this action, worknotes are mandatory.
+	sStateFlowAction: Value from the sStateFlowActionValueField in the values object:
+		sStateAction: Name of the state flow action.
+		sStateActionId: SysId of the state flow action.
+		bWorkNotesMandatory: if this action, worknotes are mandatory.
 
-aKeysDefaultReferenceFields: (Optional), if set will use aKeysDefaultReferenceFields as keys if "aKeys" is empty.
+aDynamicFieldConfig: (Optional), will evaluate a query condition or input value object checks and if true modifies the fields and mandatory fields.
+	sQueryCondition: (Optional), will run a filter against the old record and dynamically modify fields if true.
+	aInputValueChecks: (Optional), will run checks against the values object and dynamically modify fields if true.
+		sField: field where the value check is run against.
+		sRegExpPattern: (Optional), regular expression to be run against the value in the sField
+		sRegExpFlags: (Optional), regular expression flags to be used in above regex check.
+		sScript: (Optional), script to be evaluated. Before the script is run all occurrences of "sValue" will be replaced by the actual field value.
+	aFields: (Optional), if any of the above evaluation methods is true these fields will be added to the field configuration (aFields).
+	aFieldsRemoval: (Optional), if any of the above evaluation methods is true these fields will be removed from the field configuration (aFields).
+	aMandatoryFields: (Optional), if any of the above evaluation methods is true these fields will be added to the mandatory fields configuration (aMandatoryFields).
+	aMandatoryFieldsRemoval: (Optional), if any of the above evaluation methods is true these fields will be removed from the mandatory fields  configuration (aMandatoryFields).
+
+aInputValueChecks:  (Optional), 
+	sField: field where the value check is run against.
+	sRegExpPattern: (Optional), regular expression to be run against the value in the sField
+	sRegExpFlags: (Optional), regular expression flags to be used in above regex check.
+	sScript: (Optional), script to be evaluated. Before the script is run all occurrences of "sValue" will be replaced by the actual field value.
+	sErrorMessage: if any of the above evaluation methods is true then this error will be set with the generic error: 400_038 Input values check failed
+
+aKeysDefaultReferenceFields: (Optional), Default: ["sys_id"], if set will use the array values as keys if "aKeys" is empty.
 bKeysDefaultReferenceDisplayField: (Optional) Default: false, if true will use the grRefRecord.getDisplayField from the reference table as key if "aKeys" is empty.
 
 aKeys: (Optional for insert, mandatory for update/delete) Default: see GlobalToolsRecordRead.getRecordByKeys for documentation.
 aFields: (Optional), if set is an array of fields to be updated including special field configurations for value mapping and lookup.
 	sField: string with the effective field name.
 	oField: object with a specific field configuration.
-			sField: name of the field in the table.
-			sSourceField: name of the field in the values object.
-			sRefTable: (Optional), if set will use this table for lookup, if empty the sField dictionary reference table is used.
-			aKeys: see GlobalToolsRecordRead.getRecordByKeys for documentation.
-			sDefaultValue: (Optional), if set replaces an empty field value with this value.
-			sPrefix: (Optional), if set adds a prefix to the value.
-			sPostfix: (Optional), if set adds a postfix to the value.
-			sRelatedTableResultId: (Optional), if set, will lookup the value (usualy sys_id) from another table treated earlier in the integration (/oRelatedTableResultIds/sRelatedTableResultId in the configuration object).
-			bAddValues: (Optional), Default false, if true and field is a list will preserve old values and add the new values if they are not present.
-			sRefLookupScript: (Optional), will run function in sRefLookupScript this, if empty will look for a generic function in the "oTransformConfig/oTypeMap/reference/" + sRefTable + "/sRefLookupScript".
-				Parameters passed to the sRefLookupScript:
-					bLog: bLog from config.
-					sField: sField from field object.
-					sValue: sRefInput, value from values object.
-					sTargetTable: main table for record.
-					sRefTable: reference lookup table.
-					oField: field object.
-					grRecord: current record.
-					oRecordConfig: configuration object.
-					oRecordValues: values object.
+		sField: name of the field in the table.
+		sSourceField: name of the field in the values object.
+		sRefTable: (Optional), if set will use this table for lookup, if empty the sField dictionary reference table is used.
+		aKeys: see GlobalToolsRecordRead.getRecordByKeys for documentation.
+		sDefaultValue: (Optional), if set replaces an empty field value with this value.
+		sPrefix: (Optional), if set adds a prefix to the value.
+		sPostfix: (Optional), if set adds a postfix to the value.
+		sRelatedTableResultId: (Optional), if set, will lookup the value (usualy sys_id) from another table treated earlier in the integration (/oRelatedTableResultIds/sRelatedTableResultId in the configuration object).
+		bAddValues: (Optional), Default false, if true and field is a list will preserve old values and add the new values if they are not present.
+		sRefLookupScript: (Optional), will run function in sRefLookupScript this, if empty will look for a generic function in the "oTransformConfig/oTypeMap/reference/" + sRefTable + "/sRefLookupScript".
+			Parameters passed to the sRefLookupScript:
+				bLog: bLog from config.
+				sField: sField from field object.
+				sValue: sRefInput, value from values object.
+				sTargetTable: main table for record.
+				sRefTable: reference lookup table.
+				oField: field object.
+				grRecord: current record.
+				oRecordConfig: configuration object.
+				oRecordValues: values object.
 
 oTransformConfig: (Optional), if set is an object containing transform instructions.
 	oFieldMap: (Optional), if set is an object containing value pairs for a specific field, if the key is found the value is replaced.
@@ -1204,13 +1229,13 @@ oExpectedResult is anything else it will be compared to the result (===).
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>106</sys_mod_count>
+        <sys_mod_count>110</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-23 19:59:39</sys_updated_on>
+        <sys_updated_on>2023-11-24 09:06:12</sys_updated_on>
     </sys_ui_page>
 </record_update>
