@@ -118,6 +118,21 @@ GlobalToolsTable.prototype = {
 	*	Field Functions
 	************************************************************************************************************/
 
+	getInternalType: function (grRecord, sField) {
+		if (!this.checkAccess()) { return; }
+		if (this._gt.getType(grRecord).indexOf('gliderecord') != -1) {
+			if (grRecord.isValidField(sField)) {
+				var geElement = grRecord.getElement(sField);
+				if (geElement) {
+					var edElementDescriptor = geElement.getED();
+					if (edElementDescriptor) {
+						return String(edElementDescriptor.getInternalType());
+					} // if element descriptor
+				} // if element
+			} // if valid field
+		} // if valid record
+	}, // function getInternalType
+
 	getDisplayField: function (sTable) {
 		if (!this.checkAccess()) { return; }
 		if (this.isValidTable(sTable)) {
@@ -305,7 +320,7 @@ GlobalToolsTable.prototype = {
 	}, // function getMandatoryFields
 
 	type: 'GlobalToolsTable',
-	version: '1.0.1',
+	version: '1.0.2',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -314,13 +329,13 @@ GlobalToolsTable.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:03:21</sys_created_on>
         <sys_id>157e05681bb47150d5be777d8b4bcb77</sys_id>
-        <sys_mod_count>79</sys_mod_count>
+        <sys_mod_count>81</sys_mod_count>
         <sys_name>GlobalToolsTable</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_157e05681bb47150d5be777d8b4bcb77</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-22 05:46:13</sys_updated_on>
+        <sys_updated_on>2023-12-13 14:17:51</sys_updated_on>
     </sys_script_include>
 </record_update>

@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-27 14:26:38</sys_created_on>
         <sys_id>03b908e51b6db110d5be777d8b4bcbf6</sys_id>
-        <sys_mod_count>79</sys_mod_count>
+        <sys_mod_count>108</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_03b908e51b6db110d5be777d8b4bcbf6</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-07 16:52:13</sys_updated_on>
+        <sys_updated_on>2023-12-13 14:30:16</sys_updated_on>
         <table/>
         <test display_value="GlobalTools Tests">171600e11b6db110d5be777d8b4bcbbc</test>
         <timeout/>
@@ -49,14 +49,15 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-27 14:26:38</sys_created_on>
         <sys_id>ff4a88e51b6db110d5be777d8b4bcb1a</sys_id>
-        <sys_mod_count>79</sys_mod_count>
+        <sys_mod_count>108</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-07 16:52:13</sys_updated_on>
+        <sys_updated_on>2023-12-13 14:30:16</sys_updated_on>
         <value>(function(outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
+	var bLogStringToCode = true;&#13;
 	var _gt = new global.GlobalTools();&#13;
-	var _gtATF = new global.GlobalToolsATF('GlobalTools', _gt, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
+	var _gtATF = new global.GlobalToolsATF('GlobalTools', _gt, bLog, outputs, steps, params, stepResult, assertEqual, bLogStringToCode);&#13;
 	var grRecord;&#13;
 	&#13;
 	_gtATF.runATF('nsub', 'na', '', 'na');&#13;
@@ -135,6 +136,12 @@
 	_gtATF.runATF('convertUnderscoretoCamelCase', 'Test', 'test');&#13;
 	_gtATF.runATF('convertUnderscoretoCamelCase', 'TestSugus0Sugus1Sugus2', 'test_sugus0_sugus1_sugus2');&#13;
 	&#13;
+	_gtATF.runATF('getHTMLDiffFromXML', undefined);&#13;
+	_gtATF.runATF('getHTMLDiffFromXML', undefined, '&lt;xml&gt;&lt;/xml&gt;');&#13;
+	_gtATF.runATF('getHTMLDiffFromXML', undefined, '&lt;xml&gt;&lt;/xml&gt;', '&lt;xml&gt;&lt;/xml&gt;');&#13;
+	_gtATF.runATF('getHTMLDiffFromXML', /equal/gi, '&lt;syslog&gt;&lt;sys_id&gt;test&lt;/sys_id&gt;&lt;/syslog&gt;', '&lt;syslog&gt;&lt;sys_id&gt;test&lt;/sys_id&gt;&lt;/syslog&gt;', '---Left---', '---Right---');&#13;
+	_gtATF.runATF('getHTMLDiffFromXML', /replace/gi, '&lt;syslog&gt;&lt;sys_id&gt;test&lt;/sys_id&gt;&lt;/syslog&gt;', '&lt;syslog&gt;&lt;sys_id&gt;test1&lt;/sys_id&gt;&lt;/syslog&gt;', '---Left---', '---Right---');&#13;
+&#13;
 	var sScheduledScriptId = _gt.scheduleScript('GlobalTools', 'getType', 1, ['string'], [], 'atf_test_atf');&#13;
 	if (sScheduledScriptId) {&#13;
 		grRecord = _gtATF.getRecord('sys_trigger', 'sys_id=' + sScheduledScriptId);&#13;

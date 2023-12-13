@@ -97,6 +97,7 @@ GlobalTools.prototype = {
 	}, // function getType
 
 	isEqual: function (oValue1, oValue2) {
+		if (!this.checkAccess()) { return; }
 		if (((oValue1) && (!oValue2)) || ((!oValue1) && (oValue2))) {
 			return false;
 		} else if ((!oValue1) && (!oValue2)) {
@@ -156,7 +157,8 @@ GlobalTools.prototype = {
 	}, // function decodeTagToNewLine
 
 	// Function to replace placeholders
-	replacePlaceholders: function(sInputValue, oRecord, sValue, bJSON) {
+	replacePlaceholders: function (sInputValue, oRecord, sValue, bJSON) {
+		if (!this.checkAccess()) { return; }
 		if ((sInputValue) && (oRecord)) {
 			var bIsRecord = (this.getType(oRecord).indexOf('gliderecord') != -1);
 			var reGetFields = /(\[[A-Za-z_0-9]*\])(?!.*")/gi;
@@ -168,11 +170,11 @@ GlobalTools.prototype = {
 				reGetFields = /(\[[A-Za-z_0-9]*\])/gi;
 			} // if json
 			var aReResults = String(sInputValue).match(reGetFields);
-			var reReplace = new RegExp('placeholder'); 
+			var reReplace = new RegExp('placeholder');
 			var sFieldName = '', sReplaceValue = '', sReplace = '';
 			if ((aReResults) && (Array.isArray(aReResults))) {
 				this._unique(aReResults);
-				aReResults.forEach(function(sReResult) {
+				aReResults.forEach(function (sReResult) {
 					sFieldName = sReResult.replace(/\[|\]/g, '');
 					if (sFieldName == 'sValue') {
 						sReplaceValue = sValue;
@@ -192,17 +194,31 @@ GlobalTools.prototype = {
 		return sInputValue;
 	}, // function replacePlaceholders
 
-	convertUnderscoretoCamelCase: function(sInputValue) {
-        if (sInputValue) {
-            var aResult = [];
-            sInputValue.split('_').forEach(function(sWord) {
-                sWord = sWord.replace(/[^a-zA-Z0-9]/g, '');
-                aResult.push(sWord.charAt(0).toUpperCase() + sWord.substr(1).toLowerCase());
-            }); // each word
-            return aResult.join('');
-        } // if name
-        return sInputValue;
-    }, // function convertUnderscoretoCamelCase
+	convertUnderscoretoCamelCase: function (sInputValue) {
+		if (!this.checkAccess()) { return; }
+		if (sInputValue) {
+			var aResult = [];
+			sInputValue.split('_').forEach(function (sWord) {
+				sWord = sWord.replace(/[^a-zA-Z0-9]/g, '');
+				aResult.push(sWord.charAt(0).toUpperCase() + sWord.substr(1).toLowerCase());
+			}); // each word
+			return aResult.join('');
+		} // if name
+		return sInputValue;
+	}, // function convertUnderscoretoCamelCase
+
+	getHTMLDiffFromXML: function (sXMLLeft, sXMLRight, sHeaderLeft, sHeaderRight) {
+		if (!this.checkAccess()) { return; }
+		if ((sXMLLeft) && (sXMLRight)) {
+			var _DiffHelper = new global.DiffHelper();
+			var oDiff = _DiffHelper.diffXMLString(sXMLLeft, sXMLRight);
+			if (oDiff != null) {
+				sHeaderLeft = (sHeaderLeft) ? sHeaderLeft : '';
+				sHeaderRight = (sHeaderRight) ? sHeaderRight : '';
+				return _DiffHelper.getTemplate(oDiff, sHeaderLeft, sHeaderRight);
+			} // if diff
+		} // if xmls
+	}, // function getHTMLDiffFromXML
 
 	// Schedule ScriptInclude Function
 	scheduleScript: function (sScriptInclude, sFunction, iSeconds, aFunctionArgs, aClassArgs, sScheduleName) {
@@ -364,7 +380,7 @@ GlobalTools.prototype = {
 	}, // runFunctionInScope
 
 	type: 'GlobalTools',
-	version: '1.0.1',
+	version: '1.0.2',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -373,13 +389,13 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>97</sys_mod_count>
+        <sys_mod_count>108</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-22 05:45:14</sys_updated_on>
+        <sys_updated_on>2023-12-13 14:17:18</sys_updated_on>
     </sys_script_include>
 </record_update>

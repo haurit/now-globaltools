@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 05:37:15</sys_created_on>
         <sys_id>ff826c861be17510c1ecdc61ab4bcbbe</sys_id>
-        <sys_mod_count>52</sys_mod_count>
+        <sys_mod_count>54</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_ff826c861be17510c1ecdc61ab4bcbbe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-07 16:58:33</sys_updated_on>
+        <sys_updated_on>2023-12-13 14:33:19</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsTable Tests">ccd68ce11b6db110d5be777d8b4bcbe6</test>
         <timeout/>
@@ -49,9 +49,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 05:37:15</sys_created_on>
         <sys_id>7c54a8c61be17510c1ecdc61ab4bcb31</sys_id>
-        <sys_mod_count>52</sys_mod_count>
+        <sys_mod_count>54</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-07 16:58:33</sys_updated_on>
+        <sys_updated_on>2023-12-13 14:33:19</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -98,6 +98,12 @@
 &#13;
 	_gtATF.runATF('getTableScopeInfo', { 'id': 'global', 'access': null, 'read': true, 'create': true, 'write': true, 'delete': false }, 'incident');&#13;
 	_gtATF.runATF('getTableScopeInfo', undefined, 'invalidtable');&#13;
+&#13;
+	grRecord = _gtATF.getRecord('incident', 'active=true');&#13;
+	_gtATF.runATF('getInternalType', 'integer', grRecord, 'sys_mod_count');&#13;
+	_gtATF.runATF('getInternalType', 'boolean', grRecord, 'active');&#13;
+	_gtATF.runATF('getInternalType', 'string', grRecord, 'short_description');&#13;
+	_gtATF.runATF('getInternalType', 'reference', grRecord, 'caller_id');&#13;
 &#13;
 	_gtATF.runATF('getDisplayField', 'number', 'task');&#13;
 	_gtATF.runATF('getDisplayField', 'number', 'incident');&#13;

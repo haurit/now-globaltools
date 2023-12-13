@@ -72,6 +72,13 @@
 			<li>Added manual page</li>
 			<li>Additional ATF Tests</li>
 		</ol>
+		<h3>1.0.2 - 12.2023</h3>
+		<ol>
+			<li>Added function getHTMLDiffFromXML</li>
+			<li>Added function getInternalType</li>
+			<li>Added function convertGRtoXML</li>
+			<li>Added function deleteMultiple</li>
+		</ol>
 		<h2>Problem Statement</h2>
 		<p>Many functions are not available in scoped applications which hinders the developent of reusable solution
 			blocks and many functions are required across many different applications.</p>
@@ -203,6 +210,17 @@
 		<p>
 			<strong>Returns:</strong>&#160;The input string in camel case.
 		</p>
+		<h2>Function: getHTMLDiffFromXML</h2>
+		<p><strong>Purpose:</strong>&#160;This function compares two XML strings and returns a HTML string with the
+			differences.</p>
+		<p><strong>Parameters:</strong></p>
+		<ul>
+			<li><code>sXMLLeft</code>: The string containing the first XML string.</li>
+			<li><code>sXMLRight</code>: The string containing the second XML string.</li>
+			<li><code>sHeaderLeft</code>: The string containing the left title value.</li>
+			<li><code>sHeaderRight</code>: The string containing the right title value.</li>
+		</ul>
+		<p><strong>Returns:</strong>>&#160;The HTML string with the differences or <code>undefined</code> if there was an error.</p>
 		<h2>Function: scheduleScript</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function schedules the execution of a script include function.
@@ -544,6 +562,15 @@
 		</ul>
 		If the table is not valid, it returns <code>undefined</code>.
 		</p>
+		<h2>getInternalType</h2>
+		<p><strong>Purpose:</strong>&#160;This function returns the internal field type for a given table and field.</p>
+		<p><strong>Parameters:</strong>
+			<li><code>sTable</code>: A string representing the name of the table for which to retrieve the field.</li>
+			<li><code>sField</code>: A string representing the name of the field.</li>
+		</p>
+		<p><strong>Returns:</strong>&#160;Returns a string representing the internal field type or
+			<code>undefined</code> if not found.
+		</p>
 		<h2>getDisplayField</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function retrieves the display field for a given table. It checks if a
@@ -789,7 +816,20 @@ bQueryEmptyFields: Generic setting to query empty fields with ISEMPTY instead of
 		</p>
 		<p>
 			<strong>Returns:</strong>&#160;Returns JSON or a JSON string depending on the <code>bStringify</code>
-			parameter or or <code>undefined</code> if <code>grRecord</code> is not a valid GlideRecord.
+			parameter or <code>undefined</code> if <code>grRecord</code> is not a valid GlideRecord.
+		</p>
+		<h2>convertGRtoXML</h2>
+		<p>
+			<strong>Purpose:</strong>&#160;;This function converts a GlideRecord to XML format.
+		</p>
+		<p>
+			<strong>Parameters:</strong>
+			<li><code>grRecord</code>: The GlideRecord object to be converted.</li>
+		</p>
+		<p>
+			<strong>Returns:</strong>&#160;Returns XML string or <code>undefined</code> if <code>grRecord</code> is not
+			a
+			valid GlideRecord.
 		</p>
 		<h2>makeQueryADotWalkQuery</h2>
 		<p>
@@ -879,6 +919,15 @@ bNoAutoSysFields: (Optional) if true does grRecord.autoSysFields(false) (default
 		<p>
 			<strong>Returns:</strong>&#160;<code>true</code> if update executed, else <code>undefined</code>.
 		</p>
+		<h2>deleteMultiple</h2>
+		<p><strong>Purpose:</strong>&#160;This function deletes multiple records in a table based on a query.</p>
+		<p><strong>Parameters:</strong>
+			<li><code>sTable</code>: The table where the records shall be deleted.</li>
+			<li><code>sQuery</code>: The query to find the records to be deleted.</li>
+		</p>
+		<p><strong>Returns:</strong>&#160;<code>true</code> if delete executed, else <code>undefined</code>.
+		</p>
+
 		<h2>setGRValue</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function sets a value for a field in a GlideRecord object.
@@ -1191,13 +1240,12 @@ oExpectedResult is anything else it will be compared to the result (===).
 		<h2>Function: getRecord</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function uses the GlobalTools.getRecords function and if successful does
-			a
-			grRecord.next() to get the first record.
+			a grRecord.next() to get the first record.
 		</p>
 		<p>
 			<strong>Parameters:</strong>
-			<li><code>sTable</code>: The Script Include <code>sFunction</code> to be tested.</li>
-			<li><code>sQuery</code>: The expected return value from <code>sFunction</code> call.</li>
+			<li><code>sTable</code>: The table of the record.</li>
+			<li><code>sQuery</code>: The query to find the record.</li>
 		</p>
 		<p>
 			<strong>Returns:</strong>&#160;The a GlideRecord if successful or <code>undefined</code> if no record is
@@ -1229,13 +1277,13 @@ oExpectedResult is anything else it will be compared to the result (===).
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>110</sys_mod_count>
+        <sys_mod_count>121</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-24 09:06:12</sys_updated_on>
+        <sys_updated_on>2023-12-13 11:09:26</sys_updated_on>
     </sys_ui_page>
 </record_update>
