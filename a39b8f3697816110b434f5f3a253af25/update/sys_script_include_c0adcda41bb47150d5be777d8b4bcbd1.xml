@@ -194,6 +194,20 @@ GlobalToolsRecordWrite.prototype = {
 		} // if query
 	}, // function updateMultiple
 
+	// Global scoped deleteMultiple function to overcome scope issue
+	deleteMultiple: function (sTargetTable, sQuery) {
+		if (!this.checkAccess()) { return; }
+		if ((sTargetTable) && (this._gtTable.isValidTable(sTargetTable)) && (sQuery) && (sQuery != 'null')) {
+			var grRecord = new GlideRecord(sTargetTable);
+			if (grRecord.isValidEncodedQuery(sQuery)) {
+				grRecord.addEncodedQuery(sQuery);
+				grRecord.query();
+				grRecord.deleteMultiple();
+				return true;
+			} // if valid query
+		} // if valid table and query
+	}, // function deleteMultiple
+
 	// Global scoped setValue function to overcome scope issue
 	setGRValue: function (grRecord, sFieldName, oValue) {
 		if (!this.checkAccess()) { return; }
@@ -209,7 +223,7 @@ GlobalToolsRecordWrite.prototype = {
 	}, // function abortGRAction
 
 	type: 'GlobalToolsRecordWrite',
-	version: '1.0.1',
+	version: '1.0.2',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -217,13 +231,13 @@ GlobalToolsRecordWrite.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 09:59:44</sys_created_on>
         <sys_id>c0adcda41bb47150d5be777d8b4bcbd1</sys_id>
-        <sys_mod_count>14</sys_mod_count>
+        <sys_mod_count>18</sys_mod_count>
         <sys_name>GlobalToolsRecordWrite</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_c0adcda41bb47150d5be777d8b4bcbd1</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-31 06:22:01</sys_updated_on>
+        <sys_updated_on>2023-12-13 14:18:07</sys_updated_on>
     </sys_script_include>
 </record_update>
