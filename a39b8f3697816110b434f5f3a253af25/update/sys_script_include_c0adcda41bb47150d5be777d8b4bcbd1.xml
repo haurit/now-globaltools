@@ -11,12 +11,11 @@ Functions are only available for global scope and specific scopes defined in the
         <script><![CDATA[var GlobalToolsRecordWrite = Class.create();
 GlobalToolsRecordWrite.prototype = {
 	initialize: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this._gtTable = new global.GlobalToolsTable();
 	}, // function initialize
 
-	checkAccess: function () {
-		var sCallerScope = gs.getCallerScopeName();
+	checkAccess: function (sCallerScope) {
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
 		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
@@ -26,7 +25,7 @@ GlobalToolsRecordWrite.prototype = {
 
 	// Insert, update or delete record based on values and config object
 	doRecord: function (oValues, oConfig, oError) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		try {
 			var bLog = (String(oConfig['bLog']) == 'true') ? true : false;
 			if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord oValues: ' + JSON.stringify(oValues)); }
@@ -149,7 +148,7 @@ GlobalToolsRecordWrite.prototype = {
 
 	// Global scoped updateMultiple function to overcome scope issue
 	updateMultiple: function (oValues, oConfig) {
-		if ((!this.checkAccess() || (!oValues) || (!oConfig))) { return; }
+		if ((!this.checkAccess(gs.getCallerScopeName()) || (!oValues) || (!oConfig))) { return; }
 		var bLog = (String(oConfig['bLog']) == 'true') ? true : false;
 		if (bLog) { gs.info('GlobalToolsRecordWrite.updateMultiple oValues: ' + JSON.stringify(oValues)); }
 		if (bLog) { gs.info('GlobalToolsRecordWrite.updateMultiple oConfig: ' + JSON.stringify(oConfig)); }
@@ -196,7 +195,7 @@ GlobalToolsRecordWrite.prototype = {
 
 	// Global scoped deleteMultiple function to overcome scope issue
 	deleteMultiple: function (sTargetTable, sQuery) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sTargetTable) && (this._gtTable.isValidTable(sTargetTable)) && (sQuery) && (sQuery != 'null')) {
 			var grRecord = new GlideRecord(sTargetTable);
 			if (grRecord.isValidEncodedQuery(sQuery)) {
@@ -210,7 +209,7 @@ GlobalToolsRecordWrite.prototype = {
 
 	// Global scoped setValue function to overcome scope issue
 	setGRValue: function (grRecord, sFieldName, oValue) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sFieldName) && (oValue)) {
 			grRecord.setValue(sFieldName, oValue);
 		} // if fieldname and value
@@ -218,7 +217,7 @@ GlobalToolsRecordWrite.prototype = {
 
 	// Global scoped abort function to overcome scope issue
 	abortGRAction: function (grRecord) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		grRecord.setAbortAction(true);
 	}, // function abortGRAction
 
@@ -231,13 +230,13 @@ GlobalToolsRecordWrite.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 09:59:44</sys_created_on>
         <sys_id>c0adcda41bb47150d5be777d8b4bcbd1</sys_id>
-        <sys_mod_count>18</sys_mod_count>
+        <sys_mod_count>22</sys_mod_count>
         <sys_name>GlobalToolsRecordWrite</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_c0adcda41bb47150d5be777d8b4bcbd1</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-13 14:18:07</sys_updated_on>
+        <sys_updated_on>2023-12-14 07:23:44</sys_updated_on>
     </sys_script_include>
 </record_update>

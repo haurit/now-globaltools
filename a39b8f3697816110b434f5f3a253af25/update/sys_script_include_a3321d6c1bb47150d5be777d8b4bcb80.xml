@@ -11,9 +11,7 @@ Functions are only available for global scope and specific scopes defined in the
         <script><![CDATA[var GlobalToolsRecordWriteValidate = Class.create();
 GlobalToolsRecordWriteValidate.prototype = {
 	initialize: function () {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		gs.include('j2js');
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
@@ -26,8 +24,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this._gtTable = new global.GlobalToolsTable();
 	}, // function initialize
 
-	checkAccess: function () {
-		var sCallerScope = gs.getCallerScopeName();
+	checkAccess: function (sCallerScope) {
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
 		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
@@ -40,7 +37,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	************************************************************************************************************/
 
 	validateAndWrite: function (oRecordConfig, oRecordValues, oError) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this._errorHandlerInit(oRecordConfig, oError);
 		this._setGlobals(oRecordConfig, oRecordValues);
 		if (this._canContinue()) {
@@ -71,7 +68,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function validateAndWrite
 
 	validateAndReturnIREObject: function (oRecordConfig, oRecordValues, oError) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this._errorHandlerInit(oRecordConfig, oError);
 		this._setGlobals(oRecordConfig, oRecordValues);
 		if (this._canContinue()) {
@@ -101,7 +98,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	************************************************************************************************************/
 
 	_setGlobals: function (oRecordConfig, oRecordValues) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this.sUserCurrentId = gs.getUserID();
 		this.sUserInitialId = gs.getUserID();
 		this.oRecordConfig = oRecordConfig;
@@ -138,7 +135,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _setGlobals
 
 	_getFields: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this.aFields.forEach(function (oField) {
 			var sFieldType = this._gt.getType(oField);
 			if (sFieldType == 'string') {
@@ -196,6 +193,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _getFields
 
 	_getDependentFields: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var oDependentFields = {};
 		var sDependentField = '';
 		this.aAllRecordFields.forEach(function (sField) {
@@ -208,6 +206,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _getDependentFields
 
 	_sortAllRecordFieldsByDependent: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var _sortFieldsByDependent = function (oFirstElement, oSecondElement) {
 			if ((this.oDependentFields.hasOwnProperty(oFirstElement)) && (!this.oDependentFields.hasOwnProperty(oSecondElement))) {
 				return -1;
@@ -224,7 +223,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _sortAllRecordFieldsByDependent
 
 	_applyFieldValueConfiguration: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var oField;
 		this.aFieldsComplex.forEach(function (sField) {
 			oField = this._getValue(sField, {}, this.oFieldsObjects);
@@ -248,7 +247,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _applyFieldValueConfiguration
 
 	_validate: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((this.sAction == 'insert') && (!this._getValue('aKeys', undefined, this.oRecordConfig))) {
 			this.bIsValidRecord = false;
 		} else {
@@ -289,7 +288,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validate
 
 	_apply: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var oField,
 			sValue,
 			aValues,
@@ -515,7 +514,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _apply
 
 	_createIREPayload: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this.oIREPayload = { 'items': [] };
 		var sItem = {
 			'className': this._gtTable.getRecordClass(this.grRecord),
@@ -532,7 +531,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _createIREPayload
 
 	_runIRE: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sIREPayload = JSON.stringify(this.oIREPayload);
 		this._getValue('bUseIRE', false, this.oRecordConfig)
 		var sDataSourceIRE = this._getValue('sDataSourceIRE', 'Other Automated', this.oRecordConfig);
@@ -554,7 +553,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _runIRE
 
 	_writeRecord: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var bSaveActionDone = false;
 		if ((this.bIsValidRecord) && (this._getValue('oStateFlowActionConfig', '', this.oRecordConfig))) {
 			bSaveActionDone = this._validateStateFlowAction();
@@ -594,7 +593,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	************************************************************************************************************/
 
 	_setAction: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sAction = this._getValue('sAction', '', this.oRecordConfig);
 		if (sAction == 'insert') {
 			this._setValue('bInsert', true, this.oRecordConfig);
@@ -637,7 +636,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _setAction
 
 	_validateInput: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!this.oRecordConfig) || (!this.sTargetTable)) {
 			this._errorHandler('405_001', 'Missing record config object or sTargetTable property', '', '', false, true);
 			return;
@@ -655,6 +654,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateInput
 
 	_runFieldValueCheck: function (oFieldValueCheck, bReturnFalseIfNotFound) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sField = this._getValue('sField', '', oFieldValueCheck);
 		var sValue = this._getValue(sField, '', this.oRecordValues);
 		var sErrorMessage = gs.getMessage(this._getValue('sErrorMessage', '', oFieldValueCheck), [sField, sValue]);
@@ -694,7 +694,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _runFieldValueCheck
 
 	_validateRecordAction: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!this.bIsValidRecord) && (this.sAction == 'delete')) {
 			this._errorHandler('404_001', 'Invalid action: record delete', '', [this.sTargetTable], false, true);
 		} else if ((this.bIsValidRecord) && (this.sAction == 'insert')) {
@@ -705,6 +705,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateRecordAction
 
 	_runDynamicFieldConfiguration: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var aDynamicFieldConfig = this._getValue('aDynamicFieldConfig', [], this.oRecordConfig);
 		if (this._isValidArray(aDynamicFieldConfig)) {
 			var sQueryCondition = '';
@@ -734,7 +735,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _runDynamicFieldConfiguration
 
 	_validateApplyTemplate: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var bTemplateIsMandatory = this._getValue('bTemplateIsMandatory', false, this.oRecordConfig);
 		var sTemplateName = this._getValue('sTemplateName', '', this.oRecordConfig);
 		var sTemplateValueField = this._getValue('sTemplateValueField', 'template', this.oRecordConfig);
@@ -757,7 +758,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateApplyTemplate
 
 	_validateImpersonate: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sDefaultUser = this._getValue('sDefaultUser', '', this.oRecordConfig); // only for backwards compatibility
 		var sImpersonateDefaultUser = this._getValue('sImpersonateDefaultUser', sDefaultUser, this.oRecordConfig);
 		var bImpersonateDeleteFieldValue = this._getValue('bImpersonateDeleteFieldValue', false, this.oRecordConfig);
@@ -788,7 +789,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateImpersonate
 
 	_runImpersonate: function (bEndImpersonation) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sImpersonateUser = (bEndImpersonation) ? this.sUserInitialId : this.sImpersonateUserId;
 		if (sImpersonateUser) {
 			if (sImpersonateUser != this.sUserCurrentId) {
@@ -807,7 +808,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _runImpersonate
 
 	_validateRecordSecurity: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((this.sAction == 'insert') || ((this.sAction == 'save') && (!this.bIsValidRecord))) {
 			if (!this.grRecord.canCreate()) {
 				this._errorHandler('400_101', 'Access denied: record create', '', [this.sUserCurrentId, this.sTargetTable], false, true);
@@ -824,7 +825,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateRecordSecurity
 
 	_validateStateFlowAction: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sStateFlowActionValueField = this._getValue('sStateFlowActionValueField', 'action', this.oRecordConfig);
 		var sStateFlowActionValueFieldValue = this._getValue(sStateFlowActionValueField, '', this.oRecordValues);
 		var bStateFlowActionIsMandatory = this._getValue('bStateFlowActionIsMandatory', false, this.oRecordConfig);
@@ -867,7 +868,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateStateFlowAction
 
 	_getFieldsFromKeyArrays: function (aKeys, sType) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		aKeys.forEach(function (oKey) {
 			var aKey = [];
 			if (Array.isArray(oKey)) {
@@ -890,7 +891,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _getFieldsFromKeyArrays
 
 	_validateFields: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var grRecordTest = new GlideRecord(this.sTargetTable);
 		var bErrorOnAddlFieldsInBody = this._getValue('bErrorOnAddlFieldsInBody', false, this.oRecordConfig); // only for backwards compatibility
 		var bErrorOnAddlFieldsInValues = this._getValue('bErrorOnAddlFieldsInValues', bErrorOnAddlFieldsInBody, this.oRecordConfig);
@@ -934,7 +935,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateFields
 
 	_validateFieldSecurity: function (sField) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((this.grRecord) && (sField) && (!this.grRecord[sField])) {
 			if ((this.sAction == 'insert') || ((this.sAction == 'save') && (!this.bIsValidRecord))) {
 				if (!this.grRecord[sField].canCreate()) {
@@ -949,7 +950,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateFieldSecurity
 
 	_validateDataPolicy: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var bCheckDataPolicy = this._getValue('bCheckDataPolicy', true, this.oRecordConfig);
 		if (!bCheckDataPolicy) {
 			return;
@@ -1014,7 +1015,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateDataPolicy
 
 	_validateReferenceFieldValues: function (sField, oField, oValue, geElement, edElementDescriptor, sInternalType, sValueType) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var oParams = {};
 		var aValues = [];
 		var aValuesInput = (sValueType == 'array') ? oValue : [oValue];
@@ -1064,7 +1065,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateReferenceFieldValues
 
 	_validateReferenceEntry: function (sField, sValue, sRefTable, geElement, edElementDescriptor, sInternalType) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sDependentField = (this.oDependentFields.hasOwnProperty(sField)) ? this.oDependentFields[sField] : '';
 		var bMatch = true,
 			grRefRecord,
@@ -1147,7 +1148,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateReferenceEntry
 
 	_evaluateAdvRefQualifier: function (sField) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var oVars = {
 			'current': this.grRecord
 		}; // vars object
@@ -1157,7 +1158,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _evaluateAdvRefQualifier
 
 	_runBusinessLogic: function () {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		try {
 			var aUpdateBusinessLogicChecks = this._getValue('aUpdateBusinessLogicChecks', [], this.oRecordConfig);
 			aUpdateBusinessLogicChecks = (this._isValidArray(aUpdateBusinessLogicChecks)) ? aUpdateBusinessLogicChecks : [aUpdateBusinessLogicChecks];
@@ -1207,7 +1208,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	************************************************************************************************************/
 
 	_errorHandlerInit: function (oRecordConfig, oError) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		gs.flushMessages(); // flush messages before transaction
 		this.oError = oError;
 		this.sErrorReturnType = this._getValue('sErrorReturnType', 'normal', oRecordConfig);
@@ -1230,7 +1231,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _errorHandlerInit
 
 	_errorHandler: function (sErrorCode, sErrorMessage, aErrorMessageArgs, aErrorDetailArgs, bNoActionError, bFatalError) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (bNoActionError) {
 			this.oError[this.sTableSequenceId]['bNoActionError'] = true;
 		} // if no action
@@ -1269,6 +1270,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _canContinue
 
 	_parseRecordError: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var aGSErrorMessages = j2js(gs.getErrorMessages());
 		if (aGSErrorMessages.length > 0) {
 			var reTranslate = /&(nbsp|amp|quot|lt|gt);/g;
@@ -1286,7 +1288,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _parseRecordError
 
 	type: 'GlobalToolsRecordWriteValidate',
-	version: '1.0.1',
+	version: '1.0.2',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -1295,13 +1297,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>603</sys_mod_count>
+        <sys_mod_count>606</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-24 08:45:48</sys_updated_on>
+        <sys_updated_on>2023-12-14 07:21:28</sys_updated_on>
     </sys_script_include>
 </record_update>

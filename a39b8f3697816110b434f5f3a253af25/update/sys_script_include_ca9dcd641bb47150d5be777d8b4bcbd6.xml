@@ -13,8 +13,7 @@ Probably obsolete with ECMA 21</description>
 GlobalToolsArray.prototype = {
 	initialize: function () { },
 
-	checkAccess: function () {
-		var sCallerScope = gs.getCallerScopeName();
+	checkAccess: function (sCallerScope) {
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
 		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
@@ -24,7 +23,7 @@ GlobalToolsArray.prototype = {
 
 	// Obsolete with ECMA 21, works fine for small arrays
 	unique: function (aArray, bRemoveEmpty) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var onlyUnique = function (value, index, array) {
 			return array.indexOf(value) === index;
 		}; // function onlyUnique
@@ -39,14 +38,14 @@ GlobalToolsArray.prototype = {
 	}, // function
 
 	isValidArray: function (aArray) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((aArray) && (Array.isArray(aArray)) && (aArray.length > 0) && (aArray[0])) {
 			return true;
 		} // if array with one value
 	}, // function validArray
 
 	mergeArray: function (aArray1, aArray2) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((this.isValidArray(aArray1)) && ((!this.isValidArray(aArray2)))) {
 			return aArray1;
 		} else if ((!this.isValidArray(aArray1)) && ((this.isValidArray(aArray2)))) {
@@ -59,7 +58,7 @@ GlobalToolsArray.prototype = {
 
 	// Probably obsolete with ECMA 21
 	addRemoveFromArray: function (aArray, aArrayAdd, aArrayRemove) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var aResult = this.mergeArray(aArray, aArrayAdd);
 		var iFound = 0;
 		if (this.isValidArray(aArrayRemove)) {
@@ -77,7 +76,7 @@ GlobalToolsArray.prototype = {
 	// Get add/remove arrays from two arrays
 	// Note: Not optimal for performance on very big arrays
 	getAddRemoveFromArrays: function (aArray, aArrayOld) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (!this.isValidArray(aArray)) {
 			aArray = [];
 		} // is not array
@@ -112,6 +111,7 @@ GlobalToolsArray.prototype = {
 	}, // function getAddRemoveFromArray
 
 	convertCommaSepStringToArray: function (sCommaSepString) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var aResult = [];
 		sCommaSepString = sCommaSepString.replace(/[\n\s]+/g, '');
 		if (sCommaSepString) {
@@ -121,7 +121,7 @@ GlobalToolsArray.prototype = {
 	}, // function convertCommaSepStringToArray
 
 	type: 'GlobalToolsArray',
-	version: '1.0.1',
+	version: '1.0.2',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -130,13 +130,13 @@ GlobalToolsArray.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 09:59:35</sys_created_on>
         <sys_id>ca9dcd641bb47150d5be777d8b4bcbd6</sys_id>
-        <sys_mod_count>15</sys_mod_count>
+        <sys_mod_count>17</sys_mod_count>
         <sys_name>GlobalToolsArray</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_ca9dcd641bb47150d5be777d8b4bcbd6</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-11-07 15:10:18</sys_updated_on>
+        <sys_updated_on>2023-12-14 07:18:30</sys_updated_on>
     </sys_script_include>
 </record_update>

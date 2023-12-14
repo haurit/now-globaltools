@@ -11,13 +11,13 @@ Functions are only available for global scope and specific scopes defined in the
         <script><![CDATA[var GlobalToolsTable = Class.create();
 GlobalToolsTable.prototype = {
 	initialize: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		gs.include('j2js');
 		this._unique = new global.GlobalToolsArray().unique;
 		this._gt = new global.GlobalTools();
 	}, // function initialize
 
-	checkAccess: function () {
-		var sCallerScope = gs.getCallerScopeName();
+	checkAccess: function (sCallerScope) {
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
 		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
@@ -30,14 +30,14 @@ GlobalToolsTable.prototype = {
 	************************************************************************************************************/
 
 	isValidTable: function (sTable) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sTable) && (new GlideRecord(sTable).isValid())) {
 			return true;
 		} // if table is valid
 	}, // function isValidTable
 
 	getRecordClass: function (grRecord) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (this._gt.getType(grRecord).indexOf('gliderecord') != -1) {
 			var sClassName = grRecord.getValue('sys_class_name');
 			sClassName = (sClassName) ? sClassName : grRecord.getTableName();
@@ -49,7 +49,7 @@ GlobalToolsTable.prototype = {
 
 	// Convenience function to get absolute base class (to avoid scope issues)
 	getAbsoluteBase: function (sTable) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		try {
 			if (this.isValidTable(sTable)) {
 				return String(GlideDBObjectManager.get().getAbsoluteBase(sTable));
@@ -61,7 +61,7 @@ GlobalToolsTable.prototype = {
 
 	// Convenience function to get table hierarchy (to avoid scope issues)
 	getTableHierarchy: function (sTable) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		try {
 			if (this.isValidTable(sTable)) {
 				return j2js(GlideDBObjectManager.get().getTables(sTable));
@@ -73,7 +73,7 @@ GlobalToolsTable.prototype = {
 
 	// Convenience function to get table extentions (to avoid scope issues)
 	getTableExtensions: function (sTable, bAllExtensions) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		try {
 			if (this.isValidTable(sTable)) {
 				if (bAllExtensions) {
@@ -88,7 +88,7 @@ GlobalToolsTable.prototype = {
 
 	// Get cross scope access information for a table
 	getTableScopeInfo: function (sTable) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (!this.isValidTable(sTable)) {
 			return;
 		} // if not valid table
@@ -119,7 +119,7 @@ GlobalToolsTable.prototype = {
 	************************************************************************************************************/
 
 	getInternalType: function (grRecord, sField) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (this._gt.getType(grRecord).indexOf('gliderecord') != -1) {
 			if (grRecord.isValidField(sField)) {
 				var geElement = grRecord.getElement(sField);
@@ -134,7 +134,7 @@ GlobalToolsTable.prototype = {
 	}, // function getInternalType
 
 	getDisplayField: function (sTable) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.isValidTable(sTable)) {
 			var grDictOrOverride = this.getDictOrOverrideValue(sTable, '', 'display_override', true, 'display=true');
 			if (grDictOrOverride) {
@@ -144,7 +144,7 @@ GlobalToolsTable.prototype = {
 	}, // function getDisplayField
 
 	getFields: function (oTableOrRecord, bOmitSysId) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sType = this._gt.getType(oTableOrRecord);
 		var aResultFields = [];
 		var grTable, geField;
@@ -173,7 +173,7 @@ GlobalToolsTable.prototype = {
 
 	// Get reference field name based on reference table
 	getRefTable: function (sTable, sField) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sTable) && (this.isValidTable(sTable)) && (sField)) {
 			var aTables = this.getTableHierarchy(sTable);
 			var fDict = new GlideRecord('sys_dictionary');
@@ -190,7 +190,7 @@ GlobalToolsTable.prototype = {
 
 	// Get reference field name based on reference table
 	getRefFieldName: function (grRecord, sRefTable, bCheckRefTableHierarchy, sReturnType) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sReturnField = '';
 		var aReturnFields = [];
 		if (((grRecord)) && (this._gt.getType(grRecord).indexOf('gliderecord') != -1)) {
@@ -226,7 +226,7 @@ GlobalToolsTable.prototype = {
 
 	// Get dictionary record or value respecting overrides
 	getDictOrOverrideValue: function (sTable, sField, sAttributeName, bReturnRecord, sAddlDictQuery) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var oReturnValue;
 		if ((sTable) && (this.isValidTable(sTable)) && ((sField) || (sAttributeName == 'display_override'))) {
 			sAddlDictQuery = (sAddlDictQuery) ? sAddlDictQuery : '';
@@ -275,7 +275,7 @@ GlobalToolsTable.prototype = {
 	}, // function getDictOrOverrideValue
 
 	getFieldChoices: function (sTable, sField, sDependentFieldValue) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var aChoices = [],
 			aDependentValues = [],
 			aChoiceDisplayValues = [],
@@ -301,7 +301,7 @@ GlobalToolsTable.prototype = {
 	}, // function getFieldChoices
 
 	getMandatoryFields: function (sTable) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var aMandatoryFields = [];
 		if (this.isValidTable(sTable)) {
 			var grRecord = new GlideRecord(sTable);
@@ -329,13 +329,13 @@ GlobalToolsTable.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:03:21</sys_created_on>
         <sys_id>157e05681bb47150d5be777d8b4bcb77</sys_id>
-        <sys_mod_count>81</sys_mod_count>
+        <sys_mod_count>83</sys_mod_count>
         <sys_name>GlobalToolsTable</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_157e05681bb47150d5be777d8b4bcb77</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-13 14:17:51</sys_updated_on>
+        <sys_updated_on>2023-12-14 07:16:52</sys_updated_on>
     </sys_script_include>
 </record_update>
