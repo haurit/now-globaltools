@@ -11,11 +11,11 @@ Functions are only available for global scope and specific scopes defined in the
         <script><![CDATA[var GlobalTools = Class.create();
 GlobalTools.prototype = {
 	initialize: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this._unique = new global.GlobalToolsArray().unique;
 	}, // function initialize
 
-	checkAccess: function () {
-		var sCallerScope = gs.getCallerScopeName();
+	checkAccess: function (sCallerScope) {
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
 		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
@@ -26,7 +26,7 @@ GlobalTools.prototype = {
 	// Substitute null values in simple types
 	// DEPRECATED: sObjKey --> use GlobalToolsObject.getValue instead!
 	nsub: function (sValue, sSubstitute, sType, sObjKey) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (sObjKey) {
 			if (sValue.hasOwnProperty(sObjKey)) {
 				sValue = sValue[sObjKey];
@@ -74,7 +74,7 @@ GlobalTools.prototype = {
 	}, // function nsub
 
 	getType: function (oValue, bDoNotConvertCase) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (oValue === null) {
 			return 'null';
 		}
@@ -97,7 +97,7 @@ GlobalTools.prototype = {
 	}, // function getType
 
 	isEqual: function (oValue1, oValue2) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (((oValue1) && (!oValue2)) || ((!oValue1) && (oValue2))) {
 			return false;
 		} else if ((!oValue1) && (!oValue2)) {
@@ -144,21 +144,21 @@ GlobalTools.prototype = {
 
 	// Encode new line to tag
 	encodeNewLineToTag: function (sValue) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sResult = (sValue) ? String(sValue).replace(/\n/g, '!^br^!') : '';
 		return sResult;
 	}, // function encodeNewLineToTag
 
 	// Decode tag to new line
 	decodeTagToNewLine: function (sValue) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sResult = String(sValue).replace(/!\^br\^!/g, '\n');
 		return sResult;
 	}, // function decodeTagToNewLine
 
 	// Function to replace placeholders
 	replacePlaceholders: function (sInputValue, oRecord, sValue, bJSON) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sInputValue) && (oRecord)) {
 			var bIsRecord = (this.getType(oRecord).indexOf('gliderecord') != -1);
 			var reGetFields = /(\[[A-Za-z_0-9]*\])(?!.*")/gi;
@@ -195,7 +195,7 @@ GlobalTools.prototype = {
 	}, // function replacePlaceholders
 
 	convertUnderscoretoCamelCase: function (sInputValue) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (sInputValue) {
 			var aResult = [];
 			sInputValue.split('_').forEach(function (sWord) {
@@ -208,7 +208,7 @@ GlobalTools.prototype = {
 	}, // function convertUnderscoretoCamelCase
 
 	getHTMLDiffFromXML: function (sXMLLeft, sXMLRight, sHeaderLeft, sHeaderRight) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sXMLLeft) && (sXMLRight)) {
 			var _DiffHelper = new global.DiffHelper();
 			var oDiff = _DiffHelper.diffXMLString(sXMLLeft, sXMLRight);
@@ -222,7 +222,7 @@ GlobalTools.prototype = {
 
 	// Schedule ScriptInclude Function
 	scheduleScript: function (sScriptInclude, sFunction, iSeconds, aFunctionArgs, aClassArgs, sScheduleName) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		function parseArgs(aArgs) {
 			var aReturn = [];
 			if (!aArgs) {
@@ -281,7 +281,7 @@ GlobalTools.prototype = {
 
 	// Convenience function to handle scheduler
 	scheduleHandler: function (sEvent, sDelaySeconds, sAction, sAddlQuery, grRecord, oParam1, oParam2, sQueue) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		try {
 			if (!sEvent) {
 				gs.warn('global.GlobalTools.scheduleHandler called without an event.');
@@ -319,13 +319,13 @@ GlobalTools.prototype = {
 
 	// Overcome scopeing issue
 	sleep: function (iMilliseconds) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		gs.sleep(iMilliseconds);
 	}, // function sleep
 
 	// Run function in a same scope
 	runFunction: function (sFunction) { // function is a <script_include>.<function>.toString(), 2nd... args will be evaluated in function call
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var gsEvaluator = new GlideScopedEvaluator();
 		gsEvaluator.putVariable('result', null);
 		var aArguments = [];
@@ -350,7 +350,7 @@ GlobalTools.prototype = {
 
 	// Run function in a specific scope (please note the function may only use valid scoped features)
 	runFunctionInScope: function (sFunction, sScopeId) { // function is a <script_include>.<function>.toString(), 3rd... args will be evaluated in function call
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (gs.getProperty('glide.record.legacy_cross_scope_access_policy_in_script') == 'true') {
 			gs.warn('GlobalTools.runFunctionInScope is allowed, please validate your instance security settings!');
 			var gsEvaluator = new GlideScopedEvaluator();
@@ -389,13 +389,13 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>108</sys_mod_count>
+        <sys_mod_count>114</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-13 14:17:18</sys_updated_on>
+        <sys_updated_on>2023-12-14 07:16:44</sys_updated_on>
     </sys_script_include>
 </record_update>

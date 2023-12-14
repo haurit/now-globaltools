@@ -13,6 +13,7 @@ For some check JASMINE would be a good option too!</description>
         <script><![CDATA[var GlobalToolsATF = Class.create();
 GlobalToolsATF.prototype = {
 	initialize: function (sScriptIncludeName, _ScriptIncludeRef, bLog, outputs, steps, params, stepResult, assertEqual) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this._bLog = bLog;
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
@@ -34,8 +35,7 @@ GlobalToolsATF.prototype = {
 		} // validate input
 	}, // function initialize
 
-	checkAccess: function () {
-		var sCallerScope = gs.getCallerScopeName();
+	checkAccess: function (sCallerScope) {
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
 		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
@@ -44,7 +44,7 @@ GlobalToolsATF.prototype = {
 	}, // function checkAccess
 
 	runATF: function (sFunction, oExpectedResult) {
-		if ((this._bContinue === false) || (!this.checkAccess())) { return; }
+		if ((this._bContinue === false) || (!this.checkAccess(gs.getCallerScopeName()))) { return; }
 		this._iTestCount++;
 		if ((sFunction) && (this._getType(sFunction) == 'string')) {
 			var aArguments = [];
@@ -116,6 +116,7 @@ GlobalToolsATF.prototype = {
 	}, // function runATF
 
 	getRecord: function (sTable, sQuery) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var grRecord = this._gtRead.getRecords(sTable, sQuery, null, null, 1);
 		if (grRecord.next()) {
 			return grRecord;
@@ -123,10 +124,12 @@ GlobalToolsATF.prototype = {
 	}, // function getRecord
 
 	addError: function (sFunction, sError) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' ' + sError);
 	}, // function addError
 
 	endATF: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (this._aErrors.length > 0) {
 			this._stepResult.setOutputMessage(this._aErrors.join('\n'));
 			return false;
@@ -136,7 +139,7 @@ GlobalToolsATF.prototype = {
 	}, // function endATF
 
 	type: 'GlobalToolsATF',
-	version: '1.0.1',
+	version: '1.0.2',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -144,13 +147,13 @@ GlobalToolsATF.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 04:35:34</sys_created_on>
         <sys_id>087310061ba17510c1ecdc61ab4bcb55</sys_id>
-        <sys_mod_count>57</sys_mod_count>
+        <sys_mod_count>59</sys_mod_count>
         <sys_name>GlobalToolsATF</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_087310061ba17510c1ecdc61ab4bcb55</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-13 14:16:56</sys_updated_on>
+        <sys_updated_on>2023-12-14 07:18:03</sys_updated_on>
     </sys_script_include>
 </record_update>

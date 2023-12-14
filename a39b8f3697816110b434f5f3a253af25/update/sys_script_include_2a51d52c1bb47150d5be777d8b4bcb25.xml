@@ -11,9 +11,7 @@ Functions are only available for global scope and specific scopes defined in the
         <script><![CDATA[var GlobalToolsRecordRead = Class.create();
 GlobalToolsRecordRead.prototype = {
 	initialize: function () {
-		if (!this.checkAccess()) {
-			return;
-		}
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this._gt = new global.GlobalTools();
 		this._gtObject = new global.GlobalToolsObject();
 		this._getValue = this._gtObject.getValue;
@@ -21,8 +19,7 @@ GlobalToolsRecordRead.prototype = {
 		this._isValidArray = new global.GlobalToolsArray().isValidArray;
 	}, // function initialize
 
-	checkAccess: function () {
-		var sCallerScope = gs.getCallerScopeName();
+	checkAccess: function (sCallerScope) {
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
 		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
@@ -32,7 +29,7 @@ GlobalToolsRecordRead.prototype = {
 
 	// Convenience function to get count of records, returns number or Array in Array with value, displayvalue (optional) and count per field
 	countRecords: function (sTable, sQuery, sField, bDisplayValue, bDisplayValueOnly, bQueryNoDomain) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
 			gs.warn('GlobalToolsRecordRead.countRecords called with invalid table: ' + sTable);
 			return;
@@ -95,7 +92,7 @@ GlobalToolsRecordRead.prototype = {
 
 	// Function for scoped apps to query a gliderecord with the options
 	getRecords: function (sTable, sQuery, aOrderBy, aOrderByDesc, iLimit, bWorkflow, bAutoSysFields, bQueryNoDomain) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
 			gs.warn('GlobalToolsRecordRead.getRecords called with invalid table: ' + sTable);
 			return;
@@ -134,7 +131,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function getRecords
 
 	checkRecordByField: function (sTable, sField, sValue) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sField) || (!sValue)) {
 			gs.warn('GlobalToolsRecordRead.checkRecordByField table or field or value is empty!');
 			return;
@@ -146,7 +143,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function checkRecordByField
 
 	getSysIdByQuery: function (sTable, sQuery, bUniqueOnly) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sQuery)) {
 			gs.warn('GlobalToolsRecordRead.getSysIdByQuery table or query is empty!');
 			return;
@@ -168,7 +165,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function getSysIdByQuery
 
 	checkRecordByQuery: function (sTable, sQuery) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sQuery)) {
 			gs.warn('GlobalToolsRecordRead.checkRecordByQuery table or query is empty!');
 			return;
@@ -183,7 +180,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function checkRecordByQuery
 
 	getRelatedRecordByKeys: function (oRecordConfig, oRecordValues, aError, oField, sRefTable, iArrayField) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var bLog = this._getValue('bLog', false, oRecordConfig);
 		var sLogPrefix = (bLog) ? this._getValue('sLogPrefix', 'GlobalToolsRecordRead.getRelatedRecordByKeys ', oRecordConfig) : '';
 		if (!oField) {
@@ -253,7 +250,7 @@ GlobalToolsRecordRead.prototype = {
 		3. oRecordConfig['bQueryEmptyFields'] // generic setting to query empty fields with ISEMPTY instead of returning an error for all empty fields
 	*/
 	getRecordByKeys: function (oRecordConfig, oRecordValues, aError) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sTable = this._getValue('sTargetTable', '', oRecordConfig);
 		var bLog = this._getValue('bLog', false, oRecordConfig);
 		var sLogLevel = (bLog) ? this._getValue('sLogLevel', 'error', oRecordConfig) : '';
@@ -352,7 +349,7 @@ GlobalToolsRecordRead.prototype = {
 	// bDisplayValueOwnField: get Display Value in own field with postfix "_dv" (default: false), otherwise return as: "value (display)"
 	// Returns: JSON or String
 	convertGRtoJSON: function (grRecord, bStringify, bDisplayValue, bDisplayValueOwnField) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (this._gt.getType(grRecord).indexOf('gliderecord') == -1) {
 			return;
 		} // if not valid record
@@ -385,7 +382,7 @@ GlobalToolsRecordRead.prototype = {
 
 	// Convert a glide record to XML string
 	convertGRtoXML: function (grRecord) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (this._gt.getType(grRecord).indexOf('gliderecord') == -1) {
 			return;
 		} // if not valid record
@@ -395,7 +392,7 @@ GlobalToolsRecordRead.prototype = {
 
 	// Add dot walking field to a query
 	makeQueryADotWalkQuery: function (sQuery, sDotWalkField) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sQuery) && (sDotWalkField)) {
 			var aQuery = [];
 			var gqsQuery = new GlideQueryString('cmdb_ci', sQuery);
@@ -420,7 +417,7 @@ GlobalToolsRecordRead.prototype = {
 
 	// Combine Queries where the one of the queries can contain big or statements (^NQ)
 	combineQueries: function (sFirstQuery, sSecondQuery) {
-		if (!this.checkAccess()) { return; }
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sFirstQuery) && (sSecondQuery)) {
 			var bNQFirstQuery = (sFirstQuery.indexOf('^NQ') != -1);
 			var bNQSecondQuery = (sSecondQuery.indexOf('^NQ') != -1);
@@ -453,13 +450,13 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>95</sys_mod_count>
+        <sys_mod_count>97</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-13 14:17:34</sys_updated_on>
+        <sys_updated_on>2023-12-14 07:17:00</sys_updated_on>
     </sys_script_include>
 </record_update>
