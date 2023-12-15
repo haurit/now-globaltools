@@ -16,7 +16,7 @@ GlobalToolsRESTAPI.prototype = {
 		this.bValidConnectionConfig = false;
 		this.sQueryNoDomain = (bQueryNoDomain === true) ? '&sysparm_query_no_domain=true' : '';
 		this.iHttpTimeout = 300;
-		this.sSysParmLimit = '1000';
+		this.sLimit = '1000';
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
 		this._gtObject = new global.GlobalToolsObject();
@@ -105,7 +105,7 @@ GlobalToolsRESTAPI.prototype = {
 			'bValidConnectionConfig': this.bValidConnectionConfig,
 			'sQueryNoDomain': this.sQueryNoDomain,
 			'iHttpTimeout': this.iHttpTimeout,
-			'sSysParmLimit': this.sSysParmLimit,
+			'sLimit': this.sLimit,
 			'sRemoteUrl': this.sRemoteUrl,
 			'sCredentialType': this.sCredentialType,
 			'sCredentialId': this.sCredentialId,
@@ -124,24 +124,30 @@ GlobalToolsRESTAPI.prototype = {
 		return this.doRESTRequest('api/now/table/task?sysparm_limit=1' + this.sQueryNoDomain, 'get', '', '', true);
 	}, // function testNOWConnection
 
-	doNOWRESTQuery: function (sTable, sQuery, sOffset, sSysParmLimit, bIncludeRefLink) {
+	doNOWRESTQuery: function (sTable, sQuery, sOffset, sLimit, bIncludeRefLink) {
 		if ((this.bValidConnectionConfig) && (!this.checkAccess(gs.getCallerScopeName()))) { return; }
+		if (!sTable) {
+			return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_400_001_ErrorMessage') };
+		} // if no table
 		var sExcludeRefLink = (bIncludeRefLink) ? '' : 'sysparm_exclude_reference_link=true&';
 		sOffset = (sOffset) ? '&sysparm_offset=' + sOffset : '';
 		sQuery = (sQuery) ? '&sysparm_query=' + encodeURIComponent(sQuery) : '';
-		sSysParmLimit = (sSysParmLimit) ? sSysParmLimit : this.sSysParmLimit;
-		var sUrl = 'api/now/table/' + sTable + '?' + sExcludeRefLink + 'sysparm_limit=' + sSysParmLimit + this.sQueryNoDomain + sOffset + sQuery;
+		sLimit = (sLimit) ? sLimit : this.sLimit;
+		var sUrl = 'api/now/table/' + sTable + '?' + sExcludeRefLink + 'sysparm_limit=' + sLimit + this.sQueryNoDomain + sOffset + sQuery;
 		return this.doRESTRequest(sUrl);
 	}, // function doNOWRESTQuery
 
 	doNOWRESTCount: function (sTable, sQuery, sGroupByField) {
 		if ((this.bValidConnectionConfig) && (!this.checkAccess(gs.getCallerScopeName()))) { return; }
+		if (!sTable) {
+			return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_400_001_ErrorMessage') };
+		} // if no table
 		sQuery = (sQuery) ? '&sysparm_query=' + encodeURIComponent(sQuery) : '';
 		sGroupByField = (sGroupByField) ? '&sysparm_group_by=' + encodeURIComponent(sGroupByField) : '';
 		var sUrl = 'api/now/stats/' + sTable + '?sysparm_count=true' + sQuery + sGroupByField;
 		var oRESTResults = this.doRESTRequest(sUrl);
 		if ((typeof oRESTResults == 'object') && (oRESTResults.hasOwnProperty('error_code'))) {
-			return;
+			return oRESTResults;
 		} else {
 			if ((oRESTResults) && (!Array.isArray(oRESTResults)) && (oRESTResults.hasOwnProperty('stats')) && (oRESTResults['stats'].hasOwnProperty('count'))) {
 				var sResult = oRESTResults['stats']['count'];
@@ -261,13 +267,13 @@ GlobalToolsRESTAPI.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 11:42:21</sys_created_on>
         <sys_id>a95f09e21b0731105e14b8449b4bcb29</sys_id>
-        <sys_mod_count>42</sys_mod_count>
+        <sys_mod_count>47</sys_mod_count>
         <sys_name>GlobalToolsRESTAPI</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a95f09e21b0731105e14b8449b4bcb29</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-15 09:57:28</sys_updated_on>
+        <sys_updated_on>2023-12-15 16:14:59</sys_updated_on>
     </sys_script_include>
 </record_update>
