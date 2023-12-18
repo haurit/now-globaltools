@@ -53,21 +53,27 @@ GlobalToolsRESTAPI.prototype = {
 		if (sConnectionAliasId) {
 			var _ConnectionInfoProvider = new sn_cc.ConnectionInfoProvider();
 			var ccConnectionInfo = _ConnectionInfoProvider.getConnectionInfo(sConnectionAliasId);
-			this.sRemoteUrl = ccConnectionInfo.getAttribute('connection_url');
+			this.sRemoteUrl = ccConnectionInfo.getAttribute('connection_url').replace(/\/$/gi, '');
 			if ((ccConnectionInfo.getAttribute('protocol') == 'https') && (this.sRemoteUrl)) {
 				this.bValidConnectionConfig = true;
-				var iHttpTimeout = ccConnectionInfo.getAttribute('connection_timeout');
+				var iHttpTimeout = parseInt(ccConnectionInfo.getAttribute('connection_timeout'));
 				this.iHttpTimeout = (iHttpTimeout) ? iHttpTimeout : this.iHttpTimeout;
-				var sCredentialType = ccConnectionInfo.getCredentialAttribute('type');
-				this.sCredentialType = (sCredentialType == 'basic_auth') ? 'basic' : '';
-				this.sCredentialType = (sCredentialType == 'oauth_2_0') ? 'oauth2' : this.sCredentialType;
-				this.sCredentialId = ccConnectionInfo.getCredentialAttribute('sys_id');
+				this.sCredentialId = '';
+				this.sCredentialPw = '';
+				this.sCredentialType = ccConnectionInfo.getCredentialAttribute('type');
+				if (this.sCredentialType == 'basic_auth') {
+					this.sCredentialId = ccConnectionInfo.getCredentialAttribute('user_name');
+					this.sCredentialPw = ccConnectionInfo.getCredentialAttribute('password');
+				} else if (this.sCredentialType == 'oauth_2_0') {
+					this.sCredentialType = 'oauth2';
+					this.sCredentialId = ccConnectionInfo.getCredentialAttribute('sys_id');
+				} // if basic				
 				this.sMutualAuthProfile = '';
-				if (ccConnectionInfo.getAttribute('mutual_auth') == '1') {
+				if (ccConnectionInfo.getAttribute('mutual_auth') == 'true') {
 					this.sMutualAuthProfile = ccConnectionInfo.getAttribute('sys_protocol_profile.protocol');
 				} // if protocol profile 
 				this.sMIDServerName = '';
-				if (ccConnectionInfo.getAttribute('use_mid') == '1') {
+				if (ccConnectionInfo.getAttribute('use_mid') == 'true') {
 					var sMIDServerId = '';
 					var sMIDServerSelection = ccConnectionInfo.getAttribute('mid_selection');
 					var grMIDServer = new GlideRecord('ecc_agent');
@@ -83,12 +89,22 @@ GlobalToolsRESTAPI.prototype = {
 								} // if mid cluster
 							} else if (sMIDServerSelection == 'auto_select') {
 								var oMIDServerCapabilities = this._gtObject.parseJSON(ccConnectionInfo.getAttribute('capabilities'));
-								var sMIDServerApp = ccConnectionInfo.getAttribute('application');
 								var aMIDServerHost = [ccConnectionInfo.getAttribute('host')];
+								var sMIDServerApp = ccConnectionInfo.getAttribute('application');
 								sMIDServerId = sncMidSelector.selectAnyMidServer(sMIDServerApp, aMIDServerHost, oMIDServerCapabilities);
 							} // if mid selection
 						} catch (oEx) {
-							gs.error('global.GlobalToolsRESTAPI._setConnectionFromAlias error selecting MID Server: ' + String(oEx));
+							if ((sMIDServerSelection == 'auto_select') && (String(oEx).indexOf('Unable to resolve host name') != -1)) {
+								try {
+									oMIDServerCapabilities = this._gtObject.parseJSON(ccConnectionInfo.getAttribute('capabilities'));
+									sMIDServerApp = ccConnectionInfo.getAttribute('application');
+									sMIDServerId = sncMidSelector.selectAnyMidServer(sMIDServerApp, [], oMIDServerCapabilities);
+								} catch (oEx) {
+									gs.error('global.GlobalToolsRESTAPI._setConnectionFromAlias error selecting MID Server: ' + String(oEx));
+								} // if other error
+							} else {
+								gs.error('global.GlobalToolsRESTAPI._setConnectionFromAlias error selecting MID Server: ' + String(oEx));
+							} // if error resolved host
 						} // try
 					} // if specific mid
 					if ((sMIDServerId) && (grMIDServer.get(sMIDServerId))) {
@@ -176,6 +192,8 @@ GlobalToolsRESTAPI.prototype = {
 		var bSaveResponseBodyAsAttachment = false;
 		var oRequest = new sn_ws.RESTMessageV2();
 		oRequest.setHttpMethod(sMethod);
+		sUrl = sUrl.replace(/^\//gi, '');
+		sUrl = (sUrl.charAt(0) == '?') ? sUrl : '/' + sUrl;
 		oRequest.setEndpoint(this.sRemoteUrl + sUrl);
 		oRequest.setHttpTimeout(this.iHttpTimeout);
 		if ((sMethod == 'get') && (oRequestBodyOrAttachmentInfo)) {
@@ -220,7 +238,9 @@ GlobalToolsRESTAPI.prototype = {
 		if (this.sMIDServerName) {
 			oRequest.setMIDServer(this.sMIDServerName);
 		} // if mid server
-		if ((this.sCredentialType) && (this.sCredentialId)) {
+		if (this.sCredentialType == 'basic_auth') {
+			oRequest.setBasicAuth(this.sCredentialId, this.sCredentialPw);
+		} else if ((this.sCredentialType) && (this.sCredentialId)) {
 			oRequest.setAuthenticationProfile(this.sCredentialType, this.sCredentialId);
 		} // if credential
 		if (this.sMutualAuthProfile) {
@@ -267,13 +287,13 @@ GlobalToolsRESTAPI.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 11:42:21</sys_created_on>
         <sys_id>a95f09e21b0731105e14b8449b4bcb29</sys_id>
-        <sys_mod_count>47</sys_mod_count>
+        <sys_mod_count>66</sys_mod_count>
         <sys_name>GlobalToolsRESTAPI</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a95f09e21b0731105e14b8449b4bcb29</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-15 16:14:59</sys_updated_on>
+        <sys_updated_on>2023-12-18 18:55:18</sys_updated_on>
     </sys_script_include>
 </record_update>
