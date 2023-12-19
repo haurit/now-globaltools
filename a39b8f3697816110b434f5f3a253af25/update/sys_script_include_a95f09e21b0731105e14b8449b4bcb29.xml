@@ -15,7 +15,7 @@ GlobalToolsRESTAPI.prototype = {
 		this.bLog = (bLog) ? bLog : false;
 		this.bValidConnectionConfig = false;
 		this.sQueryNoDomain = (bQueryNoDomain === true) ? '&sysparm_query_no_domain=true' : '';
-		this.iHttpTimeout = 300;
+		this.iHttpTimeout = 0;
 		this.sLimit = '1000';
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
@@ -153,14 +153,15 @@ GlobalToolsRESTAPI.prototype = {
 		return this.doRESTRequest(sUrl);
 	}, // function doNOWRESTQuery
 
-	doNOWRESTCount: function (sTable, sQuery, sGroupByField) {
+	doNOWRESTCount: function (sTable, sQuery, sGroupByField, bOrderByCount) {
 		if ((this.bValidConnectionConfig) && (!this.checkAccess(gs.getCallerScopeName()))) { return; }
 		if (!sTable) {
 			return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_400_001_ErrorMessage') };
 		} // if no table
 		sQuery = (sQuery) ? '&sysparm_query=' + encodeURIComponent(sQuery) : '';
 		sGroupByField = (sGroupByField) ? '&sysparm_group_by=' + encodeURIComponent(sGroupByField) : '';
-		var sUrl = 'api/now/stats/' + sTable + '?sysparm_count=true' + sQuery + sGroupByField;
+		var sOrderBy = ((bOrderByCount) && (sGroupByField)) ? '&sysparm_order_by=' + encodeURIComponent('COUNT^DESC') : '';
+		var sUrl = 'api/now/stats/' + sTable + '?sysparm_count=true' + sQuery + sGroupByField + sOrderBy;
 		var oRESTResults = this.doRESTRequest(sUrl);
 		if ((typeof oRESTResults == 'object') && (oRESTResults.hasOwnProperty('error_code'))) {
 			return oRESTResults;
@@ -195,7 +196,9 @@ GlobalToolsRESTAPI.prototype = {
 		sUrl = sUrl.replace(/^\//gi, '');
 		sUrl = (sUrl.charAt(0) == '?') ? sUrl : '/' + sUrl;
 		oRequest.setEndpoint(this.sRemoteUrl + sUrl);
-		oRequest.setHttpTimeout(this.iHttpTimeout);
+		if (this.iHttpTimeout > 0) {
+			oRequest.setHttpTimeout(this.iHttpTimeout);
+		} // if time out
 		if ((sMethod == 'get') && (oRequestBodyOrAttachmentInfo)) {
 			var sAttachmentRecordTable = (oRequestBodyOrAttachmentInfo.hasOwnProperty('sTable')) ? oRequestBodyOrAttachmentInfo['sTable'] : '';
 			var sAttachmentRecordSysId = (oRequestBodyOrAttachmentInfo.hasOwnProperty('sSysId')) ? oRequestBodyOrAttachmentInfo['sSysId'] : '';
@@ -287,13 +290,13 @@ GlobalToolsRESTAPI.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 11:42:21</sys_created_on>
         <sys_id>a95f09e21b0731105e14b8449b4bcb29</sys_id>
-        <sys_mod_count>66</sys_mod_count>
+        <sys_mod_count>71</sys_mod_count>
         <sys_name>GlobalToolsRESTAPI</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a95f09e21b0731105e14b8449b4bcb29</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-18 18:55:18</sys_updated_on>
+        <sys_updated_on>2023-12-19 07:14:41</sys_updated_on>
     </sys_script_include>
 </record_update>
