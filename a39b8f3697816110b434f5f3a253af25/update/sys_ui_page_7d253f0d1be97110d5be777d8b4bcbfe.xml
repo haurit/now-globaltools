@@ -1283,17 +1283,17 @@ oExpectedResult is anything else it will be compared to the result (===).
 		<h2>Function: initialize</h2>
 		<p><strong>Purpose:</strong>&#160;This function initializes the class with parameters.</p>
 		<p><strong>Parameters:</strong></p>
-			<li><code>oConnectionAlias</code>: The Connection &amp; Credential Alias [sys_alias] to be used in the REST
-				API (can be the GlideRecord or the value any of the fields: <code>sys_id, id, name</code>).</li>
-			<li><code>bLog</code>: (Optional) if true does verbose logging (default: false)</li>
-			<li><code>bQueryNoDomain</code>: (Optional) if true will add sysparm_query_no_domain=true (default: false)
-			</li>
+		<li><code>oConnectionAlias</code>: The Connection &amp; Credential Alias [sys_alias] to be used in the REST
+			API (can be the GlideRecord or the value any of the fields: <code>sys_id, id, name</code>).</li>
+		<li><code>bLog</code>: (Optional) if true does verbose logging (default: false)</li>
+		<li><code>bQueryNoDomain</code>: (Optional) if true will add sysparm_query_no_domain=true (default: false)
+		</li>
 		<p>&#160;</p>
 		<h2>Function: getConnectionConfig</h2>
 		<p><strong>Purpose:</strong>&#160;This function returns an object with the configuration values determined from
 			the <code>initialize</code> function parameters.</p>
 		<p><strong>Parameters:</strong></p>
-			<li><code>bStringify</code>: (Optional) if true returns a stringified object (default: false)</li>
+		<li><code>bStringify</code>: (Optional) if true returns a stringified object (default: false)</li>
 		<p><strong>Returns:</strong>&#160;The configuration object or string with the configuration details.
 		</p>
 		<h2>Function: testNOWConnection</h2>
@@ -1302,19 +1302,35 @@ oExpectedResult is anything else it will be compared to the result (===).
 		<p><strong>Returns:</strong>&#160;Returns an object where property "success" is <code>true</code> if successful
 			or <code>false</code> if there was an error or no record is found. The object also contains a message
 			property with error messages.</p>
-		<h2>Function: doNOWRESTQuery</h2>
-		<p><strong>Purpose:</strong>&#160;This function uses the table api of a ServiceNow instance to retrieve records
-			based on the parameters provided.</p>
+		<h2>Function: getRemoteRecord</h2>
+		<p><strong>Purpose:</strong>&#160;This function uses the table API of a ServiceNow instance to retrieve a single
+			record based on the parameters provided and return it as a glide record.</p>
 		<p><strong>Parameters:</strong></p>
+		<ul>
 			<li><code>sTable</code>: A string representing the name of the table.</li>
 			<li><code>sQuery</code>: (Optional) A string representing the query to filter records
 				(<code>sysparm_query</code> URL parameter).</li>
-			<li><code>sOffset</code>: (Optional) A string representing the offset to be used when getting more records
-				than defined in the limit (<code>sysparm_offset</code> URL parameter) Default: "0".</li>
-			<li><code>sLimit</code>: (Optional) A string representing the maximum number of records to be returned
-				(<code>sysparm_limit</code> URL parameter) Default: 1000.</li>
-			<li><code>bIncludeRefLink</code>: (Optional) if true does return URLs for each reference fields
-				(<code>sysparm_exclude_reference_link=true</code> URL parameter) Default: false.</li>
+		</ul>
+		<p><strong>Returns:</strong>&#160;The a <code>glide record</code> or a object with the error details.</p>
+		<pre>{ 
+'success': false, 
+'message': sErrorMsg, 
+'error_code': sStatus
+}</pre>
+		<p></p>
+		<h2>Function: doNOWRESTQuery</h2>
+		<p><strong>Purpose:</strong>&#160;This function uses the table API of a ServiceNow instance to retrieve records
+			based on the parameters provided.</p>
+		<p><strong>Parameters:</strong></p>
+		<li><code>sTable</code>: A string representing the name of the table.</li>
+		<li><code>sQuery</code>: (Optional) A string representing the query to filter records
+			(<code>sysparm_query</code> URL parameter).</li>
+		<li><code>sOffset</code>: (Optional) A string representing the offset to be used when getting more records
+			than defined in the limit (<code>sysparm_offset</code> URL parameter) Default: "0".</li>
+		<li><code>sLimit</code>: (Optional) A string representing the maximum number of records to be returned
+			(<code>sysparm_limit</code> URL parameter) Default: 1000.</li>
+		<li><code>bIncludeRefLink</code>: (Optional) if true does return URLs for each reference fields
+			(<code>sysparm_exclude_reference_link=true</code> URL parameter) Default: false.</li>
 		<p><strong>Returns:</strong>&#160;The request result body or a object with the error details.</p>
 		<pre>{ 
 'success': false, 
@@ -1327,13 +1343,13 @@ oExpectedResult is anything else it will be compared to the result (===).
 		<p><strong>Purpose:</strong>&#160;This function uses the stats API of a ServiceNow instance to count records
 			based on the parameters provided.</p>
 		<p><strong>Parameters:</strong></p>
-			<li><code>sTable</code>: A string representing the name of the table.</li>
-			<li><code>sQuery</code>: (Optional) A string representing the query to filter records
-				(<code>sysparm_query</code> URL parameter).</li>
-			<li><code>sGroupByField</code>: (Optional) A string representing the field used to group the records
-				(<code>sysparm_group_by</code> URL parameter).</li>
-			<li><code>bOrderByCount</code>: (Optional) If true and group by field is not empty, will order the result
-				descending by count, else by group by field name (<code>sysparm_order_by</code> URL parameter).</li>
+		<li><code>sTable</code>: A string representing the name of the table.</li>
+		<li><code>sQuery</code>: (Optional) A string representing the query to filter records
+			(<code>sysparm_query</code> URL parameter).</li>
+		<li><code>sGroupByField</code>: (Optional) A string representing the field used to group the records
+			(<code>sysparm_group_by</code> URL parameter).</li>
+		<li><code>bOrderByCount</code>: (Optional) If true and group by field is not empty, will order the result
+			descending by count, else by group by field name (<code>sysparm_order_by</code> URL parameter).</li>
 		<p><strong>Returns:</strong>&#160;The the count as <code>number</code> or as <code>object</code> where the key
 			is the <code>group by field value</code> and the value the count or a object with the error details.</p>
 		<pre>Error:
@@ -1360,26 +1376,27 @@ Count sGroupByField and  bOrderByCount:
 		<p><strong>Purpose:</strong>&#160;This function does a REST call using the configuration parameters provided.
 		</p>
 		<p><strong>Parameters:</strong></p>
-			<li><code>sUrl</code>: The string complimenting the connection URL.</li>
-			<li><code>sMethod</code>: (Optional) A string representing the method (allowed values: GET, POST, PUT,
-				PATCH) Default: GET.</li>
-			<li><code>oRequestBodyOrAttachmentInfo</code>: (Optional) For <code>GET</code> method this is an object
-				containing the details on which record and file the result body should be attached as a file:
-				<pre>{
+		<li><code>sUrl</code>: The string complimenting the connection URL.</li>
+		<li><code>sMethod</code>: (Optional) A string representing the method (allowed values: GET, POST, PUT,
+			PATCH) Default: GET.</li>
+		<li><code>oRequestBodyOrAttachmentInfo</code>: (Optional) For <code>GET</code> method this is an object
+			containing the details on which record and file the result body should be attached as a file:
+			<pre>{
 	'sTable': 'incident',
 	'sSysId': 'd71f7935c0a8016700802b64c67c11c6',
 	'sFilename': 'RESTAttachment.json',
 }
 </pre>
-				For all other methods it's either the object (will be converted to string via JSON.stringify) or string
-				to be used in the request body or a valid <code>sys_id</code> of an attachment [sys_attachment] that
-				should be used as the request body.
-			</li>
-			<li><code>oHeader</code>: (Optional) An array (of arrays or objects) or an object containing the key/value
-				pairs to be set as header information in the request.</li>
-			<li><code>bTestConnection</code>: (Optional) if true does return an object where property "success" is
-				<code>true</code> if successful or <code>false</code> if there was an error or no record is found. The
-				object also contains a message property with error messages but no further details.</li>
+			For all other methods it's either the object (will be converted to string via JSON.stringify) or string
+			to be used in the request body or a valid <code>sys_id</code> of an attachment [sys_attachment] that
+			should be used as the request body.
+		</li>
+		<li><code>oHeader</code>: (Optional) An array (of arrays or objects) or an object containing the key/value
+			pairs to be set as header information in the request.</li>
+		<li><code>bTestConnection</code>: (Optional) if true does return an object where property "success" is
+			<code>true</code> if successful or <code>false</code> if there was an error or no record is found. The
+			object also contains a message property with error messages but no further details.
+		</li>
 		<p><strong>Returns:</strong>&#160;The request result body or a object with the error details.</p>
 		<pre>{ 
 'success': false, 
@@ -1395,13 +1412,13 @@ Count sGroupByField and  bOrderByCount:
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>127</sys_mod_count>
+        <sys_mod_count>129</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-19 07:59:07</sys_updated_on>
+        <sys_updated_on>2023-12-19 12:27:21</sys_updated_on>
     </sys_ui_page>
 </record_update>
