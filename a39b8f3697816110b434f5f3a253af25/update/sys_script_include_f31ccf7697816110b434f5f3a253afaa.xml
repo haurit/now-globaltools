@@ -156,6 +156,17 @@ GlobalTools.prototype = {
 		return sResult;
 	}, // function decodeTagToNewLine
 
+	// Pad number
+	padNumber: function (iNumber, iDigits) {
+		if (iNumber) {
+			iDigits = ((iDigits) && (!isNaN(iDigits))) ? iDigits : 8;
+			var sNumber = String(iNumber);
+			while (sNumber.length < iDigits)
+				sNumber = '0' + sNumber;
+			return sNumber;
+		} // if number
+	}, // function padNumber
+
 	// Function to replace placeholders
 	replacePlaceholders: function (sInputValue, oRecord, sValue, bJSON) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
@@ -389,13 +400,13 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>118</sys_mod_count>
+        <sys_mod_count>121</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-15 06:34:17</sys_updated_on>
+        <sys_updated_on>2023-12-28 17:13:29</sys_updated_on>
     </sys_script_include>
 </record_update>
