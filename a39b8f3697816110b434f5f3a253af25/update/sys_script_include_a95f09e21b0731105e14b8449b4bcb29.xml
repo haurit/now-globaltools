@@ -170,7 +170,7 @@ GlobalToolsRESTAPI.prototype = {
 		} // if valid response
 	}, // function getRemoteRecord
 
-	doNOWRESTQuery: function (sTable, sQuery, sOffset, sLimit, bIncludeRefLink) {
+	doNOWRESTQuery: function (sTable, sQuery, sOffset, sLimit, aFields, sDisplayValue, oRequestBodyOrAttachmentInfo, bIncludeRefLink) {
 		if ((this.bValidConnectionConfig) && (!this.checkAccess(gs.getCallerScopeName()))) { return; }
 		if (!sTable) {
 			return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_400_001_ErrorMessage') };
@@ -178,12 +178,21 @@ GlobalToolsRESTAPI.prototype = {
 		var sExcludeRefLink = (bIncludeRefLink) ? '' : 'sysparm_exclude_reference_link=true&';
 		sOffset = (sOffset) ? '&sysparm_offset=' + sOffset : '';
 		sQuery = (sQuery) ? '&sysparm_query=' + encodeURIComponent(sQuery) : '';
+		sDisplayValue = ((sDisplayValue == 'true') || (sDisplayValue == 'all')) ? '&sysparm_display_value=' + sDisplayValue : '';
 		sLimit = (sLimit) ? sLimit : this.sLimit;
-		var sUrl = 'api/now/table/' + sTable + '?' + sExcludeRefLink + 'sysparm_limit=' + sLimit + this.sQueryNoDomain + sOffset + sQuery;
-		return this.doRESTRequest(sUrl);
+		var sUrl = 'api/now/table/' + sTable + '?' + sExcludeRefLink + 'sysparm_limit=' + sLimit + this.sQueryNoDomain + sOffset + sQuery + sDisplayValue;
+		if (this._gtArray.isValidArray(aFields)) { 
+			var sFields = '&sysparm_fields=' + encodeURIComponent(aFields.join(','));
+			if (String(this.sRemoteUrl + sUrl + sFields).length < 2000) {
+				sUrl += sFields;
+			} else {
+				gs.error('global.GlobalToolsRESTAPI.doNOWRESTQuery Cannot add fields parameter because URL length would exceed 2k characters (see KB0829648 for solutions).');
+			} // url length > 2k
+		} // if valid fields
+		return this.doRESTRequest(sUrl, 'GET', oRequestBodyOrAttachmentInfo);
 	}, // function doNOWRESTQuery
 
-	doNOWRESTCount: function (sTable, sQuery, sGroupByField, bOrderByCount) {
+	doNOWRESTCount: function (sTable, sQuery, sGroupByField, bOrderByCount, sDisplayValue) {
 		if ((this.bValidConnectionConfig) && (!this.checkAccess(gs.getCallerScopeName()))) { return; }
 		if (!sTable) {
 			return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_400_001_ErrorMessage') };
@@ -191,7 +200,8 @@ GlobalToolsRESTAPI.prototype = {
 		sQuery = (sQuery) ? '&sysparm_query=' + encodeURIComponent(sQuery) : '';
 		sGroupByField = (sGroupByField) ? '&sysparm_group_by=' + encodeURIComponent(sGroupByField) : '';
 		var sOrderBy = ((bOrderByCount) && (sGroupByField)) ? '&sysparm_order_by=' + encodeURIComponent('COUNT^DESC') : '';
-		var sUrl = 'api/now/stats/' + sTable + '?sysparm_count=true' + sQuery + sGroupByField + sOrderBy;
+		sDisplayValue = ((sDisplayValue == 'true') || (sDisplayValue == 'all')) ? '&sysparm_display_value=' + sDisplayValue : '';
+		var sUrl = 'api/now/stats/' + sTable + '?sysparm_count=true' + sQuery + sGroupByField + sOrderBy + sDisplayValue;
 		var oRESTResults = this.doRESTRequest(sUrl);
 		if ((typeof oRESTResults == 'object') && (oRESTResults.hasOwnProperty('error_code'))) {
 			return oRESTResults;
@@ -320,13 +330,13 @@ GlobalToolsRESTAPI.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 11:42:21</sys_created_on>
         <sys_id>a95f09e21b0731105e14b8449b4bcb29</sys_id>
-        <sys_mod_count>74</sys_mod_count>
+        <sys_mod_count>79</sys_mod_count>
         <sys_name>GlobalToolsRESTAPI</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a95f09e21b0731105e14b8449b4bcb29</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-19 12:05:46</sys_updated_on>
+        <sys_updated_on>2023-12-20 09:17:33</sys_updated_on>
     </sys_script_include>
 </record_update>

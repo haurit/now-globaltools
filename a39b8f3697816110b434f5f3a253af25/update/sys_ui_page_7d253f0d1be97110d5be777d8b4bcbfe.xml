@@ -81,10 +81,12 @@
 		<ol>
 			<li>Added function getHTMLDiffFromXML</li>
 			<li>Added function getInternalType</li>
+			<li>Added function getRecord</li>
 			<li>Added function convertGRtoXML</li>
 			<li>Added function deleteMultiple</li>
 			<li>Added script include GlobalToolsRESTAPI with functions to handle REST requests using connection &amp;
 				credential aliases and some shortcuts for instance to instance requests.</li>
+			<li>Added script include GlobalToolsAttachment with functions to handle attachment operations.</li>
 		</ol>
 		<h2>Problem Statement</h2>
 		<p>Many functions are not available in scoped applications which hinders the developent of reusable solution
@@ -711,6 +713,18 @@
 			<strong>Returns:</strong>&#160;Returns an integer with the count or an array of record counts grouped by the
 			provided <code>sField</code> parameter.
 		</p>
+		<h2>getRecord</h2>
+		<p><strong>Purpose:</strong>&#160;This function retrieves one records from a specified table based on the
+			provided query or sys_id and options ensuring the record is return in the correct class.</p>
+		<p><strong>Parameters:</strong></p>
+		<ul>
+			<li><code>sTable</code>: A string representing the name of the table.</li>
+			<li><code>sQueryOrSysId</code>: A string representing the query or the sys_id to find the record.</li>
+			<li><code>bWorkflow</code>: A boolean indicating whether to include workflow information.</li>
+			<li><code>bAutoSysFields</code>: A boolean indicating whether to include auto-system fields.</li>
+			<li><code>bQueryNoDomain</code>: A boolean indicating whether to query without considering domains.</li>
+		</ul>
+		<p><strong>Returns:</strong>&#160;Returns a GlideRecord object with the retrieved record in the real class.</p>
 		<h2>getRecords</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function retrieves records from a specified table based on the provided
@@ -1329,6 +1343,20 @@ oExpectedResult is anything else it will be compared to the result (===).
 			than defined in the limit (<code>sysparm_offset</code> URL parameter) Default: "0".</li>
 		<li><code>sLimit</code>: (Optional) A string representing the maximum number of records to be returned
 			(<code>sysparm_limit</code> URL parameter) Default: 1000.</li>
+		<li><code>aFields</code>: (Optional) A array with the fields to be returned. If the URL length limit is reached
+			the parameter is omited and an error is logged (<code>sysparm_fields</code> URL parameter) Default: [].</li>
+		<li><code>sDisplayValue</code>: (Optional) If <code>"true"</code> will return display values instead of real
+			values, <code>"all"</code> will return both real value and display value (<code>sysparm_display_value</code>
+			URL parameter) Default: "false".</li>
+		<li><code>oRequestBodyOrAttachmentInfo</code>: (Optional) An object
+			containing the details on which record and filename the result body should be attached as a file:
+			<pre>{
+	'sTable': 'incident',
+	'sSysId': 'd71f7935c0a8016700802b64c67c11c6',
+	'sFilename': 'RESTAttachment.json',
+}
+</pre>
+		</li>
 		<li><code>bIncludeRefLink</code>: (Optional) if true does return URLs for each reference fields
 			(<code>sysparm_exclude_reference_link=true</code> URL parameter) Default: false.</li>
 		<p><strong>Returns:</strong>&#160;The request result body or a object with the error details.</p>
@@ -1350,6 +1378,9 @@ oExpectedResult is anything else it will be compared to the result (===).
 			(<code>sysparm_group_by</code> URL parameter).</li>
 		<li><code>bOrderByCount</code>: (Optional) If true and group by field is not empty, will order the result
 			descending by count, else by group by field name (<code>sysparm_order_by</code> URL parameter).</li>
+		<li><code>sDisplayValue</code>: (Optional) If <code>"true"</code> will return display values instead of real
+			values, <code>"all"</code> will return both real value and display value (<code>sysparm_display_value</code>
+			URL parameter) Default: "false".</li>
 		<p><strong>Returns:</strong>&#160;The the count as <code>number</code> or as <code>object</code> where the key
 			is the <code>group by field value</code> and the value the count or a object with the error details.</p>
 		<pre>Error:
@@ -1380,7 +1411,7 @@ Count sGroupByField and  bOrderByCount:
 		<li><code>sMethod</code>: (Optional) A string representing the method (allowed values: GET, POST, PUT,
 			PATCH) Default: GET.</li>
 		<li><code>oRequestBodyOrAttachmentInfo</code>: (Optional) For <code>GET</code> method this is an object
-			containing the details on which record and file the result body should be attached as a file:
+			containing the details on which record and filename the result body should be attached as a file:
 			<pre>{
 	'sTable': 'incident',
 	'sSysId': 'd71f7935c0a8016700802b64c67c11c6',
@@ -1404,6 +1435,114 @@ Count sGroupByField and  bOrderByCount:
 'error_code': sStatus
 }
 </pre>
+<h1>Script Include: global.GlobalToolsAttachment</h1>
+<p>&#160;</p>
+<h2>Function: getAttachmentsByRecord</h2>
+<p><strong>Purpose:</strong>&#160;This function gets the attachment information for a specific record based on the input parameters.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>grRecord</code>: The <code>glide record</code> for which the attachments are retrieved.</li>
+<li><code>sQuery</code>: (Optional) The query to be applied on the <code>sys_attachment</code> table.</li>
+<li><code>sReturnType</code>: (Optional) The return type if the attachment information: id, filename or object with both as <code>array</code> or record as <code>glide record</code>. Default: id</li>
+<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are hidden from the user.</li>
+</ul>
+<p><strong>Returns:</strong>&#160;The <code>array</code> or <code>glide record</code> respecting the type specified in <code>sReturnType</code></p>
+<h2>Function: getAttachmentsStartWithFilename</h2>
+<p><strong>Purpose:</strong>&#160;This function gets the attachment information for a specific record and files starting with a specific string.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sTable</code>: The glide record table for which the attachments are retrieved.</li>
+<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachments are retrieved.</li>
+<li><code>sFilename</code>: The filename to be applied as a "file_nameSTARTSWITH" query on the <code>sys_attachment</code> table.</li>
+<li><code>sReturnType</code>: (Optional) The return type if the attachment information: id, filename or object with both as <code>array</code> or record as <code>glide record</code>. Default: id</li>
+<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are hidden from the user.</li>
+</ul>
+<p><strong>Returns:</strong>&#160;The <code>array</code> or <code>glide record</code> respecting the type specified in <code>sReturnType</code></p>
+<h2>Function: getAttachments</h2>
+<p><strong>Purpose:</strong>&#160;This function gets the attachment information for a specific record based and a specific query.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sTable</code>: The glide record table for which the attachments are retrieved.</li>
+<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachments are retrieved.</li>
+<li><code>sQuery</code>: (Optional) The <code>encoded query</code> to be applied on the <code>sys_attachment</code> table.</li>
+<li><code>sReturnType</code>: (Optional) The return type if the attachment information: id, filename or object with both as <code>array</code> or record as <code>glide record</code>. Default: id</li>
+<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are hidden from the user.</li>
+</ul>
+<p><strong>Returns:</strong>&#160;The <code>array</code> or <code>glide record</code> respecting the type specified in <code>sReturnType</code></p>
+<h2>Function: readAttachmentStream</h2>
+<p><strong>Purpose:</strong>&#160;This function reads the attachment information for a specific record and attachment filename.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sTable</code>: The glide record table for which the attachment is retrieved.</li>
+<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachment is retrieved.</li>
+<li><code>sFilename</code>: The filename to be applied as a "file_name=" query on the <code>sys_attachment</code> table.</li>
+<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are hidden from the user.</li>
+</ul>
+<p><strong>Returns:</strong>&#160;The <code>string</code> of the attachment content.</p>
+<h2>Function: combineAttachments</h2>
+<p><strong>Purpose:</strong>&#160;This function reads multiple attachments for a specific record and attachments that start with a specific filename.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sTable</code>: The glide record table for which the attachment is retrieved.</li>
+<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachment is retrieved.</li>
+<li><code>sFilename</code>: The filename to be applied as a "file_nameSTARTSWITH" query on the <code>sys_attachment</code> table.</li>
+<li><code>bReturnJSON</code>: (Optional) Parses the text string to an JSON object.</li>
+<li><code>bDeleteAfterRead</code>: (Optional) If successful deletes the attachments after reading.</li>
+<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are hidden from the user.</li>
+</ul>
+<p><strong>Returns:</strong>&#160;The <code>string</code> or <code>JSON</code> of the combined attachment content.</p>
+<h2>Function: writeAttachment</h2>
+<p><strong>Purpose:</strong>&#160;This function writes an attachment to a specific record.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>grRecord</code>: The <code>glide record</code> to which the file is attached in the <code>sys_attachment</code> table..</li>
+<li><code>sFilename</code>: The filename to be set (field <code>file_name</code>).</li>
+<li><code>sContent</code>: The content of the attachment.</li>
+<li><code>sContentType</code>: (Optional) If <code>undefined</code> the string after the last . (dot) of the <code>sFilename</code> is taken.</li>
+<li><code>bBase64</code>: (Optional) Write the content as Base64 encoded string.</li>
+<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are hidden from the user.</li>
+</ul>
+<p><strong>Returns:</strong>&#160;The <code>string</code> with the attachment sys_id or <code>undefined</code> if not successful.</p>
+<h2>Function: writeAttachmentByTableId</h2>
+<p><strong>Purpose:</strong>&#160;This function writes an attachment to a specific record.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sTable</code>: The glide record table for which the attachment is written.</li>
+<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachment is written.</li>
+<li><code>sFilename</code>: The filename to be set (field <code>file_name</code>).</li>
+<li><code>sContent</code>: The content of the attachment.</li>
+<li><code>sContentType</code>: (Optional) If <code>undefined</code> the string after the last . (dot) of the <code>sFilename</code> is taken.</li>
+<li><code>bBase64</code>: (Optional) Write the content as Base64 encoded string.</li>
+<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are hidden from the user.</li>
+</ul>
+<p><strong>Returns:</strong>&#160;The <code>string</code> with the attachment sys_id or <code>undefined</code> if not successful.</p>
+<h2>Function: deleteAttachment</h2>
+<p><strong>Purpose:</strong>&#160;This function deletes a specific attachment on a specific record.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sTable</code>: The glide record table from which the attachment is deleted.</li>
+<li><code>sId</code>: The <code>sys_id</code> of the base record from which the attachment is deleted.</li>
+<li><code>sFilename</code>: The filename of the attachment to be deleted (field <code>file_name</code>).</li>
+<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are hidden from the user.</li>
+</ul>
+<h2>Function: deleteAttachmentsStartWithFilename</h2>
+<p><strong>Purpose:</strong>&#160;This function deletes specific attachments on a specific record.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sTable</code>: The glide record table from which the attachments are deleted.</li>
+<li><code>sId</code>: The <code>sys_id</code> of the base record from which the attachments are deleted.</li>
+<li><code>sFilename</code>: The starting string of the filenames for the attachment to be deleted (field <code>file_name</code> STARTSWITH).</li>
+<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are hidden from the user.</li>
+</ul>
+<h2>Function: deleteAttachments</h2>
+<p><strong>Purpose:</strong>&#160;This function deletes specific attachments on a specific record.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sTable</code>: The glide record table from which the attachments are deleted.</li>
+<li><code>sId</code>: The <code>sys_id</code> of the base record from which the attachments are deleted.</li>
+<li><code>sQuery</code>: The query string to be applied to search for the attachments to be deleted.</li>
+<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are hidden from the user.</li>
+</ul>
 	</body>
 </j:jelly>]]></html>
         <name>global_tools_manual</name>
@@ -1412,13 +1551,13 @@ Count sGroupByField and  bOrderByCount:
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>129</sys_mod_count>
+        <sys_mod_count>136</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-19 12:27:21</sys_updated_on>
+        <sys_updated_on>2023-12-28 09:24:04</sys_updated_on>
     </sys_ui_page>
 </record_update>
