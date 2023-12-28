@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.GlobalToolsAttachment</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description>Tools to support (scoped) app development&#13;
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
+        <name>GlobalToolsAttachment</name>
+        <script><![CDATA[var GlobalToolsAttachment = Class.create();
+GlobalToolsAttachment.prototype = {
+	initialize: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		this._gt = new global.GlobalTools();
+		this._gtArray = new global.GlobalToolsArray();
+		this._gtObject = new global.GlobalToolsObject();
+		this._gtTable = new global.GlobalToolsTable();
+		this._gtRecordRead = new global.GlobalToolsRecordRead();
+		this._gtRecordWrite = new global.GlobalToolsRecordWrite();
+	}, // function initialize
+
+	checkAccess: function (sCallerScope) {
+		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
+		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
+		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
+			return true;
+		} // if scope is allowed
+	}, // function checkAccess
+
+	getAttachmentsByRecord: function (grRecord, sQuery, sReturnType, bHidden) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((this._gt.getType(grRecord).indexOf('gliderecord') == -1) || (!grRecord.isValidRecord())) {
+			gs.warn('GlobalToolsAttachment.getAttachmentsByRecord called with invalid record');
+			return;
+		} // if not valid record
+		var grAttachment = new GlideRecord('sys_attachment');
+		if (sQuery) {
+			if (!grAttachment.isValidEncodedQuery(sQuery)) {
+				gs.warn('GlobalToolsAttachment.getAttachmentsByRecord called with invalid query ' + sQuery + ' (sys_attachment)');
+				return;
+			} // if invalid query
+		} else {
+			sQuery = '';
+		} // if query
+		return this.getAttachments(grRecord.getTableName(), grRecord.getUniqueValue(), sQuery, sReturnType, bHidden);
+	}, // function getAttachmentsByRecord
+
+	getAttachmentsStartWithFilename: function (sTable, sId, sFilename, sReturnType, bHidden) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId) || (!sFilename)) {
+			gs.warn('GlobalToolsAttachment.getAttachmentsStartWithFilename called with invalid table ' + sTable + ' or id or filename is empty');
+			return;
+		} // if no table return
+		return this.getAttachments(sTable, sId, 'file_nameSTARTSWITH' + sFilename, sReturnType, bHidden);
+	}, // function getAttachmentsStartWithFilename
+
+	getAttachments: function (sTable, sId, sQuery, sReturnType, bHidden) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		sReturnType = ((sReturnType) && (['record', 'filename', 'object'].indexOf(sReturnType) != -1)) ? sReturnType : 'id';
+		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId)) {
+			gs.warn('GlobalToolsAttachment.getAttachments called with invalid table ' + sTable + ' or id is empty');
+			return;
+		} // if no table return
+		var aReturnValues = [];
+		var grAttachment = new GlideRecord('sys_attachment');
+		if (sQuery) {
+			if (!grAttachment.isValidEncodedQuery(sQuery)) {
+				gs.warn('GlobalToolsAttachment.getAttachments called with invalid query ' + sQuery + ' (sys_attachment)');
+				return;
+			} // if invalid query
+			sQuery = '^' + sQuery;
+		} else {
+			sQuery = '';
+		} // if query
+		if (bHidden === true) {
+			sTable = 'ZZ_YY' + sTable;
+		} // if hidden
+		grAttachment.addEncodedQuery('table_name=' + sTable + '^table_sys_id=' + sId + sQuery);
+		grAttachment.query();
+		if (sReturnType != 'record') {
+			while (grAttachment.next()) {
+				if (sReturnType == 'id') {
+					aReturnValues.push(grAttachment.getUniqueValue());
+				} else if (sReturnType == 'filename') {
+					aReturnValues.push(grAttachment.getValue('file_name'));
+				} else if (sReturnType == 'object') {
+					aReturnValues.push({ 'id': grAttachment.getUniqueValue(), 'filename': grAttachment.getValue('file_name') });
+				} // if return type
+			} // while attachments
+			if (this._gtArray.isValidArray(aReturnValues)) {
+				return aReturnValues;
+			} // if valid array
+		} else if (grAttachment.hasNext()) {
+			return grAttachment;
+		} // if return record
+	}, // function getAttachments
+
+	readAttachmentStream: function (sTable, sId, sFileName, bHidden) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var aAttachmentIds = this.getAttachments(sTable, sId, 'file_name=' + sFileName, 'id', bHidden);
+		if (this._gtArray.isValidArray(aAttachmentIds)) {
+			var aLines = [];
+			var gsAttachment = new GlideSysAttachment();
+			var gsContentStream = gsAttachment.getContentStream(aAttachmentIds[0]);
+			var gTextReader = new GlideTextReader(gsContentStream);
+			var oLine = ' ';
+			while ((oLine = gTextReader.readLine()) != null) {
+				aLines.push(oLine);
+			} // while lines
+			return aLines.join('\n');
+		} // if attachmentids
+	}, // function readAttachment
+
+	combineAttachments: function (sTable, sId, sFilename, bReturnJSON, bDeleteAfterRead, bHidden) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var aAttachmentIds = this.getAttachmentsStartWithFilename(sTable, sId, sFilename, 'id', bHidden);
+		if (this._gtArray.isValidArray(aAttachmentIds)) {
+			var aLines = [];
+			var gsAttachment = new GlideSysAttachment();
+			aAttachmentIds.forEach(function (sAttachmentId) {
+				var gsContentStream = gsAttachment.getContentStream(sAttachmentId);
+				var gTextReader = new GlideTextReader(gsContentStream);
+				var oLine = ' ';
+				while ((oLine = gTextReader.readLine()) != null) {
+					aLines.push(oLine);
+				} // while lines
+			}, this);
+			if ((bDeleteAfterRead === true) && (this._gtArray.isValidArray(aLines))) {
+				this.deleteAttachmentsStartWithFilename(sTable, sId, sFilename, bHidden);
+			} // if delete
+			if (bReturnJSON) {
+				return this._gtObject.parseJSON(aLines.join('\n'));
+			} else {
+				return aLines.join('\n');
+			} // if return json
+		} // if attachmentids
+	}, // function combineAttachments
+
+	writeAttachment: function (grRecord, sFilename, sContent, sContentType, bBase64, bHidden) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((this._gt.getType(grRecord).indexOf('gliderecord') == -1) || (!grRecord.isValidRecord()) || (!sFilename) || (!sContent)) {
+			gs.warn('GlobalToolsAttachment.writeAttachment called with invalid record or filename or content is empty');
+			return;
+		} // if not valid record
+		sContentType = (sContentType) ? sContentType : 'application/' + sFilename.split('.').pop();
+		var gsAttachment = new GlideSysAttachment();
+		var sAttachId = '';
+		if (bBase64 === true) {
+			sAttachId = gsAttachment.writeBase64(grRecord, sFilename, sContentType, sContent);
+		} else {
+			sAttachId = gsAttachment.write(grRecord, sFilename, sContentType, sContent);
+		} // if base64
+		if ((sAttachId) && (bHidden === true)) {
+			var grAttachment = new GlideRecord('sys_attachment');
+			grAttachment.setWorkflow(false);
+			grAttachment.autoSysFields(false);
+			if (grAttachment.get(sAttachId)) {
+				grAttachment.setValue('table_name', 'ZZ_YY' + grAttachment.getValue('table_name'));
+				grAttachment.update();
+			} // if attachment
+		} // if hidden
+		if (sAttachId) {
+			return sAttachId;
+		} // if attachment id
+	}, // function writeAttachment
+
+	writeAttachmentByTableId: function (sTable, sId, sFilename, sContent, sContentType, bBase64, bHidden) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId) || (!sFilename) || (!sContent)) {
+			gs.warn('GlobalToolsAttachment.writeAttachmentByTableId called with invalid table ' + sTable + ' or id, filename or content is empty');
+			return;
+		} // if no table return
+		var grRecord = this._gtRecordRead.getRecord(sTable, sId);
+		if (grRecord) {
+			return this.writeAttachment(grRecord, sFilename, sContent, sContentType, bBase64, bHidden);
+		} // if record
+	}, // function writeAttachmentByTableId
+
+	deleteAttachment: function (sTable, sId, sFilename, bHidden) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId) || (!sFilename)) {
+			gs.warn('GlobalToolsAttachment.deleteAttachment called with invalid table ' + sTable + ' or id or filename is empty');
+			return;
+		} // if no table return
+		this.deleteAttachments(sTable, sId, 'file_name=' + sFilename, bHidden);
+	}, // function deleteAttachment
+
+	deleteAttachmentsStartWithFilename: function (sTable, sId, sFilename, bHidden) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId) || (!sFilename)) {
+			gs.warn('GlobalToolsAttachment.deleteAttachmentsStartWithFilename called with invalid table ' + sTable + ' or id or filename is empty');
+			return;
+		} // if no table return
+		this.deleteAttachments(sTable, sId, 'file_nameSTARTSWITH' + sFilename, bHidden);
+	}, // function deleteAttachmentsStartWithFilename
+
+	deleteAttachments: function (sTable, sId, sQuery, bHidden) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId)) {
+			gs.warn('GlobalToolsAttachment.deleteAttachments called with invalid table ' + sTable + ' or id is empty');
+			return;
+		} // if no table return
+		if (sQuery) {
+			var grAttachment = new GlideRecord('sys_attachment');
+			if (!grAttachment.isValidEncodedQuery(sQuery)) {
+				gs.warn('GlobalToolsAttachment.deleteAttachments called with invalid query ' + sQuery + ' (' + sTable + ')');
+				return;
+			} // if invalid query
+			sQuery = '^' + sQuery;
+		} else {
+			sQuery = '';
+		} // if query
+		if (bHidden === true) {
+			sTable = 'ZZ_YY' + sTable;
+		} // if hidden
+		this._gtRecordWrite.deleteMultiple('sys_attachment', 'table_name=' + sTable + '^table_sys_id=' + sId + sQuery);
+	}, // function deleteAttachments
+
+	type: 'GlobalToolsAttachment',
+	version: '1.0.2',
+	author: 'Tom Hauri',
+	email: 'tom@hauri.biz'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-12-27 17:45:07</sys_created_on>
+        <sys_id>e52021ba1b1b31504422dc61ab4bcb47</sys_id>
+        <sys_mod_count>24</sys_mod_count>
+        <sys_name>GlobalToolsAttachment</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_script_include_e52021ba1b1b31504422dc61ab4bcb47</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-12-28 07:55:45</sys_updated_on>
+    </sys_script_include>
+</record_update>

@@ -35,15 +35,20 @@ GlobalToolsRecordRead.prototype = {
 			return;
 		} // if no table return
 		var gaRecord = new GlideAggregate(sTable);
+		var grRecord = new GlideRecord(sTable);
 		if (sQuery) {
-			gaRecord.addEncodedQuery(sQuery);
+			if (grRecord.isValidEncodedQuery(sQuery)) {
+				grRecord.addEncodedQuery(sQuery);
+			} else {
+				gs.warn('GlobalToolsRecordRead.countRecords called with invalid query: ' + sQuery);
+				return;
+			} // if invalid query
 		} // if query
 		if (sField) {
 			var aRow = [],
 				sFieldValue = '',
 				sFieldDisplayValue = '',
 				iFieldCount = -1;
-			var grRecord = new GlideRecord(sTable);
 			if (grRecord.isValidField(sField)) {
 				gaRecord.addAggregate('COUNT', sField);
 				if (bQueryNoDomain) {
@@ -90,6 +95,44 @@ GlobalToolsRecordRead.prototype = {
 		} // if field
 	}, // function countRecords
 
+	// Function for scoped apps to query one gliderecord with the options (ensures the real record class)
+	getRecord: function (sTable, sQueryOrSysId, bWorkflow, bAutoSysFields, bQueryNoDomain) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sQueryOrSysId)) {
+			gs.warn('GlobalToolsRecordRead.getRecord called with invalid table ' + sTable + ' or query is empty!');
+			return;
+		} // if no table return
+		var grRecord = new GlideRecord(sTable);
+		if (grRecord.isValidEncodedQuery(sQueryOrSysId)) {
+			grRecord.addEncodedQuery(sQueryOrSysId);
+		} else if (sQueryOrSysId.length == 32) {
+			grRecord.addEncodedQuery('sys_id=' + sQueryOrSysId);
+		} else {
+			gs.warn('GlobalToolsRecordRead.getRecords called with invalid query: ' + sQueryOrSysId + ' (' + sTable + ')');
+			return;
+		} // if invalid query
+		grRecord.setLimit(1);
+		if (bWorkflow === false) {
+			grRecord.setWorkflow(false);
+		} // if workflow false
+		if (bAutoSysFields === false) {
+			grRecord.autoSysFields(false);
+		} // if autosysfields false
+		if (bQueryNoDomain === true) {
+			grRecord.queryNoDomain();
+		} else {
+			grRecord._query();
+		} // if queryno domain
+		if (grRecord._next()) {
+			var sRealClass = this._gtTable.getRecordClass(grRecord);
+			if (sRealClass == sTable) {
+				return grRecord;
+			} else {
+				return this.getRecord(sRealClass, sQueryOrSysId, bWorkflow, bAutoSysFields, bQueryNoDomain);
+			} // if real class
+		} // if next
+	}, // function getRecord
+
 	// Function for scoped apps to query a gliderecord with the options
 	getRecords: function (sTable, sQuery, aOrderBy, aOrderByDesc, iLimit, bWorkflow, bAutoSysFields, bQueryNoDomain) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
@@ -99,18 +142,23 @@ GlobalToolsRecordRead.prototype = {
 		} // if no table return
 		var grRecord = new GlideRecord(sTable);
 		if (sQuery) {
-			grRecord.addEncodedQuery(sQuery);
+			if (grRecord.isValidEncodedQuery(sQuery)) {
+				grRecord.addEncodedQuery(sQuery);
+			} else {
+				gs.warn('GlobalToolsRecordRead.getRecords called with invalid query: ' + sQuery + ' (' + sTable + ')');
+				return;
+			} // if invalid query
 		} // if query
 		if (aOrderBy) {
 			var fnOrderBy = function (sOrderByField) {
 				grRecord.orderBy(sOrderByField);
-			};
+			}; // function order by field
 			aOrderBy.forEach(fnOrderBy);
 		} // if order by
 		if (aOrderByDesc) {
 			var fnOrderByDesc = function (sOrderByField) {
 				grRecord.orderByDesc(sOrderByField);
-			};
+			}; // function order by desc
 			aOrderByDesc.forEach(fnOrderByDesc);
 		} // if order by
 		if ((iLimit) && (!isNaN(iLimit))) {
@@ -125,7 +173,7 @@ GlobalToolsRecordRead.prototype = {
 		if (bQueryNoDomain === true) {
 			grRecord.queryNoDomain();
 		} else {
-			grRecord.query();
+			grRecord._query();
 		} // if queryno domain
 		return grRecord;
 	}, // function getRecords
@@ -133,10 +181,14 @@ GlobalToolsRecordRead.prototype = {
 	checkRecordByField: function (sTable, sField, sValue) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sField) || (!sValue)) {
-			gs.warn('GlobalToolsRecordRead.checkRecordByField table or field or value is empty!');
+			gs.warn('GlobalToolsRecordRead.checkRecordByField table ' + sTable + ' or field or value is empty!');
 			return;
 		} // if table is empty
 		var grRecord = new GlideRecord(sTable);
+		if (!grRecord.isValidField(sField)) {
+			gs.warn('GlobalToolsRecordRead.checkRecordByField called with invalid field: ' + sField + ' (' + sTable + ')');
+			return;
+		} // if invalid field
 		if (grRecord.get(sField, sValue)) {
 			return true;
 		} // if found
@@ -154,8 +206,15 @@ GlobalToolsRecordRead.prototype = {
 		} else {
 			grRecord.setLimit(1);
 		} // if error on multiple
-		grRecord.addEncodedQuery(sQuery);
-		grRecord.query();
+		if (sQuery) {
+			if (grRecord.isValidEncodedQuery(sQuery)) {
+				grRecord.addEncodedQuery(sQuery);
+			} else {
+				gs.warn('GlobalToolsRecordRead.getSysIdByQuery called with invalid query: ' + sQuery + ' (' + sTable + ')');
+				return;
+			} // if invalid query
+		} // if query
+		grRecord._query();
 		if (grRecord._next()) {
 			if ((bUniqueOnly) && (grRecord.getRowCount() > 1)) {
 				return;
@@ -172,9 +231,16 @@ GlobalToolsRecordRead.prototype = {
 		} // if table is empty
 		var grRecord = new GlideRecord(sTable);
 		grRecord.setLimit(1);
-		grRecord.addEncodedQuery(sQuery);
-		grRecord.query();
-		if (grRecord._next()) {
+		if (sQuery) {
+			if (grRecord.isValidEncodedQuery(sQuery)) {
+				grRecord.addEncodedQuery(sQuery);
+			} else {
+				gs.warn('GlobalToolsRecordRead.checkRecordByQuery called with invalid query: ' + sQuery + ' (' + sTable + ')');
+				return;
+			} // if invalid query
+		} // if query
+		grRecord._query();
+		if (grRecord.hasNext()) {
 			return true;
 		} // if found
 	}, // function checkRecordByQuery
@@ -450,13 +516,13 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>97</sys_mod_count>
+        <sys_mod_count>101</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-14 07:17:00</sys_updated_on>
+        <sys_updated_on>2023-12-27 20:40:46</sys_updated_on>
     </sys_script_include>
 </record_update>

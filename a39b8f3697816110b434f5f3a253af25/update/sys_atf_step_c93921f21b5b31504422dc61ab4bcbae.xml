@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step">
+    <sys_atf_step action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <copied_from/>
+        <description>Run Server Side Validation Script</description>
+        <display_name>Run Server Side Script</display_name>
+        <inputs/>
+        <mugshots_cache_json/>
+        <notes/>
+        <order>1</order>
+        <step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config>
+        <sys_class_name>sys_atf_step</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-12-27 18:23:42</sys_created_on>
+        <sys_id>c93921f21b5b31504422dc61ab4bcbae</sys_id>
+        <sys_mod_count>21</sys_mod_count>
+        <sys_name>Run Server Side Script</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_atf_step_c93921f21b5b31504422dc61ab4bcbae</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-12-28 07:30:54</sys_updated_on>
+        <table/>
+        <test display_value="GlobalToolsAttachment Tests">83a8e1b21b5b31504422dc61ab4bcbc1</test>
+        <timeout/>
+        <warning_message/>
+    </sys_atf_step>
+    <sys_variable_value action="delete_multiple" query="document_key=c93921f21b5b31504422dc61ab4bcbae"/>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>c93921f21b5b31504422dc61ab4bcbae</document_key>
+        <order>100</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-12-27 18:23:42</sys_created_on>
+        <sys_id>3b3961f21b5b31504422dc61ab4bcbdb</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-12-27 18:23:42</sys_updated_on>
+        <value>3.1</value>
+        <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
+    </sys_variable_value>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>c93921f21b5b31504422dc61ab4bcbae</document_key>
+        <order>200</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2023-12-27 18:23:42</sys_created_on>
+        <sys_id>ff3961f21b5b31504422dc61ab4bcbdb</sys_id>
+        <sys_mod_count>21</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2023-12-28 07:30:54</sys_updated_on>
+        <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
+&#13;
+	var bLog = false;&#13;
+	var _gtAttachment = new global.GlobalToolsAttachment();&#13;
+	var _gtATF = new global.GlobalToolsATF('GlobalToolsAttachment', _gtAttachment, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
+	var grRecord;&#13;
+	var grRecordAttachment;&#13;
+	var bEmptyRecord = false;&#13;
+	var sRecordId = '';&#13;
+	do {&#13;
+		grRecord = _gtATF.getRecord('incident', 'active=true');&#13;
+		grRecordAttachment = _gtATF.getRecord('sys_attachment', 'table_name=incident^table_sys_id=' + grRecord.getUniqueValue());&#13;
+		if (!grRecordAttachment.isValidRecord()) {&#13;
+			bEmptyRecord = true;&#13;
+			sRecordId = grRecord.getUniqueValue();&#13;
+		} // if valid attachment&#13;
+	} while (!bEmptyRecord);&#13;
+	&#13;
+	_gtATF.runATF('getAttachmentsByRecord', undefined);&#13;
+	_gtATF.runATF('getAttachmentsByRecord', undefined, 'sugus');&#13;
+	_gtATF.runATF('getAttachmentsByRecord', undefined, grRecord);&#13;
+&#13;
+	_gtATF.runATF('getAttachmentsStartWithFilename', undefined);&#13;
+	_gtATF.runATF('getAttachmentsStartWithFilename', undefined);&#13;
+&#13;
+	_gtATF.runATF('getAttachments', undefined);&#13;
+	_gtATF.runATF('getAttachments', undefined, 'sugus');&#13;
+	_gtATF.runATF('getAttachments', undefined, 'incident');&#13;
+	_gtATF.runATF('getAttachments', undefined, 'incident', 'sugus');&#13;
+	_gtATF.runATF('getAttachments', undefined, 'incident', sRecordId, '');&#13;
+	_gtATF.runATF('getAttachments', undefined, 'incident', sRecordId, '', 'record');&#13;
+	&#13;
+	_gtATF.runATF('readAttachmentStream', undefined);&#13;
+	_gtATF.runATF('readAttachmentStream', undefined, 'sugus');&#13;
+	_gtATF.runATF('readAttachmentStream', undefined, 'incident');&#13;
+	_gtATF.runATF('readAttachmentStream', undefined, 'incident', 'sugus');&#13;
+	_gtATF.runATF('readAttachmentStream', undefined, 'incident', sRecordId);&#13;
+	_gtATF.runATF('readAttachmentStream', undefined, 'incident', sRecordId, 'sugus');&#13;
+&#13;
+	_gtATF.runATF('combineAttachments', undefined);&#13;
+	_gtATF.runATF('combineAttachments', undefined, 'sugus');&#13;
+	_gtATF.runATF('combineAttachments', undefined, 'incident');&#13;
+	_gtATF.runATF('combineAttachments', undefined, 'incident', 'sugus');&#13;
+	_gtATF.runATF('combineAttachments', undefined, 'incident', sRecordId);&#13;
+	_gtATF.runATF('combineAttachments', undefined, 'incident', sRecordId, 'sugus');&#13;
+	&#13;
+	_gtATF.runATF('writeAttachment', undefined);&#13;
+	_gtATF.runATF('writeAttachment', undefined, 'sugus');&#13;
+	_gtATF.runATF('writeAttachment', undefined, grRecord);&#13;
+	_gtATF.runATF('writeAttachment', undefined, grRecord, 'sugus');&#13;
+	_gtATF.runATF('writeAttachment', undefined, grRecord, 'sugus.txt');&#13;
+	&#13;
+	_gtATF.runATF('writeAttachmentByTableId', undefined);&#13;
+	_gtATF.runATF('writeAttachmentByTableId', undefined, 'sugus');&#13;
+	_gtATF.runATF('writeAttachmentByTableId', undefined, 'incident');&#13;
+	_gtATF.runATF('writeAttachmentByTableId', undefined, 'incident', 'sugus');&#13;
+	_gtATF.runATF('writeAttachmentByTableId', undefined, 'incident', sRecordId);&#13;
+	_gtATF.runATF('writeAttachmentByTableId', undefined, 'incident', sRecordId, 'sugus');&#13;
+	_gtATF.runATF('writeAttachmentByTableId', undefined, 'incident', sRecordId, 'sugus.txt');&#13;
+	&#13;
+	_gtATF.runATF('writeAttachmentByTableId', /([0-9a-f]){32}/g, 'incident', sRecordId, 'sugus.txt', 'sugus0');&#13;
+&#13;
+	grRecordAttachment = _gtATF.getRecord('sys_attachment', 'table_name=incident^table_sys_id=' + sRecordId);&#13;
+	var sAttachmentId = grRecordAttachment.getUniqueValue();&#13;
+&#13;
+	_gtATF.runATF('getAttachmentsByRecord', [sAttachmentId], grRecord);&#13;
+	_gtATF.runATF('getAttachmentsByRecord', undefined, grRecord, 'file_nameSTARTSWITHgugus');&#13;
+	_gtATF.runATF('getAttachmentsByRecord', [sAttachmentId], grRecord, 'file_nameSTARTSWITHsugus');&#13;
+	_gtATF.runATF('getAttachmentsByRecord', ['sugus.txt'], grRecord, 'file_nameSTARTSWITHsugus', 'filename');&#13;
+	_gtATF.runATF('getAttachmentsByRecord', [{'id': sAttachmentId, 'filename': 'sugus.txt'}], grRecord, 'file_nameSTARTSWITHsugus', 'object');&#13;
+	_gtATF.runATF('getAttachmentsByRecord', '&gt;0', grRecord, 'file_nameSTARTSWITHsugus', 'record');&#13;
+&#13;
+	_gtATF.runATF('getAttachmentsStartWithFilename', [sAttachmentId], 'incident', sRecordId, 'sugus');&#13;
+&#13;
+	_gtATF.runATF('getAttachments', [sAttachmentId], 'incident', sRecordId, 'file_nameSTARTSWITHsugus');&#13;
+&#13;
+	_gtATF.runATF('readAttachmentStream', 'sugus0', 'incident', sRecordId, 'sugus.txt');&#13;
+&#13;
+	_gtATF.runATF('writeAttachmentByTableId', /([0-9a-f]){32}/g, 'incident', sRecordId, 'sugus1.txt', 'sugus1');&#13;
+	_gtATF.runATF('writeAttachmentByTableId', /([0-9a-f]){32}/g, 'incident', sRecordId, 'sugus2.txt', 'sugus2');&#13;
+	&#13;
+	_gtATF.runATF('combineAttachments', 'sugus0\nsugus1\nsugus2', 'incident', sRecordId, 'sugus');&#13;
+&#13;
+	_gtATF.runATF('combineAttachments', 'sugus0\nsugus1\nsugus2', 'incident', sRecordId, 'sugus', false, true);&#13;
+&#13;
+	_gtATF.runATF('getAttachments', undefined, 'incident', sRecordId);&#13;
+&#13;
+	_gtATF.runATF('writeAttachment', /([0-9a-f]){32}/g, grRecord, 'sugus1.txt', '{"sugus1": "value1",');&#13;
+	_gtATF.runATF('writeAttachment', /([0-9a-f]){32}/g, grRecord, 'sugus2.txt', '"sugus2": "value2"}');&#13;
+&#13;
+	_gtATF.runATF('combineAttachments', {'sugus1': 'value1', 'sugus2': 'value2'}, 'incident', sRecordId, 'sugus', true);&#13;
+&#13;
+	_gtATF.runATF('deleteAttachments', undefined);&#13;
+	_gtATF.runATF('getAttachments', '&gt;1', 'incident', sRecordId);&#13;
+	_gtATF.runATF('deleteAttachments', undefined, 'sugus');&#13;
+	_gtATF.runATF('getAttachments', '&gt;1', 'incident', sRecordId);&#13;
+	_gtATF.runATF('deleteAttachments', undefined, 'incident');&#13;
+	_gtATF.runATF('getAttachments', '&gt;1', 'incident', sRecordId);&#13;
+	_gtATF.runATF('deleteAttachments', undefined, 'incident', 'sugus');&#13;
+	_gtATF.runATF('getAttachments', '&gt;1', 'incident', sRecordId);&#13;
+	_gtATF.runATF('deleteAttachments', undefined, 'incident', sRecordId, 'sugus');&#13;
+	_gtATF.runATF('getAttachments', '&gt;1', 'incident', sRecordId);&#13;
+	_gtATF.runATF('deleteAttachments', undefined, 'incident', sRecordId, 'sugus.txt');&#13;
+	_gtATF.runATF('getAttachments', '&gt;1', 'incident', sRecordId);&#13;
+&#13;
+	_gtATF.runATF('deleteAttachment', undefined, 'incident', sRecordId, 'sugus1.txt');&#13;
+	_gtATF.runATF('getAttachments', '&gt;0', 'incident', sRecordId);&#13;
+&#13;
+	_gtATF.runATF('deleteAttachmentsStartWithFilename', undefined, 'incident', sRecordId, 'sugus');&#13;
+	_gtATF.runATF('getAttachments', undefined, 'incident', sRecordId);&#13;
+&#13;
+	_gtATF.runATF('writeAttachment', /([0-9a-f]){32}/g, grRecord, 'sugus1.txt', '{"sugus1": "value1"}', 'json', false, true);&#13;
+	_gtATF.runATF('getAttachmentsByRecord', '&gt;0', grRecord, '', '', true);&#13;
+	_gtATF.runATF('readAttachmentStream', '{"sugus1": "value1"}', 'incident', sRecordId, 'sugus1.txt', true);&#13;
+	_gtATF.runATF('deleteAttachment', undefined, 'incident', sRecordId, 'sugus1.txt', true);&#13;
+	_gtATF.runATF('getAttachmentsByRecord', undefined, grRecord, '', '', true);&#13;
+&#13;
+	return _gtATF.endATF();&#13;
+&#13;
+})(outputs, steps, params, stepResult, assertEqual);&#13;
+</value>
+        <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
+    </sys_variable_value>
+</record_update>

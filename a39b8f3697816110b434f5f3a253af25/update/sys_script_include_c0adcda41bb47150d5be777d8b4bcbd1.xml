@@ -68,7 +68,7 @@ GlobalToolsRecordWrite.prototype = {
 					grRecord.autoSysFields(false);
 				} // if no autosysfields
 				sQuery = aQuery.join('^');
-				if (sQuery) {
+				if ((sQuery) && (grRecord.isValidEncodedQuery(sQuery))) {
 					grRecord.addEncodedQuery(sQuery);
 				} else {
 					if (bLog) {
@@ -154,12 +154,12 @@ GlobalToolsRecordWrite.prototype = {
 		if (bLog) { gs.info('GlobalToolsRecordWrite.updateMultiple oConfig: ' + JSON.stringify(oConfig)); }
 		var sQuery = (oConfig.hasOwnProperty('sQuery')) ? String(oConfig['sQuery']) : '';
 		var sTargetTable = (oConfig.hasOwnProperty('sTargetTable')) ? oConfig['sTargetTable'] : '';
-		if ((sTargetTable) && (this._gtTable.isValidTable(sTargetTable)) && (sQuery) && (sQuery != 'null') && (Object.keys(oValues).length > 0)) {
+		var grRecord = new GlideRecord(sTargetTable);
+		if ((sTargetTable) && (this._gtTable.isValidTable(sTargetTable)) && (sQuery) && (sQuery != 'null') && (grRecord.isValidEncodedQuery(sQuery)) && (Object.keys(oValues).length > 0)) {
 			var bDoUpdate = false;
 			var bNoWorkflow = (String(oConfig['bNoWorkflow']) == 'true') ? true : false; // default is false
 			var bNoAutoSysFields = (String(oConfig['bNoAutoSysFields']) == 'true') ? true : false; // default is false
 			var bNoEngines = (String(oConfig['bNoEngines']) == 'true') ? true : false; // default is false
-			var grRecord = new GlideRecord(sTargetTable);
 			grRecord.addEncodedQuery(sQuery);
 			if (bNoWorkflow) {
 				grRecord.setWorkflow(false);
@@ -230,13 +230,13 @@ GlobalToolsRecordWrite.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 09:59:44</sys_created_on>
         <sys_id>c0adcda41bb47150d5be777d8b4bcbd1</sys_id>
-        <sys_mod_count>25</sys_mod_count>
+        <sys_mod_count>26</sys_mod_count>
         <sys_name>GlobalToolsRecordWrite</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_c0adcda41bb47150d5be777d8b4bcbd1</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-16 08:26:18</sys_updated_on>
+        <sys_updated_on>2023-12-27 16:52:35</sys_updated_on>
     </sys_script_include>
 </record_update>
