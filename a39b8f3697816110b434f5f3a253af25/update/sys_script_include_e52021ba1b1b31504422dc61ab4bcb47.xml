@@ -85,7 +85,13 @@ GlobalToolsAttachment.prototype = {
 				} else if (sReturnType == 'filename') {
 					aReturnValues.push(grAttachment.getValue('file_name'));
 				} else if (sReturnType == 'object') {
-					aReturnValues.push({ 'id': grAttachment.getUniqueValue(), 'filename': grAttachment.getValue('file_name') });
+					aReturnValues.push({
+						'id': grAttachment.getUniqueValue(),
+						'filename': grAttachment.getValue('file_name'),
+						'hash': grAttachment.getValue('file_name'),
+						'record_id': grAttachment.getValue('table_sys_id'),
+						'record_table': grAttachment.getValue('table_name')
+					}); // object values
 				} // if return type
 			} // while attachments
 			if (this._gtArray.isValidArray(aReturnValues)) {
@@ -226,13 +232,13 @@ GlobalToolsAttachment.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-27 17:45:07</sys_created_on>
         <sys_id>e52021ba1b1b31504422dc61ab4bcb47</sys_id>
-        <sys_mod_count>24</sys_mod_count>
+        <sys_mod_count>25</sys_mod_count>
         <sys_name>GlobalToolsAttachment</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_e52021ba1b1b31504422dc61ab4bcb47</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-28 07:55:45</sys_updated_on>
+        <sys_updated_on>2023-12-29 17:01:24</sys_updated_on>
     </sys_script_include>
 </record_update>
