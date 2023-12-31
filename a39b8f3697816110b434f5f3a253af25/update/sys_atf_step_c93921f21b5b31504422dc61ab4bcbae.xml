@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-27 18:23:42</sys_created_on>
         <sys_id>c93921f21b5b31504422dc61ab4bcbae</sys_id>
-        <sys_mod_count>23</sys_mod_count>
+        <sys_mod_count>29</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_c93921f21b5b31504422dc61ab4bcbae</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-29 17:06:35</sys_updated_on>
+        <sys_updated_on>2023-12-31 08:05:16</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsAttachment Tests">83a8e1b21b5b31504422dc61ab4bcbc1</test>
         <timeout/>
@@ -49,9 +49,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-27 18:23:42</sys_created_on>
         <sys_id>ff3961f21b5b31504422dc61ab4bcbdb</sys_id>
-        <sys_mod_count>23</sys_mod_count>
+        <sys_mod_count>29</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-29 17:06:35</sys_updated_on>
+        <sys_updated_on>2023-12-31 08:05:17</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -98,6 +98,15 @@
 	_gtATF.runATF('combineAttachments', undefined, 'incident', sRecordId);&#13;
 	_gtATF.runATF('combineAttachments', undefined, 'incident', sRecordId, 'sugus');&#13;
 	&#13;
+	_gtATF.runATF('getAttachmentSize', undefined, 'sugus');&#13;
+&#13;
+	_gtATF.runATF('getAttachmentSizePerRecord', undefined);&#13;
+	_gtATF.runATF('getAttachmentSizePerRecord', undefined, 'sugus');&#13;
+	_gtATF.runATF('getAttachmentSizePerRecord', undefined, 'incident');&#13;
+	_gtATF.runATF('getAttachmentSizePerRecord', undefined, 'incident', 'sugus');&#13;
+	_gtATF.runATF('getAttachmentSizePerRecord', undefined, 'incident', sRecordId);&#13;
+	_gtATF.runATF('getAttachmentSizePerRecord', undefined, 'incident', sRecordId, 'sugus');&#13;
+&#13;
 	_gtATF.runATF('writeAttachment', undefined);&#13;
 	_gtATF.runATF('writeAttachment', undefined, 'sugus');&#13;
 	_gtATF.runATF('writeAttachment', undefined, grRecord);&#13;
@@ -144,6 +153,12 @@
 &#13;
 	_gtATF.runATF('combineAttachments', {'sugus1': 'value1', 'sugus2': 'value2'}, 'incident', sRecordId, 'sugus', true);&#13;
 &#13;
+	_gtATF.runATF('getAttachmentSize', /([0-9]*)/g);&#13;
+	_gtATF.runATF('getAttachmentSize', /([0-9]*)/g, 'table_name=task');&#13;
+	_gtATF.runATF('getAttachmentSizePerRecord', '79 B', 'incident', sRecordId, 'file_nameSTARTSWITHsugus');&#13;
+	_gtATF.runATF('getAttachmentSizePerRecord', '39 B', 'incident', sRecordId, 'file_nameSTARTSWITHsugus', 'full');&#13;
+	_gtATF.runATF('getAttachmentSizePerRecord', {'full': '39 B', 'compressed': '79 B'}, 'incident', sRecordId, 'file_nameSTARTSWITHsugus', 'object');&#13;
+	&#13;
 	_gtATF.runATF('deleteAttachments', undefined);&#13;
 	_gtATF.runATF('getAttachments', '&gt;1', 'incident', sRecordId);&#13;
 	_gtATF.runATF('deleteAttachments', undefined, 'sugus');&#13;

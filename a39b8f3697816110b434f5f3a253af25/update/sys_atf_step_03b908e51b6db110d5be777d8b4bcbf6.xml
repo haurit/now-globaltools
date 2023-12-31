@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-27 14:26:38</sys_created_on>
         <sys_id>03b908e51b6db110d5be777d8b4bcbf6</sys_id>
-        <sys_mod_count>110</sys_mod_count>
+        <sys_mod_count>112</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_03b908e51b6db110d5be777d8b4bcbf6</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-28 17:14:31</sys_updated_on>
+        <sys_updated_on>2023-12-31 07:27:24</sys_updated_on>
         <table/>
         <test display_value="GlobalTools Tests">171600e11b6db110d5be777d8b4bcbbc</test>
         <timeout/>
@@ -49,9 +49,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-27 14:26:38</sys_created_on>
         <sys_id>ff4a88e51b6db110d5be777d8b4bcb1a</sys_id>
-        <sys_mod_count>110</sys_mod_count>
+        <sys_mod_count>112</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-28 17:14:31</sys_updated_on>
+        <sys_updated_on>2023-12-31 07:27:24</sys_updated_on>
         <value>(function(outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -127,6 +127,36 @@
 	_gtATF.runATF('padNumber', '00000001', '1');&#13;
 	_gtATF.runATF('padNumber', '000001', 1, 6);&#13;
 &#13;
+	_gtATF.runATF('formatBytes', undefined);&#13;
+	_gtATF.runATF('formatBytes', undefined, '');&#13;
+	_gtATF.runATF('formatBytes', undefined, 'abc');&#13;
+	_gtATF.runATF('formatBytes', undefined, -1);&#13;
+	_gtATF.runATF('formatBytes', '0 B', 0);&#13;
+	_gtATF.runATF('formatBytes', '0 B', '0');&#13;
+	_gtATF.runATF('formatBytes', '1 B', 1);&#13;
+	_gtATF.runATF('formatBytes', '1 B', '1');&#13;
+	_gtATF.runATF('formatBytes', '999 B', 999);&#13;
+	_gtATF.runATF('formatBytes', '1 KB', 1000);&#13;
+	_gtATF.runATF('formatBytes', '1.02 KB', 1024);&#13;
+	_gtATF.runATF('formatBytes', '1 MB', 1000001);&#13;
+	_gtATF.runATF('formatBytes', '1 GB', 1000000001);&#13;
+	_gtATF.runATF('formatBytes', '156.88 GB', 156879898741, 4);&#13;
+	_gtATF.runATF('formatBytes', '1 TB', 1000000000001);&#13;
+	_gtATF.runATF('formatBytes', '1 PB', 1000000000000001);&#13;
+	_gtATF.runATF('formatBytes', '0 B', 0, 'iec');&#13;
+	_gtATF.runATF('formatBytes', '0 B', '0', 'iec');&#13;
+	_gtATF.runATF('formatBytes', '1 B', 1, 'iec');&#13;
+	_gtATF.runATF('formatBytes', '1 B', '1', 'iec');&#13;
+	_gtATF.runATF('formatBytes', '1000 B', 1000, 'iec');&#13;
+	_gtATF.runATF('formatBytes', '1 KiB', 1024, 'iec');&#13;
+	_gtATF.runATF('formatBytes', '1 KiB', 1025, 'iec');&#13;
+	_gtATF.runATF('formatBytes', '1 MiB', 1048576, 'iec');&#13;
+	_gtATF.runATF('formatBytes', '1 GiB', 1073741824, 'iec');&#13;
+	_gtATF.runATF('formatBytes', '12.5484 GiB', 13473741824, 'iec', 4);&#13;
+	_gtATF.runATF('formatBytes', '1 TiB', 1099511627776, 'iec');&#13;
+	_gtATF.runATF('formatBytes', '1 PiB', 1125899906842624, 'iec');&#13;
+	_gtATF.runATF('formatBytes', '1 PiB', 1125899906842629, 'iec');&#13;
+	&#13;
 	_gtATF.runATF('replacePlaceholders', undefined);&#13;
 	_gtATF.runATF('replacePlaceholders', 'test, [sugus1]', 'test, [sugus1]');&#13;
 	_gtATF.runATF('replacePlaceholders', 'test, value1', 'test, [sugus1]', {'sugus1': 'value1'});&#13;

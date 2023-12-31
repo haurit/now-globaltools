@@ -95,6 +95,39 @@ GlobalToolsRecordRead.prototype = {
 		} // if field
 	}, // function countRecords
 
+	// Convenience function to get sum of a field in records, returns number in bytes
+	sumRecordsField: function (sTable, sField, sQuery, bQueryNoDomain) {
+		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
+			gs.warn('GlobalToolsRecordRead.sumRecordsField called with invalid table ' + sTable + '!');
+			return;
+		} // if no table return
+		var grRecord = new GlideRecord(sTable);
+		if (!grRecord.isValidField(sField)) {
+			gs.warn('GlobalToolsRecordRead.sumRecordsField called with invalid field: ' + sField + ' (' + sTable + ')');
+			return;
+		} // if invalid field
+		var gaRecord = new GlideAggregate(sTable);
+		if (sQuery) {
+			if (grRecord.isValidEncodedQuery(sQuery)) {
+				gaRecord.addEncodedQuery(sQuery);
+			} else {
+				gs.warn('GlobalToolsRecordRead.sumRecordsField called with invalid query: ' + sQuery);
+				return;
+			} // if invalid query
+		} // if query
+		gaRecord.setGroup(false);
+		gaRecord.setOrder(false);
+		gaRecord.addAggregate('SUM', sField);
+		if (bQueryNoDomain) {
+			gaRecord.queryNoDomain();
+		} else {
+			gaRecord._query();
+		} // if no domain
+		if (gaRecord._next()) {
+			return gaRecord.getAggregate('SUM', sField);
+		} // if record
+	}, // function sumRecordsField
+
 	// Function for scoped apps to query one gliderecord with the options (ensures the real record class)
 	getRecord: function (sTable, sQueryOrSysId, bWorkflow, bAutoSysFields, bQueryNoDomain) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
@@ -516,13 +549,13 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>101</sys_mod_count>
+        <sys_mod_count>102</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-27 20:40:46</sys_updated_on>
+        <sys_updated_on>2023-12-30 10:21:48</sys_updated_on>
     </sys_script_include>
 </record_update>
