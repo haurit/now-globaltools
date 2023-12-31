@@ -79,8 +79,11 @@
 		</ol>
 		<h3>1.0.2 - 12.2023</h3>
 		<ol>
+			<li>Added function padNumber</li>
+			<li>Added function formatBytes</li>
 			<li>Added function getHTMLDiffFromXML</li>
 			<li>Added function getInternalType</li>
+			<li>Added function sumRecordsField</li>
 			<li>Added function getRecord</li>
 			<li>Added function convertGRtoXML</li>
 			<li>Added function deleteMultiple</li>
@@ -201,6 +204,16 @@
 			<li><code>iDigits</code>: The input <code>integer</code> with the desired lenght of the string.</li>
 		</ul>
 		<p><strong>Returns:</strong>&#160;The <code>string</code> with the required length.</p>
+		<h2>Function: formatBytes</h2>
+		<p><strong>Purpose:</strong>&#160;This function formats a number to the correct byte representation.</p>
+		<p><strong>Parameters:</strong></p>
+		<ul>
+			<li><code>iNumber</code>: The input <code>integer</code> with the actual number of bytes.</li>
+			<li><code>sNotation</code>: (Optional) The string definining the notation to be used: si (base 1000) or iec
+				(base 1024) Default: si.</li>
+			<li><code>iDecimals</code>: (Optional) The number of decimals to be returned (Default: 2).</li>
+		</ul>
+		<p><strong>Returns:</strong>&#160;The <code>string</code> with the formated bytes value.</p>
 		<h2>Function: replacePlaceholders</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function replaces placeholders in a string [field_name] with the
@@ -722,6 +735,17 @@
 			<strong>Returns:</strong>&#160;Returns an integer with the count or an array of record counts grouped by the
 			provided <code>sField</code> parameter.
 		</p>
+		<h2>Function: sumRecordsField</h2>
+		<p><strong>Purpose:</strong>&#160;This function sums up the field values for records.</p>
+		<p><strong>Parameters:</strong></p>
+		<ul>
+			<li><code>sTable</code>: A string representing the name of the table.</li>
+			<li><code>sField</code>: (Optional) A string representing the field for which to sum up the values.</li>
+			<li><code>sQuery</code>: A string representing the query to filter records.</li>
+			<li><code>bQueryNoDomain</code>: (Optional) A boolean indicating whether to query without considering
+				domains.</li>
+		</ul>
+		<p><strong>Returns:</strong>&#160;The <code>number</code> with the sum of all field values.</p>
 		<h2>getRecord</h2>
 		<p><strong>Purpose:</strong>&#160;This function retrieves one records from a specified table based on the
 			provided query or sys_id and options ensuring the record is return in the correct class.</p>
@@ -1469,7 +1493,8 @@ Count sGroupByField and  bOrderByCount:
 			<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachments are retrieved.
 			</li>
 			<li><code>sFilename</code>: The filename to be applied as a "file_nameSTARTSWITH" query on the
-				<code>sys_attachment</code> table.</li>
+				<code>sys_attachment</code> table.
+			</li>
 			<li><code>sReturnType</code>: (Optional) The return type if the attachment information: id, filename or
 				object with both as <code>array</code> or record as <code>glide record</code>. Default: id</li>
 			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
@@ -1486,7 +1511,8 @@ Count sGroupByField and  bOrderByCount:
 			<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachments are retrieved.
 			</li>
 			<li><code>sQuery</code>: (Optional) The <code>encoded query</code> to be applied on the
-				<code>sys_attachment</code> table.</li>
+				<code>sys_attachment</code> table.
+			</li>
 			<li><code>sReturnType</code>: (Optional) The return type if the attachment information: id, filename or
 				object with both as <code>array</code> or record as <code>glide record</code>. Default: id</li>
 			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
@@ -1494,6 +1520,13 @@ Count sGroupByField and  bOrderByCount:
 		</ul>
 		<p><strong>Returns:</strong>&#160;The <code>array</code> or <code>glide record</code> respecting the type
 			specified in <code>sReturnType</code></p>
+		<h2>Function: readAttachmentStreamFromId</h2>
+		<p><strong>Purpose:</strong>&#160;This function reads the attachment information for a specific attachment.</p>
+		<p><strong>Parameters:</strong></p>
+		<ul>
+			<li><code>sId</code>: The <code>sys_id</code> of the attachment to be retrieved.</li>
+		</ul>
+		<p><strong>Returns:</strong>&#160;The <code>string</code> of the attachment content.</p>
 		<h2>Function: readAttachmentStream</h2>
 		<p><strong>Purpose:</strong>&#160;This function reads the attachment information for a specific record and
 			attachment filename.</p>
@@ -1502,7 +1535,8 @@ Count sGroupByField and  bOrderByCount:
 			<li><code>sTable</code>: The glide record table for which the attachment is retrieved.</li>
 			<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachment is retrieved.</li>
 			<li><code>sFilename</code>: The filename to be applied as a "file_name=" query on the
-				<code>sys_attachment</code> table.</li>
+				<code>sys_attachment</code> table.
+			</li>
 			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
 				hidden from the user.</li>
 		</ul>
@@ -1515,7 +1549,8 @@ Count sGroupByField and  bOrderByCount:
 			<li><code>sTable</code>: The glide record table for which the attachment is retrieved.</li>
 			<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachment is retrieved.</li>
 			<li><code>sFilename</code>: The filename to be applied as a "file_nameSTARTSWITH" query on the
-				<code>sys_attachment</code> table.</li>
+				<code>sys_attachment</code> table.
+			</li>
 			<li><code>bReturnJSON</code>: (Optional) Parses the text string to an JSON object.</li>
 			<li><code>bDeleteAfterRead</code>: (Optional) If successful deletes the attachments after reading.</li>
 			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
@@ -1523,16 +1558,40 @@ Count sGroupByField and  bOrderByCount:
 		</ul>
 		<p><strong>Returns:</strong>&#160;The <code>string</code> or <code>JSON</code> of the combined attachment
 			content.</p>
+			<h2>Function: getAttachmentSizePerRecord</h2>
+<p><strong>Purpose:</strong>&#160;This function gets the total attachment size information for a specific record based and a specific query.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sTable</code>: The glide record table for which the attachments are retrieved.</li>
+<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachments are retrieved.</li>
+<li><code>sQuery</code>: (Optional) The <code>encoded query</code> to be applied on the <code>sys_attachment</code> table.</li>
+<li><code>sReturnType</code>: (Optional) The return type if the attachment information: full, compressed or object with both. Default: compressed</li>
+<li><code>sNotation</code>: (Optional) The string definining the notation to be used to format the result: number (no notation), si (base 1000) or iec (base 1024) Default: si.</li>
+<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are hidden from the user.</li>
+</ul>
+<p><strong>Returns:</strong>&#160;The <code>number</code>, <code>string</code> or <code>object</code> respecting the type specified in <code>sReturnType</code></p>
+<h2>Function: getAttachmentSize</h2>
+<p><strong>Purpose:</strong>&#160;This function gets the total attachment size information for a specific record based and a specific query.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sQuery</code>: (Optional) The <code>encoded query</code> to be applied on the <code>sys_attachment</code> table.</li>
+<li><code>sReturnType</code>: (Optional) The return type if the attachment information: full, compressed or object with both. Default: compressed</li>
+<li><code>sNotation</code>: (Optional) The string definining the notation to be used to format the result: number (no notation), si (base 1000) or iec (base 1024) Default: si.</li>
+</ul>
+<p><strong>Returns:</strong>&#160;The <code>number</code>, <code>string</code> or <code>object</code> respecting the type specified in <code>sReturnType</code></p>
+
 		<h2>Function: writeAttachment</h2>
 		<p><strong>Purpose:</strong>&#160;This function writes an attachment to a specific record.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
 			<li><code>grRecord</code>: The <code>glide record</code> to which the file is attached in the
-				<code>sys_attachment</code> table..</li>
+				<code>sys_attachment</code> table..
+			</li>
 			<li><code>sFilename</code>: The filename to be set (field <code>file_name</code>).</li>
 			<li><code>sContent</code>: The content of the attachment.</li>
 			<li><code>sContentType</code>: (Optional) If <code>undefined</code> the string after the last . (dot) of the
-				<code>sFilename</code> is taken.</li>
+				<code>sFilename</code> is taken.
+			</li>
 			<li><code>bBase64</code>: (Optional) Write the content as Base64 encoded string.</li>
 			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
 				hidden from the user.</li>
@@ -1548,7 +1607,8 @@ Count sGroupByField and  bOrderByCount:
 			<li><code>sFilename</code>: The filename to be set (field <code>file_name</code>).</li>
 			<li><code>sContent</code>: The content of the attachment.</li>
 			<li><code>sContentType</code>: (Optional) If <code>undefined</code> the string after the last . (dot) of the
-				<code>sFilename</code> is taken.</li>
+				<code>sFilename</code> is taken.
+			</li>
 			<li><code>bBase64</code>: (Optional) Write the content as Base64 encoded string.</li>
 			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
 				hidden from the user.</li>
@@ -1574,7 +1634,8 @@ Count sGroupByField and  bOrderByCount:
 			<li><code>sId</code>: The <code>sys_id</code> of the base record from which the attachments are deleted.
 			</li>
 			<li><code>sFilename</code>: The starting string of the filenames for the attachment to be deleted (field
-				<code>file_name</code> STARTSWITH).</li>
+				<code>file_name</code> STARTSWITH).
+			</li>
 			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
 				hidden from the user.</li>
 		</ul>
@@ -1597,13 +1658,13 @@ Count sGroupByField and  bOrderByCount:
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>137</sys_mod_count>
+        <sys_mod_count>142</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-28 17:11:06</sys_updated_on>
+        <sys_updated_on>2023-12-31 09:45:43</sys_updated_on>
     </sys_ui_page>
 </record_update>

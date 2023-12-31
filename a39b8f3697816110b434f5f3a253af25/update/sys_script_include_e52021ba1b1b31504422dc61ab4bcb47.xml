@@ -85,7 +85,13 @@ GlobalToolsAttachment.prototype = {
 				} else if (sReturnType == 'filename') {
 					aReturnValues.push(grAttachment.getValue('file_name'));
 				} else if (sReturnType == 'object') {
-					aReturnValues.push({ 'id': grAttachment.getUniqueValue(), 'filename': grAttachment.getValue('file_name') });
+					aReturnValues.push({
+						'id': grAttachment.getUniqueValue(),
+						'filename': grAttachment.getValue('file_name'),
+						'hash': grAttachment.getValue('hash'),
+						'record_id': grAttachment.getValue('table_sys_id'),
+						'record_table': grAttachment.getValue('table_name')
+					}); // object values
 				} // if return type
 			} // while attachments
 			if (this._gtArray.isValidArray(aReturnValues)) {
@@ -100,17 +106,26 @@ GlobalToolsAttachment.prototype = {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var aAttachmentIds = this.getAttachments(sTable, sId, 'file_name=' + sFileName, 'id', bHidden);
 		if (this._gtArray.isValidArray(aAttachmentIds)) {
+			return this.readAttachmentStreamFromId(aAttachmentIds[0]);
+		} // if attachmentids
+	}, // function readAttachmentStream
+
+	readAttachmentStreamFromId: function (sId) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (sId) {
 			var aLines = [];
 			var gsAttachment = new GlideSysAttachment();
-			var gsContentStream = gsAttachment.getContentStream(aAttachmentIds[0]);
-			var gTextReader = new GlideTextReader(gsContentStream);
-			var oLine = ' ';
-			while ((oLine = gTextReader.readLine()) != null) {
-				aLines.push(oLine);
-			} // while lines
-			return aLines.join('\n');
+			var gsContentStream = gsAttachment.getContentStream(sId);
+			if (gsContentStream) {
+				var gTextReader = new GlideTextReader(gsContentStream);
+				var oLine = ' ';
+				while ((oLine = gTextReader.readLine()) != null) {
+					aLines.push(oLine);
+				} // while lines
+				return aLines.join('\n');
+			} // if content stream
 		} // if attachmentids
-	}, // function readAttachment
+	}, // function readAttachmentStreamFromId
 
 	combineAttachments: function (sTable, sId, sFilename, bReturnJSON, bDeleteAfterRead, bHidden) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
@@ -136,6 +151,61 @@ GlobalToolsAttachment.prototype = {
 			} // if return json
 		} // if attachmentids
 	}, // function combineAttachments
+
+	getAttachmentSizePerRecord: function (sTable, sId, sQuery, sReturnType, sNotation, bHidden) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId)) {
+			gs.warn('GlobalToolsAttachment.getAttachmentSizePerRecord called with invalid table ' + sTable + ' or id is empty');
+			return;
+		} // if no table return
+		sQuery = (sQuery) ? '^' + sQuery : '';
+		if (bHidden === true) {
+			sTable = 'ZZ_YY' + sTable;
+		} // if hidden
+		return this.getAttachmentSize('table_name=' + sTable + '^table_sys_id=' + sId + sQuery, sReturnType, sNotation);
+	}, // function getAttachmentSizePerRecord
+
+	getAttachmentSize: function (sQuery, sReturnType, sNotation) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var grAttachment = new GlideRecord('sys_attachment');
+		if (sQuery) {
+			if (!grAttachment.isValidEncodedQuery(sQuery)) {
+				gs.warn('GlobalToolsAttachment.getAttachmentSize called with invalid query ' + sQuery + ' (sys_attachment)');
+				return;
+			} // if invalid query
+		} else {
+			sQuery = '';
+		} // if query
+		sReturnType = ((sReturnType) && (['full', 'compressed', 'object'].indexOf(sReturnType) != -1)) ? sReturnType : 'compressed';
+		sNotation = ((sNotation) && (['integer', 'si', 'iec'].indexOf(sNotation) != -1)) ? sNotation : 'si';
+		var iFullBytes = 0;
+		var iCompressedBytes = 0;
+		if ((sReturnType == 'object') || (sReturnType == 'full')) {
+			iFullBytes = this._gtRecordRead.sumRecordsField('sys_attachment', 'size_bytes', sQuery, true);
+		} // if object or full
+		if ((sReturnType == 'object') || (sReturnType == 'compressed')) {
+			iCompressedBytes = this._gtRecordRead.sumRecordsField('sys_attachment', 'size_compressed', sQuery, true);
+		} // if object or full
+		if (sReturnType == 'object') {
+			if (sNotation == 'integer') {
+				return { 'full': iFullBytes, 'compressed': iCompressedBytes };
+			} else {
+				return { 'full': this._gt.formatBytes(iFullBytes, sNotation), 'compressed': this._gt.formatBytes(iCompressedBytes, sNotation) };
+			} // if notation 
+		} else if (sReturnType == 'full') {
+			if (sNotation == 'integer') {
+				return iFullBytes;
+			} else {
+				return this._gt.formatBytes(iFullBytes, sNotation);
+			} // notation
+		} else {
+			if (sNotation == 'integer') {
+				return iCompressedBytes;
+			} else {
+				return this._gt.formatBytes(iCompressedBytes, sNotation);
+			} // notation
+		} // if return type
+	}, // function getRecordAttachmentSize
 
 	writeAttachment: function (grRecord, sFilename, sContent, sContentType, bBase64, bHidden) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
@@ -226,13 +296,13 @@ GlobalToolsAttachment.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-27 17:45:07</sys_created_on>
         <sys_id>e52021ba1b1b31504422dc61ab4bcb47</sys_id>
-        <sys_mod_count>24</sys_mod_count>
+        <sys_mod_count>36</sys_mod_count>
         <sys_name>GlobalToolsAttachment</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_e52021ba1b1b31504422dc61ab4bcb47</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-28 07:55:45</sys_updated_on>
+        <sys_updated_on>2023-12-31 08:05:54</sys_updated_on>
     </sys_script_include>
 </record_update>

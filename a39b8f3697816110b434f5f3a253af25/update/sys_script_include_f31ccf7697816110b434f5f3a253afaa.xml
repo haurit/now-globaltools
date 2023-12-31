@@ -158,7 +158,7 @@ GlobalTools.prototype = {
 
 	// Pad number
 	padNumber: function (iNumber, iDigits) {
-		if (iNumber) {
+		if ((iNumber) || (iNumber === 0)) {
 			iDigits = ((iDigits) && (!isNaN(iDigits))) ? iDigits : 8;
 			var sNumber = String(iNumber);
 			while (sNumber.length < iDigits)
@@ -166,6 +166,30 @@ GlobalTools.prototype = {
 			return sNumber;
 		} // if number
 	}, // function padNumber
+
+	// Format bytes user friendly
+	formatBytes: function (iNumber, sNotation, iDecimals) {
+		if ((this.getType(iNumber) != 'number') && (this.getType(iNumber) != 'integer')) {
+			iNumber = parseInt(iNumber);
+			if (isNaN(iNumber)) {
+				return;
+			} // if not number
+		} // if not number
+		iDecimals = ((iDecimals) && (!isNaN(iDecimals))) ? parseInt(iDecimals) : 2;
+		if (iNumber < 0) {return;} // if less than zero
+		sNotation = (sNotation == 'iec') ? 'iec' : 'si';
+		var aPrefixes = {
+			'si': ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+			'iec': ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+		}; // Prefixes
+		var iBase = (sNotation == 'iec') ? 1024 : 1000;
+		if (iNumber === 0) {
+			return '0 ' + aPrefixes[sNotation][0];
+		} // if zero
+		var iExponent = Math.floor(Math.log(iNumber) / Math.log(iBase));
+		var iResult = (iNumber / Math.pow(iBase, iExponent)).toFixed(iDecimals);
+		return String(iResult).replace('.' + this.padNumber(0, iDecimals), '') + ' ' + aPrefixes[sNotation][iExponent];
+	}, // function formatBytes
 
 	// Function to replace placeholders
 	replacePlaceholders: function (sInputValue, oRecord, sValue, bJSON) {
@@ -400,13 +424,13 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>121</sys_mod_count>
+        <sys_mod_count>127</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-28 17:13:29</sys_updated_on>
+        <sys_updated_on>2023-12-31 07:22:48</sys_updated_on>
     </sys_script_include>
 </record_update>
