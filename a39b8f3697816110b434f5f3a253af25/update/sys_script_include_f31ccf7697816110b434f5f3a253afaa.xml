@@ -176,7 +176,7 @@ GlobalTools.prototype = {
 			} // if not number
 		} // if not number
 		iDecimals = ((iDecimals) && (!isNaN(iDecimals))) ? parseInt(iDecimals) : 2;
-		if (iNumber < 0) {return;} // if less than zero
+		if (iNumber < 0) { return; } // if less than zero
 		sNotation = (sNotation == 'iec') ? 'iec' : 'si';
 		var aPrefixes = {
 			'si': ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
@@ -263,7 +263,8 @@ GlobalTools.prototype = {
 			if (!aArgs) {
 				return '';
 			} // if no args
-			aArgs.forEach(function (oItem, iIndex) {
+			for (iIndex = 0; iIndex < aArgs.length; iIndex++) {
+				oItem = aArgs[iIndex];
 				var sType = typeof oItem;
 				if ((!oItem) && (sType != 'boolean') && (!oItem === 0)) {
 					return '';
@@ -284,7 +285,7 @@ GlobalTools.prototype = {
 				} else {
 					aReturn.push(JSON.stringify(oItem));
 				} // if special object
-			}, this); // each argument
+			} // each argument (HINT: forEach created StackOverflow)
 			return aReturn.join(', ');
 		} // function parseArgs
 		iSeconds = (iSeconds) ? iSeconds : 1;
@@ -358,6 +359,14 @@ GlobalTools.prototype = {
 		gs.sleep(iMilliseconds);
 	}, // function sleep
 
+	// Overcome scopeing issue
+	getExecutionTrackerbyId: function (sId) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (sId) {
+			return SNC.GlideExecutionTracker.getBySysID(sId);
+		} // if id
+	}, // function getExecutionTrackerbyId
+
 	// Run function in a same scope
 	runFunction: function (sFunction) { // function is a <script_include>.<function>.toString(), 2nd... args will be evaluated in function call
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
@@ -424,13 +433,13 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>127</sys_mod_count>
+        <sys_mod_count>142</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-31 07:22:48</sys_updated_on>
+        <sys_updated_on>2024-01-02 14:07:58</sys_updated_on>
     </sys_script_include>
 </record_update>

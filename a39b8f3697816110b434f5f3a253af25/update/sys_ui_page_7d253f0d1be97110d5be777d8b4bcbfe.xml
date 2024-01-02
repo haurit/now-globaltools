@@ -300,6 +300,13 @@
 			<strong>Parameters:</strong>
 			<li><code>iMilliseconds</code>: The number of milliseconds to pause script execution.</li>
 		</p>
+		<h2>Function: getExecutionTrackerbyId</h2>
+<p><strong>Purpose:</strong>&#160;This function is used to get an execution tracker by id.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>sId</code>: The <code>string</code> with the id of the execution tracker to retrieve.</li>
+</ul>
+<p><strong>Returns:</strong>&#160;The GlideExecutionTracker specified by the <code>sId</code> parameter.</p>
 		<h2>Function: runFunction</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function runs a given JavaScript function in global scope. The function
@@ -1658,13 +1665,13 @@ Count sGroupByField and  bOrderByCount:
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>142</sys_mod_count>
+        <sys_mod_count>143</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-31 09:45:43</sys_updated_on>
+        <sys_updated_on>2024-01-02 14:07:48</sys_updated_on>
     </sys_ui_page>
 </record_update>
