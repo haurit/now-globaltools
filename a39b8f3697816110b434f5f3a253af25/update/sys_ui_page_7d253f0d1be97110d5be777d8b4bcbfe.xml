@@ -61,7 +61,7 @@
 		<p>Copyright 2023-2024 by Tom Hauri</p>
 		<p>Licensed under the Apache License, Version 2.0 (the "License")</p>
 		<p>You may not use Global Tools except in compliance with the License.</p>
-		<p>You may obtain a copy of the License at: <a href="https://www.apache.org/licenses/LICENSE-2.0"
+		<p>You may obtain a copy of the License at:&#160;<a href="https://www.apache.org/licenses/LICENSE-2.0"
 				target="_blank">https://www.apache.org/licenses/LICENSE-2.0</a></p>
 		<p>Unless required by applicable law or agreed to in writing, software distributed under the License is
 			distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -122,26 +122,26 @@
 			functions not all tests create their own test data.</p>
 		<p></p>
 		<h1>Script Include: global.GlobalTools</h1>
-		<h2>Function: nsub</h2>
+		<h2>nsub</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function substitutes null values in simple types, arrays.
 		</p>
 		<p>
 			<strong>Parameters:</strong>
-			<li><code>sValue</code>: The value to be checked and possibly substituted by <code>sSubstitute</code> if
+			<li><code>sValue</code>: The value to be checked and possibly substituted by&#160;<code>sSubstitute</code>&#160;if
 				null.</li>
-			<li><code>sSubstitute</code>: The value to use as a substitute if <code>sValue</code> is null.</li>
-			<li><code>sType</code>: (Optional) The type of <code>sSubstitute</code> to be returned if
-				<code>sValue</code> is null.
+			<li><code>sSubstitute</code>: The value to use as a substitute if&#160;<code>sValue</code>&#160;is null.</li>
+			<li><code>sType</code>: (Optional) The type of&#160;<code>sSubstitute</code>&#160;to be returned if
+				<code>sValue</code>&#160;is null.
 			</li>
-			<li><code>sObjKey</code>: (Deprecated) Use <code>new global.GlobalToolsObject().getValue()</code> instead.
+			<li><code>sObjKey</code>: (Deprecated) Use&#160;<code>new global.GlobalToolsObject().getValue()</code>&#160;instead.
 			</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;The <code>sValue</code> if not null or <code>sSubstitute</code> respecting
-			the type specified in <code>sType</code>
+			<strong>Returns:</strong>&#160;The&#160;<code>sValue</code>&#160;if not null or&#160;<code>sSubstitute</code>&#160;respecting
+			the type specified in&#160;<code>sType</code>
 		</p>
-		<h2>Function: getType</h2>
+		<h2>getType</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function determines the type of a given value.
 		</p>
@@ -152,9 +152,9 @@
 				else it's converted to lowercase.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;The type of the provided <code>oValue</code> as a string.
+			<strong>Returns:</strong>&#160;The type of the provided&#160;<code>oValue</code>&#160;as a string.
 		</p>
-		<h2>Function: isEqual</h2>
+		<h2>isEqual</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function compares two values and returns true if they are the same
 			(object
@@ -166,10 +166,10 @@
 			<li><code>oValue2</code>: The second value.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;True if <code>oValue1</code> and <code>oValue2</code> are the same, false if
+			<strong>Returns:</strong>&#160;True if&#160;<code>oValue1</code>&#160;and&#160;<code>oValue2</code>&#160;are the same, false if
 			not.
 		</p>
-		<h2>Function: encodeNewLineToTag</h2>
+		<h2>encodeNewLineToTag</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function replaces newline characters "\n" in a string with a custom tag
 			"!^br^!".
@@ -179,10 +179,10 @@
 			<li><code>sValue</code>: The input string containing newline characters.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;The <code>sValue</code> with newline characters replaced by "!^br^!".
+			<strong>Returns:</strong>&#160;The&#160;<code>sValue</code>&#160;with newline characters replaced by "!^br^!".
 		</p>
 
-		<h2>Function: decodeTagToNewLine</h2>
+		<h2>decodeTagToNewLine</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function replaces a custom tag "!^br^!" in a string with newline
 			characters
@@ -193,28 +193,28 @@
 			<li><code>sValue</code>: The input string containing the "!^br^!" tag.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;The <code>sValue</code> with the "!^br^!" tag replaced by newline characters.
+			<strong>Returns:</strong>&#160;The&#160;<code>sValue</code>&#160;with the "!^br^!" tag replaced by newline characters.
 		</p>
-		<h2>Function: padNumber</h2>
+		<h2>padNumber</h2>
 		<p><strong>Purpose:</strong>&#160;This function ensures a string has a specific length by prefixing zeros (0).
 		</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
-			<li><code>iNumber</code>: The input <code>integer</code> with the actual number.</li>
-			<li><code>iDigits</code>: The input <code>integer</code> with the desired lenght of the string.</li>
+			<li><code>iNumber</code>: The input&#160;<code>integer</code>&#160;with the actual number.</li>
+			<li><code>iDigits</code>: The input&#160;<code>integer</code>&#160;with the desired lenght of the string.</li>
 		</ul>
-		<p><strong>Returns:</strong>&#160;The <code>string</code> with the required length.</p>
-		<h2>Function: formatBytes</h2>
+		<p><strong>Returns:</strong>&#160;The&#160;<code>string</code>&#160;with the required length.</p>
+		<h2>formatBytes</h2>
 		<p><strong>Purpose:</strong>&#160;This function formats a number to the correct byte representation.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
-			<li><code>iNumber</code>: The input <code>integer</code> with the actual number of bytes.</li>
+			<li><code>iNumber</code>: The input&#160;<code>integer</code>&#160;with the actual number of bytes.</li>
 			<li><code>sNotation</code>: (Optional) The string definining the notation to be used: si (base 1000) or iec
 				(base 1024) Default: si.</li>
 			<li><code>iDecimals</code>: (Optional) The number of decimals to be returned (Default: 2).</li>
 		</ul>
-		<p><strong>Returns:</strong>&#160;The <code>string</code> with the formated bytes value.</p>
-		<h2>Function: replacePlaceholders</h2>
+		<p><strong>Returns:</strong>&#160;The&#160;<code>string</code>&#160;with the formated bytes value.</p>
+		<h2>replacePlaceholders</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function replaces placeholders in a string [field_name] with the
 			respective field values from an object or GlideRecord.
@@ -223,13 +223,13 @@
 			<strong>Parameters:</strong>
 			<li><code>sInputValue</code>: The string containing the placeholders.</li>
 			<li><code>oRecord</code>: An object or valid GlideRecord where the field values are looked up.</li>
-			<li><code>sValue</code>: A value that will replace the <code>sValue</code> in the input string.</li>
+			<li><code>sValue</code>: A value that will replace the&#160;<code>sValue</code>&#160;in the input string.</li>
 			<li><code>bJSON</code>: If the input string is a JSON string this needs to be set to true.</li>
 		</p>
 		<p>
 			<strong>Returns:</strong>&#160;The input string with all the placeholders replaced with actual values.
 		</p>
-		<h2>Function: convertUnderscoretoCamelCase</h2>
+		<h2>convertUnderscoretoCamelCase</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function replaces _ (underscore) values and puts the string in camel
 			case.
@@ -241,7 +241,7 @@
 		<p>
 			<strong>Returns:</strong>&#160;The input string in camel case.
 		</p>
-		<h2>Function: getHTMLDiffFromXML</h2>
+		<h2>getHTMLDiffFromXML</h2>
 		<p><strong>Purpose:</strong>&#160;This function compares two XML strings and returns a HTML string with the
 			differences.</p>
 		<p><strong>Parameters:</strong></p>
@@ -251,16 +251,11 @@
 			<li><code>sHeaderLeft</code>: The string containing the left title value.</li>
 			<li><code>sHeaderRight</code>: The string containing the right title value.</li>
 		</ul>
-		<p><strong>Returns:</strong>&#160;The HTML string with the differences or <code>undefined</code> if there was an
+		<p><strong>Returns:</strong>&#160;The HTML string with the differences or&#160;<code>undefined</code>&#160;if there was an
 			error.</p>
-		<h2>Function: scheduleScript</h2>
+		<h2>scheduleScript</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function schedules the execution of a script include function.
-		</p>
-		<p>
-			<strong>Description:</strong>&#160;This function can schedule the execution a script include function. It
-			allows
-			passing arguments to both the script include constructor and the script include function.
 		</p>
 		<p>
 			<strong>Parameters:</strong>
@@ -272,14 +267,9 @@
 			<li><code>sScheduleName</code>: (Optional) The name of the scheduled script.</li>
 		</p>
 
-		<h2>Function: scheduleHandler</h2>
+		<h2>scheduleHandler</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function handles event scheduling and queuing.
-		</p>
-		<p>
-			<strong>Description:</strong>&#160;This function handles the scheduling and management of events based on
-			the
-			provided parameters. It can also be used to stop active events.
 		</p>
 		<p>
 			<strong>Parameters:</strong>
@@ -291,7 +281,7 @@
 			<li><code>oParam1 and oParam2</code>: (Optional) Additional parameters for the event.</li>
 			<li><code>sQueue</code>: (Optional) The queue to use for event scheduling.</li>
 		</p>
-		<h2>Function: sleep</h2>
+		<h2>sleep</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function is used to pause script execution for a specified number of
 			milliseconds.
@@ -300,14 +290,14 @@
 			<strong>Parameters:</strong>
 			<li><code>iMilliseconds</code>: The number of milliseconds to pause script execution.</li>
 		</p>
-		<h2>Function: getExecutionTrackerbyId</h2>
+		<h2>getExecutionTrackerbyId</h2>
 <p><strong>Purpose:</strong>&#160;This function is used to get an execution tracker by id.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
-<li><code>sId</code>: The <code>string</code> with the id of the execution tracker to retrieve.</li>
+<li><code>sId</code>: The&#160;<code>string</code>&#160;with the id of the execution tracker to retrieve.</li>
 </ul>
-<p><strong>Returns:</strong>&#160;The GlideExecutionTracker specified by the <code>sId</code> parameter.</p>
-		<h2>Function: runFunction</h2>
+<p><strong>Returns:</strong>&#160;The GlideExecutionTracker specified by the&#160;<code>sId</code>&#160;parameter.</p>
+		<h2>runFunction</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function runs a given JavaScript function in global scope. The function
 			to
@@ -322,7 +312,7 @@
 		<p>
 			<strong>Returns:</strong>&#160;The result of the executed function.
 		</p>
-		<h2>Function: runFunctionInScope</h2>
+		<h2>runFunctionInScope</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function runs a specified JavaScript function within a specific scope.
 			The
@@ -341,19 +331,19 @@
 			<strong>Returns:</strong>&#160;The result of the executed function within the specified scope.
 		</p>
 		<h1>Script Include: global.GlobalToolsArray</h1>
-		<h2>Function: unique</h2>
+		<h2>unique</h2>
 		<p>
-			<strong>Purpose:</strong>&#160;This function removes duplicate elements from an array.
+			<strong>Purpose:</strong>&#160;This function removes duplicate elements from an array. In ECMA 21 scripts you can use "Array.from(new Set(<code>array</code>));" instead.
 		</p>
 		<p>
 			<strong>Parameters:</strong>
 			<li><code>aArray</code>: The input array to remove duplicates from.</li>
-			<li><code>bRemoveEmpty</code>: (Optional) A boolean flag to indicate whether to remove empty values.</li>
+			<li><code>bRemoveEmpty</code>: (Optional) A boolean flag to indicate whether to remove empty values (Default: false).</li>
 		</p>
 		<p>
 			<strong>Returns:</strong>&#160;An array with duplicate elements removed.
 		</p>
-		<h2>Function: isValidArray</h2>
+		<h2>isValidArray</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function checks if an array is valid, not empty, and has at least one
 			element.
@@ -365,7 +355,7 @@
 		<p>
 			<strong>Returns:</strong>&#160;A boolean value indicating whether the array is valid.
 		</p>
-		<h2>Function: mergeArray</h2>
+		<h2>mergeArray</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function merges two arrays into one, removing duplicates.
 		</p>
@@ -377,7 +367,7 @@
 		<p>
 			<strong>Returns:</strong>&#160;A merged array with duplicates removed.
 		</p>
-		<h2>Function: addRemoveFromArray</h2>
+		<h2>addRemoveFromArray</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function adds elements to and removes elements from an array.
 		</p>
@@ -390,7 +380,7 @@
 		<p>
 			<strong>Returns:</strong>&#160;An array with elements added and removed as specified.
 		</p>
-		<h2>Function: getAddRemoveFromArrays</h2>
+		<h2>getAddRemoveFromArrays</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function compares two arrays and returns the elements to add to and
 			remove
@@ -402,12 +392,12 @@
 			<li><code>aArrayOld</code>: The reference array to compare with.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;An <code>object</code> containing three properties:
+			<strong>Returns:</strong>&#160;An&#160;<code>object</code>&#160;containing three properties:
 			<li><code>add</code>: An array of elements to add to the target array.</li>
 			<li><code>remove</code>: An array of elements to remove from the target array.</li>
 			<li><code>same</code>: A boolean indicating whether the arrays are already identical.</li>
 		</p>
-		<h2>Function: convertCommaSepStringToArray</h2>
+		<h2>convertCommaSepStringToArray</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function cleans an comma separated string and returns an array.
 		</p>
@@ -419,7 +409,7 @@
 			<strong>Returns:</strong>&#160;An array with elements from the comma separated string.
 		</p>
 		<h1>Script Include: global.GlobalToolsObject</h1>
-		<h2>Function: isObject</h2>
+		<h2>isObject</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function checks if a given variable is an object. Does return true for
 			all
@@ -432,7 +422,7 @@
 		<p>
 			<strong>Returns:</strong>&#160;A boolean indicating whether the variable is an object (is false for arrays).
 		</p>
-		<h2>Function: getValue</h2>
+		<h2>getValue</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function retrieves a configuration value from an object, allowing up to
 			8
@@ -447,7 +437,7 @@
 		<p>
 			<strong>Returns:</strong>&#160;The retrieved configuration value or the replacement value if not found.
 		</p>
-		<h2>Function: setValue</h2>
+		<h2>setValue</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function sets a configuration value in an object, allowing up to 8
 			levels of
@@ -461,9 +451,9 @@
 			<li><code>oConfig</code>: The object in which to set the configuration value.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;None. It modifies the input object <code>oConfig</code> in place.
+			<strong>Returns:</strong>&#160;None. It modifies the input object&#160;<code>oConfig</code>&#160;in place.
 		</p>
-		<h2>Function: hasValue</h2>
+		<h2>hasValue</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function checks if a configuration value in an object exists, allowing
 			up to 8 levels of
@@ -476,9 +466,9 @@
 			<li><code>oConfig</code>: The object in which to check the configuration value.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;If the last node exists returns<code>true</code>, else <code>false</code>.
+			<strong>Returns:</strong>&#160;If the last node exists returns&#160;<code>true</code>, else&#160;<code>false</code>.
 		</p>
-		<h2>Function: deepMerge</h2>
+		<h2>deepMerge</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function performs a simple deep merge of two objects with an option to
 			merge
@@ -493,7 +483,7 @@
 		<p>
 			<strong>Returns:</strong>&#160;The merged object.
 		</p>
-		<h2>Function: getDepth</h2>
+		<h2>getDepth</h2>
 		<p><strong>Purpose:</strong>&#160;This function returns the depth of a nested object.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
@@ -502,7 +492,7 @@
 		<p><strong>Returns:</strong>&#160;The depth of the object as integer (-1 if it's not an object, 0 if the object
 			is empty).</p>
 		<p>&#160;</p>
-		<h2>Function: parseJSON</h2>
+		<h2>parseJSON</h2>
 		<p><strong>Purpose:</strong>&#160;This function returns an object from a valid JSON string.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
@@ -522,8 +512,7 @@
 			<li><code>sTable</code>: A string representing the table name to check.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;Returns <code>true</code> if the table is valid; otherwise, it returns
-			<code>undefined</code>.
+			<strong>Returns:</strong>&#160;Returns&#160;<code>true</code>&#160;if the table is valid; otherwise, it returns&#160;<code>undefined</code>.
 		</p>
 		<h2>getRecordClass</h2>
 		<p>
@@ -535,7 +524,7 @@
 		</p>
 		<p>
 			<strong>Returns:</strong>&#160;Returns the class name as a string if the input is a valid GlideRecord;
-			otherwise, it returns <code>undefined</code>.
+			otherwise, it returns&#160;<code>undefined</code>.
 		</p>
 
 		<h2>getAbsoluteBase</h2>
@@ -548,7 +537,7 @@
 		</p>
 		<p>
 			<strong>Returns:</strong>&#160;Returns the absolute base class name as a string if the table is valid;
-			otherwise, it returns <code>undefined</code>.
+			otherwise, it returns&#160;<code>undefined</code>.
 		</p>
 
 		<h2>getTableHierarchy</h2>
@@ -561,7 +550,7 @@
 		</p>
 		<p>
 			<strong>Returns:</strong>&#160;Returns an array of table names representing the hierarchy if the table is
-			valid; otherwise, it returns <code>undefined</code>.
+			valid; otherwise, it returns&#160;<code>undefined</code>.
 		</p>
 
 		<h2>getTableExtensions</h2>
@@ -571,13 +560,12 @@
 		<p>
 			<strong>Parameters:</strong>
 			<li><code>sTable</code>: A string representing the table name to retrieve the extensions for.</li>
-			<li><code>bAllExtensions</code>: A boolean flag indicating whether to retrieve all extensions (if
-				<code>true</code>) or just direct extensions (if <code>false</code>).
+			<li><code>bAllExtensions</code>: A boolean flag indicating whether to retrieve all extensions (if&#160;<code>true</code>) or just direct extensions (if&#160;<code>false</code>).
 			</li>
 		</p>
 		<p>
 			<strong>Returns:</strong>&#160;Returns an array of table names representing the extensions if the table is
-			valid; otherwise, it returns <code>undefined</code>.
+			valid; otherwise, it returns&#160;<code>undefined</code>.
 		</p>
 		<h2>getTableScopeInfo</h2>
 		<p>
@@ -589,7 +577,7 @@
 			</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;Returns an <code>object</code> containing cross-scope access information for
+			<strong>Returns:</strong>&#160;Returns an&#160;<code>object</code>&#160;containing cross-scope access information for
 			the table. The object has the following properties:
 		<ul>
 			<li><code>id</code>: A string representing the sys_scope ID.</li>
@@ -599,7 +587,7 @@
 			<li><code>write</code>: A boolean indicating if write access is granted.</li>
 			<li><code>delete</code>: A boolean indicating if delete access is granted.</li>
 		</ul>
-		If the table is not valid, it returns <code>undefined</code>.
+		If the table is not valid, it returns&#160;<code>undefined</code>.
 		</p>
 		<h2>getInternalType</h2>
 		<p><strong>Purpose:</strong>&#160;This function returns the internal field type for a given table and field.</p>
@@ -607,8 +595,7 @@
 			<li><code>sTable</code>: A string representing the name of the table for which to retrieve the field.</li>
 			<li><code>sField</code>: A string representing the name of the field.</li>
 		</p>
-		<p><strong>Returns:</strong>&#160;Returns a string representing the internal field type or
-			<code>undefined</code> if not found.
+		<p><strong>Returns:</strong>&#160;Returns a string representing the internal field type or&#160;<code>undefined</code>&#160;if not found.
 		</p>
 		<h2>getDisplayField</h2>
 		<p>
@@ -621,8 +608,7 @@
 				field.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;Returns a string representing the display field of the table or
-			<code>undefined</code> if not found.
+			<strong>Returns:</strong>&#160;Returns a string representing the display field of the table or&#160;<code>undefined</code>&#160;if not found.
 		</p>
 		<h2>getFields</h2>
 		<p>
@@ -642,8 +628,7 @@
 		<h2>getRefTable</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function retrieves the reference table name based on the reference field
-			and
-			the table it belongs to.
+			and the table it belongs to.
 		</p>
 		<p>
 			<strong>Parameters:</strong>
@@ -663,20 +648,18 @@
 			<strong>Parameters:</strong>
 			<li><code>fRecord</code>: A GlideRecord object representing the record.</li>
 			<li><code>sRefTable</code>: A string representing the name of the reference table.</li>
-			<li><code>bCheckRefTableHierarchy</code>: A boolean indicating whether to check the hierarchy of the
-				<code>sRefTable</code> table.
+			<li><code>bCheckRefTableHierarchy</code>: A boolean indicating whether to check the hierarchy of the&#160;<code>sRefTable</code>&#160;table.
 			</li>
 			<li><code>sReturnType</code>: A string specifying the return type, either 'array' or 'string'.</li>
 		</p>
 		<p>
 			<strong>Returns:</strong>&#160;Returns either a single field name or an array of field names in the
-			specified table that reference the given <code>sRefTable</code> table with or without respecting the
-			hierarchy depending on <code>bCheckRefTableHierarchy</code>.
+			specified table that reference the given&#160;<code>sRefTable</code>&#160;table with or without respecting the
+			hierarchy depending on&#160;<code>bCheckRefTableHierarchy</code>.
 		</p>
 		<h2>getDictOrOverrideValue</h2>
 		<p>
-			<strong>Purpose:</strong>&#160;This function retrieves dictionary records or values (depending wether
-			<code>bReturnRecord</code> is set) while respecting overrides. It can return dictionary records or their
+			<strong>Purpose:</strong>&#160;This function retrieves dictionary records or values (depending wether&#160;<code>bReturnRecord</code>&#160;is set) while respecting overrides. It can return dictionary records or their
 			attribute values.
 		</p>
 		<p>
@@ -740,9 +723,9 @@
 		</p>
 		<p>
 			<strong>Returns:</strong>&#160;Returns an integer with the count or an array of record counts grouped by the
-			provided <code>sField</code> parameter.
+			provided&#160;<code>sField</code>&#160;parameter.
 		</p>
-		<h2>Function: sumRecordsField</h2>
+		<h2>sumRecordsField</h2>
 		<p><strong>Purpose:</strong>&#160;This function sums up the field values for records.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
@@ -752,7 +735,7 @@
 			<li><code>bQueryNoDomain</code>: (Optional) A boolean indicating whether to query without considering
 				domains.</li>
 		</ul>
-		<p><strong>Returns:</strong>&#160;The <code>number</code> with the sum of all field values.</p>
+		<p><strong>Returns:</strong>&#160;The&#160;<code>number</code>&#160;with the sum of all field values.</p>
 		<h2>getRecord</h2>
 		<p><strong>Purpose:</strong>&#160;This function retrieves one records from a specified table based on the
 			provided query or sys_id and options ensuring the record is return in the correct class.</p>
@@ -814,13 +797,12 @@
 			<li><code>bUniqueOnly</code>: A boolean indicating whether to retrieve only unique records.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;Returns the sys_id of the first matching recor . If <code>bUniqueOnly</code>
-			is true returns <code>undefined</code> if more than one record is found.
+			<strong>Returns:</strong>&#160;Returns the sys_id of the first matching recor . If&#160;<code>bUniqueOnly</code>&#160;is true returns&#160;<code>undefined</code>&#160;if more than one record is found.
 		</p>
 		<h2>getRelatedRecordByKeys</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function retrieves a related record based on specified keys and
-			configurations using the <code>getRecordByKeys</code> function below.
+			configurations using the&#160;<code>getRecordByKeys</code>&#160;function below.
 		</p>
 		<p>
 			<strong>Parameters:</strong>
@@ -859,8 +841,7 @@ bQueryEmptyFields: Generic setting to query empty fields with ISEMPTY instead of
 			<li><code>aError</code>: An array to store error messages.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;Returns a GlideRecord object with the retrieved record if found, or
-			<code>undefined</code> if not found.
+			<strong>Returns:</strong>&#160;Returns a GlideRecord object with the retrieved record if found, or&#160;<code>undefined</code>&#160;if not found.
 		</p>
 		<h2>convertGRtoJSON</h2>
 		<p>
@@ -877,8 +858,8 @@ bQueryEmptyFields: Generic setting to query empty fields with ISEMPTY instead of
 				its own field with the "_dv" postfix (default: false).</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;Returns JSON or a JSON string depending on the <code>bStringify</code>
-			parameter or <code>undefined</code> if <code>grRecord</code> is not a valid GlideRecord.
+			<strong>Returns:</strong>&#160;Returns JSON or a JSON string depending on the&#160;<code>bStringify</code>&#160;
+parameter or&#160;<code>undefined</code>&#160;if&#160;<code>grRecord</code>&#160;is not a valid GlideRecord.
 		</p>
 		<h2>convertGRtoXML</h2>
 		<p>
@@ -889,9 +870,7 @@ bQueryEmptyFields: Generic setting to query empty fields with ISEMPTY instead of
 			<li><code>grRecord</code>: The GlideRecord object to be converted.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;Returns XML string or <code>undefined</code> if <code>grRecord</code> is not
-			a
-			valid GlideRecord.
+			<strong>Returns:</strong>&#160;Returns XML string or&#160;<code>undefined</code>&#160;if&#160;<code>grRecord</code>&#160;is not a valid GlideRecord.
 		</p>
 		<h2>makeQueryADotWalkQuery</h2>
 		<p>
@@ -979,7 +958,7 @@ bNoAutoSysFields: (Optional) if true does grRecord.autoSysFields(false) (default
 			</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;<code>true</code> if update executed, else <code>undefined</code>.
+			<strong>Returns:</strong>&#160;<code>true</code>&#160;if update executed, else&#160;<code>undefined</code>.
 		</p>
 		<h2>deleteMultiple</h2>
 		<p><strong>Purpose:</strong>&#160;This function deletes multiple records in a table based on a query.</p>
@@ -987,7 +966,7 @@ bNoAutoSysFields: (Optional) if true does grRecord.autoSysFields(false) (default
 			<li><code>sTable</code>: The table where the records shall be deleted.</li>
 			<li><code>sQuery</code>: The query to find the records to be deleted.</li>
 		</p>
-		<p><strong>Returns:</strong>&#160;<code>true</code> if delete executed, else <code>undefined</code>.
+		<p><strong>Returns:</strong>&#160;<code>true</code>&#160;if delete executed, else&#160;<code>undefined</code>.
 		</p>
 
 		<h2>setGRValue</h2>
@@ -1001,11 +980,11 @@ bNoAutoSysFields: (Optional) if true does grRecord.autoSysFields(false) (default
 			<li><code>oValue</code>: The value to set for the field.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;Updates the field value in the <code>grRecord</code> object.
+			<strong>Returns:</strong>&#160;Updates the field value in the&#160;<code>grRecord</code>&#160;object.
 		</p>
 		<h2>abortGRAction</h2>
 		<p>
-			<strong>Purpose:</strong>&#160;This function aborts a <code>grRecord</code> action, such as an update or
+			<strong>Purpose:</strong>&#160;This function aborts a&#160;<code>grRecord</code>&#160;action, such as an update or
 			insert.
 		</p>
 		<p>
@@ -1013,10 +992,10 @@ bNoAutoSysFields: (Optional) if true does grRecord.autoSysFields(false) (default
 			<li><code>grRecord</code>: The GlideRecord object for which to abort the action.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;Aborts the specified action for the <code>grRecord</code> object.
+			<strong>Returns:</strong>&#160;Aborts the specified action for the&#160;<code>grRecord</code>&#160;object.
 		</p>
 		<h1>Script Include: global.GlobalToolsRecordWriteValidate</h1>
-		<p>This script will be documented in detail in a community article.</p>
+		<p>This script will be documented in detail in a community article later.</p>
 		<h2>validateAndWrite</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function validates and writes a record based on configuration and
@@ -1259,31 +1238,30 @@ template / sTemplateValueField: (Optional), can be used to define the template t
 			<strong>Returns:</strong>&#160;Returns an object with the IRE payload.
 		</p>
 		<h1>Script Include: global.GlobalToolsATF</h1>
-		<h2>Function: initialize</h2>
+		<h2>initialize</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function initializes the class with parameters.
 		</p>
 		<p>
 			<strong>Parameters:</strong>
 			<li><code>sScriptIncludeName</code>: The name of the Script Include to be tested.</li>
-			<li><code>_ScriptIncludeRef</code>: The initialized Script Include to be tested <code>var _si = new
-					myScriptInclude();</code> is null.</li>
+			<li><code>_ScriptIncludeRef</code>: The initialized Script Include to be tested&#160;<code>var _si = new
+					myScriptInclude();</code>&#160;is null.</li>
 			<li><code>outputs</code>: The outputs parameter from ATF test step</li>
 			<li><code>steps</code>: The steps parameter from ATF test step</li>
 			<li><code>params</code>: The params parameter from ATF test step</li>
 			<li><code>stepResult</code>: The stepResult parameter ATF from test step</li>
 			<li><code>assertEqual</code>: The assertEqual parameter ATF from test step</li>
 		</p>
-		<h2>Function: runATF</h2>
+		<h2>runATF</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function runs the specific function and passes all variables except
-			script
-			and expected value to it.
+			script and expected value to it.
 		</p>
 		<p>
 			<strong>Parameters:</strong>
-			<li><code>sFunction</code>: The Script Include <code>sFunction</code> to be tested.</li>
-			<li><code>oExpectedResult</code>: The expected return value from <code>sFunction</code> call.
+			<li><code>sFunction</code>: The Script Include&#160;<code>sFunction</code>&#160;to be tested.</li>
+			<li><code>oExpectedResult</code>: The expected return value from&#160;<code>sFunction</code>&#160;call.
 				<pre>oExpectedResult is a number or a string containing a comparison and a number (&quot;&lt;10&quot;, &quot;&gt;10&quot;, &quot;&lt;=10&quot;, &quot;&gt;=10&quot;) and the result is of type, number, array or gliderecord it will return an error if the comparison is not true (e.g. if the number is 1 and the array does not contain exactly 1 element or the gliderecord count is not 1).
 oExpectedResult is a string and the oResult is a gliderecord then grRecord.getUniqueValue() will be compared against the string.
 oExpectedResult is a regex the then the result will converted to string and is tested against the regex.
@@ -1292,37 +1270,36 @@ oExpectedResult is a function the then the function will be called with paramete
 oExpectedResult is anything else it will be compared to the result (===).
 			</pre>
 			</li>
-			<li><code>arguments</code>: (Optional) The <code>arguments</code> that will be passed to the
-				<code>sFunction</code>.
+			<li><code>arguments</code>: (Optional) The&#160;<code>arguments</code>&#160;that will be passed to the&#160;<code>sFunction</code>.
 			</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;The true if test is successful or <code>undefined</code> if it failed.
+			<strong>Returns:</strong>&#160;The true if test is successful or&#160;<code>undefined</code>&#160;if it failed.
 		</p>
-		<h2>Function: getRecord</h2>
+		<h2>getRecord</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function uses the GlobalTools.getRecords function and if successful does
 			a grRecord.next() to get the first record.
 		</p>
 		<p>
 			<strong>Parameters:</strong>
-			<li><code>sTable</code>: The table of the record.</li>
+			<li><code>sTable</code>: The table where the record is located</li>
 			<li><code>sQuery</code>: The query to find the record.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;The a GlideRecord if successful or <code>undefined</code> if no record is
+			<strong>Returns:</strong>&#160;The a GlideRecord if successful or&#160;<code>undefined</code>&#160;if no record is
 			found.
 		</p>
-		<h2>Function: addError</h2>
+		<h2>addError</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function adds an error to the error array.
 		</p>
 		<p>
 			<strong>Parameters:</strong>
-			<li><code>sFunction</code>: The Script Include <code>sFunction</code> that was tested.</li>
-			<li><code>sError</code>: The error in validation of running the <code>sFunction</code> call.</li>
+			<li><code>sFunction</code>: The Script Include&#160;<code>sFunction</code>&#160;that was tested.</li>
+			<li><code>sError</code>: The error in validation of running the&#160;<code>sFunction</code>&#160;call.</li>
 		</p>
-		<h2>Function: endATF</h2>
+		<h2>endATF</h2>
 		<p>
 			<strong>Purpose:</strong>&#160;This function parses the result, sets the error message if any and ends the
 			ATF
@@ -1334,60 +1311,59 @@ oExpectedResult is anything else it will be compared to the result (===).
 		<p></p>
 		<h1>Script Include: global.GlobalToolsRESTAPI</h1>
 		<p></p>
-		<h2>Function: initialize</h2>
+		<h2>initialize</h2>
 		<p><strong>Purpose:</strong>&#160;This function initializes the class with parameters.</p>
 		<p><strong>Parameters:</strong></p>
 		<li><code>oConnectionAlias</code>: The Connection &amp; Credential Alias [sys_alias] to be used in the REST
-			API (can be the GlideRecord or the value any of the fields: <code>sys_id, id, name</code>).</li>
+			API (can be the GlideRecord or the value any of the fields:&#160;<code>sys_id, id, name</code>).</li>
 		<li><code>bLog</code>: (Optional) if true does verbose logging (default: false)</li>
 		<li><code>bQueryNoDomain</code>: (Optional) if true will add sysparm_query_no_domain=true (default: false)
 		</li>
 		<p>&#160;</p>
-		<h2>Function: getConnectionConfig</h2>
+		<h2>getConnectionConfig</h2>
 		<p><strong>Purpose:</strong>&#160;This function returns an object with the configuration values determined from
-			the <code>initialize</code> function parameters.</p>
+			the&#160;<code>initialize</code>&#160;function parameters.</p>
 		<p><strong>Parameters:</strong></p>
 		<li><code>bStringify</code>: (Optional) if true returns a stringified object (default: false)</li>
 		<p><strong>Returns:</strong>&#160;The configuration object or string with the configuration details.
 		</p>
-		<h2>Function: testNOWConnection</h2>
+		<h2>testNOWConnection</h2>
 		<p><strong>Purpose:</strong>&#160;This function does a REST call using the configuration to fetch one record
-			from the <code>task</code> table.</p>
-		<p><strong>Returns:</strong>&#160;Returns an object where property "success" is <code>true</code> if successful
-			or <code>false</code> if there was an error or no record is found. The object also contains a message
+			from the&#160;<code>task</code>&#160;table.</p>
+		<p><strong>Returns:</strong>&#160;Returns an object where property "success" is&#160;<code>true</code>&#160;if successful
+			or&#160;<code>false</code>&#160;if there was an error or no record is found. The object also contains a message
 			property with error messages.</p>
-		<h2>Function: getRemoteRecord</h2>
+		<h2>getRemoteRecord</h2>
 		<p><strong>Purpose:</strong>&#160;This function uses the table API of a ServiceNow instance to retrieve a single
 			record based on the parameters provided and return it as a glide record.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
 			<li><code>sTable</code>: A string representing the name of the table.</li>
 			<li><code>sQuery</code>: (Optional) A string representing the query to filter records
-				(<code>sysparm_query</code> URL parameter).</li>
+				(<code>sysparm_query</code>&#160;URL parameter).</li>
 		</ul>
-		<p><strong>Returns:</strong>&#160;The a <code>glide record</code> or a object with the error details.</p>
+		<p><strong>Returns:</strong>&#160;The a&#160;<code>glide record</code>&#160;or a object with the error details.</p>
 		<pre>{ 
 'success': false, 
 'message': sErrorMsg, 
 'error_code': sStatus
 }</pre>
 		<p></p>
-		<h2>Function: doNOWRESTQuery</h2>
+		<h2>doNOWRESTQuery</h2>
 		<p><strong>Purpose:</strong>&#160;This function uses the table API of a ServiceNow instance to retrieve records
 			based on the parameters provided.</p>
 		<p><strong>Parameters:</strong></p>
 		<li><code>sTable</code>: A string representing the name of the table.</li>
 		<li><code>sQuery</code>: (Optional) A string representing the query to filter records
-			(<code>sysparm_query</code> URL parameter).</li>
+			(<code>sysparm_query</code>&#160;URL parameter).</li>
 		<li><code>sOffset</code>: (Optional) A string representing the offset to be used when getting more records
-			than defined in the limit (<code>sysparm_offset</code> URL parameter) Default: "0".</li>
+			than defined in the limit (<code>sysparm_offset</code>&#160;URL parameter) Default: "0".</li>
 		<li><code>sLimit</code>: (Optional) A string representing the maximum number of records to be returned
-			(<code>sysparm_limit</code> URL parameter) Default: 1000.</li>
+			(<code>sysparm_limit</code>&#160;URL parameter) Default: 1000.</li>
 		<li><code>aFields</code>: (Optional) A array with the fields to be returned. If the URL length limit is reached
-			the parameter is omited and an error is logged (<code>sysparm_fields</code> URL parameter) Default: [].</li>
-		<li><code>sDisplayValue</code>: (Optional) If <code>"true"</code> will return display values instead of real
-			values, <code>"all"</code> will return both real value and display value (<code>sysparm_display_value</code>
-			URL parameter) Default: "false".</li>
+			the parameter is omited and an error is logged (<code>sysparm_fields</code>&#160;URL parameter) Default: [].</li>
+		<li><code>sDisplayValue</code>: (Optional) If&#160;<code>"true"</code>&#160;will return display values instead of real
+			values,&#160;<code>"all"</code>&#160;will return both real value and display value (<code>sysparm_display_value</code>&#160;URL parameter) Default: "false".</li>
 		<li><code>oRequestBodyOrAttachmentInfo</code>: (Optional) An object
 			containing the details on which record and filename the result body should be attached as a file:
 			<pre>{
@@ -1398,8 +1374,8 @@ oExpectedResult is anything else it will be compared to the result (===).
 </pre>
 		</li>
 		<li><code>bIncludeRefLink</code>: (Optional) if true does return URLs for each reference fields
-			(<code>sysparm_exclude_reference_link=true</code> URL parameter) Default: false.</li>
-		<p><strong>Returns:</strong>&#160;The request result body or a object with the error details.</p>
+			(<code>sysparm_exclude_reference_link=true</code>&#160;URL parameter) Default: false.</li>
+		<p><strong>Returns:</strong>&#160;The request result body array or a object with the error details.</p>
 		<pre>{ 
 'success': false, 
 'message': sErrorMsg, 
@@ -1407,22 +1383,21 @@ oExpectedResult is anything else it will be compared to the result (===).
 }
 </pre>
 		<p></p>
-		<h2>Function: doNOWRESTCount</h2>
+		<h2>doNOWRESTCount</h2>
 		<p><strong>Purpose:</strong>&#160;This function uses the stats API of a ServiceNow instance to count records
 			based on the parameters provided.</p>
 		<p><strong>Parameters:</strong></p>
 		<li><code>sTable</code>: A string representing the name of the table.</li>
 		<li><code>sQuery</code>: (Optional) A string representing the query to filter records
-			(<code>sysparm_query</code> URL parameter).</li>
+			(<code>sysparm_query</code>&#160;URL parameter).</li>
 		<li><code>sGroupByField</code>: (Optional) A string representing the field used to group the records
-			(<code>sysparm_group_by</code> URL parameter).</li>
+			(<code>sysparm_group_by</code>&#160;URL parameter).</li>
 		<li><code>bOrderByCount</code>: (Optional) If true and group by field is not empty, will order the result
-			descending by count, else by group by field name (<code>sysparm_order_by</code> URL parameter).</li>
-		<li><code>sDisplayValue</code>: (Optional) If <code>"true"</code> will return display values instead of real
-			values, <code>"all"</code> will return both real value and display value (<code>sysparm_display_value</code>
-			URL parameter) Default: "false".</li>
-		<p><strong>Returns:</strong>&#160;The the count as <code>number</code> or as <code>object</code> where the key
-			is the <code>group by field value</code> and the value the count or a object with the error details.</p>
+			descending by count, else by group by field name (<code>sysparm_order_by</code>&#160;URL parameter).</li>
+		<li><code>sDisplayValue</code>: (Optional) If&#160;<code>"true"</code>&#160;will return display values instead of real
+			values,&#160;<code>"all"</code>&#160;will return both real value and display value (<code>sysparm_display_value</code>&#160;URL parameter) Default: "false".</li>
+		<p><strong>Returns:</strong>&#160;The the count as&#160;<code>number</code>&#160;or as&#160;<code>object</code>&#160;where the key
+			is the&#160;<code>group by field value</code>&#160;and the value the count or a object with the error details.</p>
 		<pre>Error:
 { 
 'success': false, 
@@ -1443,14 +1418,14 @@ Count sGroupByField and  bOrderByCount:
 }
 </pre>
 		<p></p>
-		<h2>Function: doRESTRequest</h2>
+		<h2>doRESTRequest</h2>
 		<p><strong>Purpose:</strong>&#160;This function does a REST call using the configuration parameters provided.
 		</p>
 		<p><strong>Parameters:</strong></p>
 		<li><code>sUrl</code>: The string complimenting the connection URL.</li>
 		<li><code>sMethod</code>: (Optional) A string representing the method (allowed values: GET, POST, PUT,
 			PATCH) Default: GET.</li>
-		<li><code>oRequestBodyOrAttachmentInfo</code>: (Optional) For <code>GET</code> method this is an object
+		<li><code>oRequestBodyOrAttachmentInfo</code>: (Optional) For&#160;<code>GET</code>&#160;method this is an object
 			containing the details on which record and filename the result body should be attached as a file:
 			<pre>{
 	'sTable': 'incident',
@@ -1459,13 +1434,12 @@ Count sGroupByField and  bOrderByCount:
 }
 </pre>
 			For all other methods it's either the object (will be converted to string via JSON.stringify) or string
-			to be used in the request body or a valid <code>sys_id</code> of an attachment [sys_attachment] that
+			to be used in the request body or a valid&#160;<code>sys_id</code>&#160;of an attachment [sys_attachment] that
 			should be used as the request body.
 		</li>
 		<li><code>oHeader</code>: (Optional) An array (of arrays or objects) or an object containing the key/value
 			pairs to be set as header information in the request.</li>
-		<li><code>bTestConnection</code>: (Optional) if true does return an object where property "success" is
-			<code>true</code> if successful or <code>false</code> if there was an error or no record is found. The
+		<li><code>bTestConnection</code>: (Optional) if true does return an object where property "success" is&#160;<code>true</code>&#160;if successful or&#160;<code>false</code>&#160;if there was an error or no record is found. The
 			object also contains a message property with error messages but no further details.
 		</li>
 		<p><strong>Returns:</strong>&#160;The request result body or a object with the error details.</p>
@@ -1477,184 +1451,172 @@ Count sGroupByField and  bOrderByCount:
 </pre>
 		<h1>Script Include: global.GlobalToolsAttachment</h1>
 		<p>&#160;</p>
-		<h2>Function: getAttachmentsByRecord</h2>
+		<h2>getAttachmentsByRecord</h2>
 		<p><strong>Purpose:</strong>&#160;This function gets the attachment information for a specific record based on
 			the input parameters.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
-			<li><code>grRecord</code>: The <code>glide record</code> for which the attachments are retrieved.</li>
-			<li><code>sQuery</code>: (Optional) The query to be applied on the <code>sys_attachment</code> table.</li>
+			<li><code>grRecord</code>: The&#160;<code>glide record</code>&#160;for which the attachments are retrieved.</li>
+			<li><code>sQuery</code>: (Optional) The query to be applied on the&#160;<code>sys_attachment</code>&#160;table.</li>
 			<li><code>sReturnType</code>: (Optional) The return type if the attachment information: id, filename or
-				object with both as <code>array</code> or record as <code>glide record</code>. Default: id</li>
-			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
+				object with both as&#160;<code>array</code>&#160;or record as&#160;<code>glide record</code>. Default: id</li>
+			<li><code>bHidden</code>: (Optional) Use&#160;<code>ZZ_YY</code>&#160;prefix on table name for attachments that are
 				hidden from the user.</li>
 		</ul>
-		<p><strong>Returns:</strong>&#160;The <code>array</code> or <code>glide record</code> respecting the type
-			specified in <code>sReturnType</code></p>
-		<h2>Function: getAttachmentsStartWithFilename</h2>
+		<p><strong>Returns:</strong>&#160;The&#160;<code>array</code>&#160;or&#160;<code>glide record</code>&#160;respecting the type
+			specified in&#160;<code>sReturnType</code></p>
+		<h2>getAttachmentsStartWithFilename</h2>
 		<p><strong>Purpose:</strong>&#160;This function gets the attachment information for a specific record and files
 			starting with a specific string.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
 			<li><code>sTable</code>: The glide record table for which the attachments are retrieved.</li>
-			<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachments are retrieved.
+			<li><code>sId</code>: The&#160;<code>sys_id</code>&#160;of the base record for which the attachments are retrieved.
 			</li>
-			<li><code>sFilename</code>: The filename to be applied as a "file_nameSTARTSWITH" query on the
-				<code>sys_attachment</code> table.
+			<li><code>sFilename</code>: The filename to be applied as a "file_nameSTARTSWITH" query on the&#160;<code>sys_attachment</code>&#160;table.
 			</li>
 			<li><code>sReturnType</code>: (Optional) The return type if the attachment information: id, filename or
-				object with both as <code>array</code> or record as <code>glide record</code>. Default: id</li>
-			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
+				object with both as&#160;<code>array</code>&#160;or record as&#160;<code>glide record</code>. Default: id</li>
+			<li><code>bHidden</code>: (Optional) Use&#160;<code>ZZ_YY</code>&#160;prefix on table name for attachments that are
 				hidden from the user.</li>
 		</ul>
-		<p><strong>Returns:</strong>&#160;The <code>array</code> or <code>glide record</code> respecting the type
-			specified in <code>sReturnType</code></p>
-		<h2>Function: getAttachments</h2>
+		<p><strong>Returns:</strong>&#160;The&#160;<code>array</code>&#160;or&#160;<code>glide record</code>&#160;respecting the type
+			specified in&#160;<code>sReturnType</code></p>
+		<h2>getAttachments</h2>
 		<p><strong>Purpose:</strong>&#160;This function gets the attachment information for a specific record based and
 			a specific query.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
 			<li><code>sTable</code>: The glide record table for which the attachments are retrieved.</li>
-			<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachments are retrieved.
+			<li><code>sId</code>: The&#160;<code>sys_id</code>&#160;of the base record for which the attachments are retrieved.
 			</li>
-			<li><code>sQuery</code>: (Optional) The <code>encoded query</code> to be applied on the
-				<code>sys_attachment</code> table.
+			<li><code>sQuery</code>: (Optional) The&#160;<code>encoded query</code>&#160;to be applied on the&#160;<code>sys_attachment</code>&#160;table.
 			</li>
 			<li><code>sReturnType</code>: (Optional) The return type if the attachment information: id, filename or
-				object with both as <code>array</code> or record as <code>glide record</code>. Default: id</li>
-			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
+				object with both as&#160;<code>array</code>&#160;or record as&#160;<code>glide record</code>. Default: id</li>
+			<li><code>bHidden</code>: (Optional) Use&#160;<code>ZZ_YY</code>&#160;prefix on table name for attachments that are
 				hidden from the user.</li>
 		</ul>
-		<p><strong>Returns:</strong>&#160;The <code>array</code> or <code>glide record</code> respecting the type
-			specified in <code>sReturnType</code></p>
-		<h2>Function: readAttachmentStreamFromId</h2>
-		<p><strong>Purpose:</strong>&#160;This function reads the attachment information for a specific attachment.</p>
-		<p><strong>Parameters:</strong></p>
-		<ul>
-			<li><code>sId</code>: The <code>sys_id</code> of the attachment to be retrieved.</li>
-		</ul>
-		<p><strong>Returns:</strong>&#160;The <code>string</code> of the attachment content.</p>
-		<h2>Function: readAttachmentStream</h2>
+		<p><strong>Returns:</strong>&#160;The&#160;<code>array</code>&#160;or&#160;<code>glide record</code>&#160;respecting the type
+			specified in&#160;<code>sReturnType</code></p>
+		<h2>readAttachmentStream</h2>
 		<p><strong>Purpose:</strong>&#160;This function reads the attachment information for a specific record and
 			attachment filename.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
 			<li><code>sTable</code>: The glide record table for which the attachment is retrieved.</li>
-			<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachment is retrieved.</li>
-			<li><code>sFilename</code>: The filename to be applied as a "file_name=" query on the
-				<code>sys_attachment</code> table.
+			<li><code>sId</code>: The&#160;<code>sys_id</code>&#160;of the base record for which the attachment is retrieved.</li>
+			<li><code>sFilename</code>: The filename to be applied as a "file_name=" query on the&#160;<code>sys_attachment</code>&#160;table.
 			</li>
-			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
+			<li><code>bHidden</code>: (Optional) Use&#160;<code>ZZ_YY</code>&#160;prefix on table name for attachments that are
 				hidden from the user.</li>
 		</ul>
-		<p><strong>Returns:</strong>&#160;The <code>string</code> of the attachment content.</p>
-		<h2>Function: combineAttachments</h2>
+		<p><strong>Returns:</strong>&#160;The&#160;<code>string</code>&#160;of the attachment content.</p>
+		<h2>readAttachmentStreamFromId</h2>
+		<p><strong>Purpose:</strong>&#160;This function reads the attachment information for a specific attachment.</p>
+		<p><strong>Parameters:</strong></p>
+		<ul>
+			<li><code>sId</code>: The&#160;<code>sys_id</code>&#160;of the attachment to be retrieved.</li>
+		</ul>
+		<p><strong>Returns:</strong>&#160;The&#160;<code>string</code>&#160;of the attachment content.</p>
+		<h2>combineAttachments</h2>
 		<p><strong>Purpose:</strong>&#160;This function reads multiple attachments for a specific record and attachments
 			that start with a specific filename.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
 			<li><code>sTable</code>: The glide record table for which the attachment is retrieved.</li>
-			<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachment is retrieved.</li>
-			<li><code>sFilename</code>: The filename to be applied as a "file_nameSTARTSWITH" query on the
-				<code>sys_attachment</code> table.
+			<li><code>sId</code>: The&#160;<code>sys_id</code>&#160;of the base record for which the attachment is retrieved.</li>
+			<li><code>sFilename</code>: The filename to be applied as a "file_nameSTARTSWITH" query on the&#160;<code>sys_attachment</code>&#160;table.
 			</li>
 			<li><code>bReturnJSON</code>: (Optional) Parses the text string to an JSON object.</li>
 			<li><code>bDeleteAfterRead</code>: (Optional) If successful deletes the attachments after reading.</li>
-			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
+			<li><code>bHidden</code>: (Optional) Use&#160;<code>ZZ_YY</code>&#160;prefix on table name for attachments that are
 				hidden from the user.</li>
 		</ul>
-		<p><strong>Returns:</strong>&#160;The <code>string</code> or <code>JSON</code> of the combined attachment
+		<p><strong>Returns:</strong>&#160;The&#160;<code>string</code>&#160;or&#160;<code>JSON</code>&#160;of the combined attachment
 			content.</p>
-			<h2>Function: getAttachmentSizePerRecord</h2>
+			<h2>getAttachmentSizePerRecord</h2>
 <p><strong>Purpose:</strong>&#160;This function gets the total attachment size information for a specific record based and a specific query.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
 <li><code>sTable</code>: The glide record table for which the attachments are retrieved.</li>
-<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachments are retrieved.</li>
-<li><code>sQuery</code>: (Optional) The <code>encoded query</code> to be applied on the <code>sys_attachment</code> table.</li>
+<li><code>sId</code>: The&#160;<code>sys_id</code>&#160;of the base record for which the attachments are retrieved.</li>
+<li><code>sQuery</code>: (Optional) The&#160;<code>encoded query</code>&#160;to be applied on the&#160;<code>sys_attachment</code>&#160;table.</li>
 <li><code>sReturnType</code>: (Optional) The return type if the attachment information: full, compressed or object with both. Default: compressed</li>
 <li><code>sNotation</code>: (Optional) The string definining the notation to be used to format the result: number (no notation), si (base 1000) or iec (base 1024) Default: si.</li>
-<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are hidden from the user.</li>
+<li><code>bHidden</code>: (Optional) Use&#160;<code>ZZ_YY</code>&#160;prefix on table name for attachments that are hidden from the user.</li>
 </ul>
-<p><strong>Returns:</strong>&#160;The <code>number</code>, <code>string</code> or <code>object</code> respecting the type specified in <code>sReturnType</code></p>
-<h2>Function: getAttachmentSize</h2>
+<p><strong>Returns:</strong>&#160;The&#160;<code>number</code>,&#160;<code>string</code>&#160;or&#160;<code>object</code>&#160;respecting the type specified in&#160;<code>sReturnType</code></p>
+<h2>getAttachmentSize</h2>
 <p><strong>Purpose:</strong>&#160;This function gets the total attachment size information for a specific record based and a specific query.</p>
 <p><strong>Parameters:</strong></p>
 <ul>
-<li><code>sQuery</code>: (Optional) The <code>encoded query</code> to be applied on the <code>sys_attachment</code> table.</li>
+<li><code>sQuery</code>: (Optional) The&#160;<code>encoded query</code>&#160;to be applied on the&#160;<code>sys_attachment</code>&#160;table.</li>
 <li><code>sReturnType</code>: (Optional) The return type if the attachment information: full, compressed or object with both. Default: compressed</li>
 <li><code>sNotation</code>: (Optional) The string definining the notation to be used to format the result: number (no notation), si (base 1000) or iec (base 1024) Default: si.</li>
 </ul>
-<p><strong>Returns:</strong>&#160;The <code>number</code>, <code>string</code> or <code>object</code> respecting the type specified in <code>sReturnType</code></p>
+<p><strong>Returns:</strong>&#160;The&#160;<code>number</code>,&#160;<code>string</code>&#160;or&#160;<code>object</code>&#160;respecting the type specified in&#160;<code>sReturnType</code></p>
 
-		<h2>Function: writeAttachment</h2>
+		<h2>writeAttachment</h2>
 		<p><strong>Purpose:</strong>&#160;This function writes an attachment to a specific record.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
-			<li><code>grRecord</code>: The <code>glide record</code> to which the file is attached in the
-				<code>sys_attachment</code> table..
+			<li><code>grRecord</code>: The&#160;<code>glide record</code>&#160;to which the file is attached in the&#160;<code>sys_attachment</code>&#160;table..
 			</li>
-			<li><code>sFilename</code>: The filename to be set (field <code>file_name</code>).</li>
+			<li><code>sFilename</code>: The filename to be set (field&#160;<code>file_name</code>).</li>
 			<li><code>sContent</code>: The content of the attachment.</li>
-			<li><code>sContentType</code>: (Optional) If <code>undefined</code> the string after the last . (dot) of the
-				<code>sFilename</code> is taken.
+			<li><code>sContentType</code>: (Optional) If&#160;<code>undefined</code>&#160;the string after the last . (dot) of the&#160;<code>sFilename</code>&#160;is taken.
 			</li>
 			<li><code>bBase64</code>: (Optional) Write the content as Base64 encoded string.</li>
-			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
-				hidden from the user.</li>
+			<li><code>bHidden</code>: (Optional) Use&#160;<code>ZZ_YY</code>&#160;prefix on table name for attachments that are	hidden from the user.</li>
 		</ul>
-		<p><strong>Returns:</strong>&#160;The <code>string</code> with the attachment sys_id or <code>undefined</code>
-			if not successful.</p>
-		<h2>Function: writeAttachmentByTableId</h2>
+		<p><strong>Returns:</strong>&#160;The&#160;<code>string</code>&#160;with the attachment sys_id or&#160;<code>undefined</code>&#160;if not successful.</p>
+		<h2>writeAttachmentByTableId</h2>
 		<p><strong>Purpose:</strong>&#160;This function writes an attachment to a specific record.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
 			<li><code>sTable</code>: The glide record table for which the attachment is written.</li>
-			<li><code>sId</code>: The <code>sys_id</code> of the base record for which the attachment is written.</li>
-			<li><code>sFilename</code>: The filename to be set (field <code>file_name</code>).</li>
+			<li><code>sId</code>: The&#160;<code>sys_id</code>&#160;of the base record for which the attachment is written.</li>
+			<li><code>sFilename</code>: The filename to be set (field&#160;<code>file_name</code>).</li>
 			<li><code>sContent</code>: The content of the attachment.</li>
-			<li><code>sContentType</code>: (Optional) If <code>undefined</code> the string after the last . (dot) of the
-				<code>sFilename</code> is taken.
+			<li><code>sContentType</code>: (Optional) If&#160;<code>undefined</code>&#160;the string after the last . (dot) of the&#160;<code>sFilename</code>&#160;is taken.
 			</li>
 			<li><code>bBase64</code>: (Optional) Write the content as Base64 encoded string.</li>
-			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
-				hidden from the user.</li>
+			<li><code>bHidden</code>: (Optional) Use&#160;<code>ZZ_YY</code>&#160;prefix on table name for attachments that are hidden from the user.</li>
 		</ul>
-		<p><strong>Returns:</strong>&#160;The <code>string</code> with the attachment sys_id or <code>undefined</code>
-			if not successful.</p>
-		<h2>Function: deleteAttachment</h2>
+		<p><strong>Returns:</strong>&#160;The&#160;<code>string</code>&#160;with the attachment sys_id or&#160;<code>undefined</code>&#160;if not successful.</p>
+		<h2>deleteAttachment</h2>
 		<p><strong>Purpose:</strong>&#160;This function deletes a specific attachment on a specific record.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
 			<li><code>sTable</code>: The glide record table from which the attachment is deleted.</li>
-			<li><code>sId</code>: The <code>sys_id</code> of the base record from which the attachment is deleted.</li>
-			<li><code>sFilename</code>: The filename of the attachment to be deleted (field <code>file_name</code>).
+			<li><code>sId</code>: The&#160;<code>sys_id</code>&#160;of the base record from which the attachment is deleted.</li>
+			<li><code>sFilename</code>: The filename of the attachment to be deleted (field&#160;<code>file_name</code>).
 			</li>
-			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
+			<li><code>bHidden</code>: (Optional) Use&#160;<code>ZZ_YY</code>&#160;prefix on table name for attachments that are
 				hidden from the user.</li>
 		</ul>
-		<h2>Function: deleteAttachmentsStartWithFilename</h2>
+		<h2>deleteAttachmentsStartWithFilename</h2>
 		<p><strong>Purpose:</strong>&#160;This function deletes specific attachments on a specific record.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
 			<li><code>sTable</code>: The glide record table from which the attachments are deleted.</li>
-			<li><code>sId</code>: The <code>sys_id</code> of the base record from which the attachments are deleted.
+			<li><code>sId</code>: The&#160;<code>sys_id</code>&#160;of the base record from which the attachments are deleted.
 			</li>
-			<li><code>sFilename</code>: The starting string of the filenames for the attachment to be deleted (field
-				<code>file_name</code> STARTSWITH).
+			<li><code>sFilename</code>: The starting string of the filenames for the attachment to be deleted (field&#160;<code>file_name</code>&#160;STARTSWITH).
 			</li>
-			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
+			<li><code>bHidden</code>: (Optional) Use&#160;<code>ZZ_YY</code>&#160;prefix on table name for attachments that are
 				hidden from the user.</li>
 		</ul>
-		<h2>Function: deleteAttachments</h2>
+		<h2>deleteAttachments</h2>
 		<p><strong>Purpose:</strong>&#160;This function deletes specific attachments on a specific record.</p>
 		<p><strong>Parameters:</strong></p>
 		<ul>
 			<li><code>sTable</code>: The glide record table from which the attachments are deleted.</li>
-			<li><code>sId</code>: The <code>sys_id</code> of the base record from which the attachments are deleted.
+			<li><code>sId</code>: The&#160;<code>sys_id</code>&#160;of the base record from which the attachments are deleted.
 			</li>
 			<li><code>sQuery</code>: The query string to be applied to search for the attachments to be deleted.</li>
-			<li><code>bHidden</code>: (Optional) Use <code>ZZ_YY</code> prefix on table name for attachments that are
+			<li><code>bHidden</code>: (Optional) Use&#160;<code>ZZ_YY</code>&#160;prefix on table name for attachments that are
 				hidden from the user.</li>
 		</ul>
 	</body>
@@ -1665,13 +1627,13 @@ Count sGroupByField and  bOrderByCount:
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>143</sys_mod_count>
+        <sys_mod_count>147</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-01-02 14:07:48</sys_updated_on>
+        <sys_updated_on>2024-01-04 11:26:33</sys_updated_on>
     </sys_ui_page>
 </record_update>

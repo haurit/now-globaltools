@@ -38,7 +38,7 @@ GlobalToolsRecordRead.prototype = {
 		var grRecord = new GlideRecord(sTable);
 		if (sQuery) {
 			if (grRecord.isValidEncodedQuery(sQuery)) {
-				grRecord.addEncodedQuery(sQuery);
+				gaRecord.addEncodedQuery(sQuery);
 			} else {
 				gs.warn('GlobalToolsRecordRead.countRecords called with invalid query: ' + sQuery);
 				return;
@@ -549,13 +549,13 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>102</sys_mod_count>
+        <sys_mod_count>103</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-30 10:21:48</sys_updated_on>
+        <sys_updated_on>2024-01-04 12:45:09</sys_updated_on>
     </sys_script_include>
 </record_update>
