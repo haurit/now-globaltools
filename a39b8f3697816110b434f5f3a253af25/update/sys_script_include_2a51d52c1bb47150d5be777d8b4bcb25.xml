@@ -13,10 +13,10 @@ GlobalToolsRecordRead.prototype = {
 	initialize: function () {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this._gt = new global.GlobalTools();
+		this._gtArray = new global.GlobalToolsArray();
 		this._gtObject = new global.GlobalToolsObject();
 		this._getValue = this._gtObject.getValue;
 		this._gtTable = new global.GlobalToolsTable();
-		this._isValidArray = new global.GlobalToolsArray().isValidArray;
 	}, // function initialize
 
 	checkAccess: function (sCallerScope) {
@@ -297,7 +297,7 @@ GlobalToolsRecordRead.prototype = {
 		if ((this._gtObject.isObject(oField)) && (oField.hasOwnProperty('sField'))) {
 			sField = oField['sField'];
 			aKeys = this._getValue('aKeys', ['sys_id'], oField);
-			if (!this._isValidArray(aKeys)) {
+			if (!this._gtArray.isValidArray(aKeys)) {
 				aKeys = [aKeys];
 			} // if not array
 		} else if ((oField) && (this._gt.getType(oField) == 'string')) {
@@ -362,7 +362,7 @@ GlobalToolsRecordRead.prototype = {
 			return;
 		} // if table is empty
 		var aAllKeys = this._getValue('aKeys', [], oRecordConfig);
-		aAllKeys = (this._isValidArray(aAllKeys)) ? aAllKeys : ['sys_id'];
+		aAllKeys = (this._gtArray.isValidArray(aAllKeys)) ? aAllKeys : ['sys_id'];
 		var aKeys = [],
 			aQuery = [],
 			sKeyField = '',
@@ -524,11 +524,12 @@ GlobalToolsRecordRead.prototype = {
 				gs.warn('GlobalToolsRecordRead.combineQueries is used with two big or statements in both queries! Return false! sFirstQuery: ' + sFirstQuery + ' sSecondQuery: ' + sSecondQuery);
 				return 'false';
 			} // if both queries contain big or
-			var aResult = [];
+			var aResult = [], aTmpQuery = [];
 			var aQueries = (bNQFirstQuery) ? sFirstQuery.split('^NQ') : sSecondQuery.split('^NQ');
 			var sAddlQuery = (bNQFirstQuery) ? sSecondQuery : sFirstQuery;
 			aQueries.forEach(function (sQuery) {
-				aResult.push(sQuery + '^' + sAddlQuery);
+				aTmpQuery = String(sQuery + '^' + sAddlQuery).split('^');
+				aResult.push(this._gtArray.unique(aTmpQuery, true).join('^'));
 			}, this); // each big or query
 			return aResult.join('^NQ'); // join by big or query
 		} else if ((sFirstQuery) && (!sSecondQuery)) {
@@ -549,13 +550,13 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>103</sys_mod_count>
+        <sys_mod_count>104</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-01-04 12:45:09</sys_updated_on>
+        <sys_updated_on>2024-01-05 07:14:53</sys_updated_on>
     </sys_script_include>
 </record_update>
