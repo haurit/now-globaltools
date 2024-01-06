@@ -54,65 +54,67 @@ GlobalToolsRESTAPI.prototype = {
 		if (sConnectionAliasId) {
 			var _ConnectionInfoProvider = new sn_cc.ConnectionInfoProvider();
 			var ccConnectionInfo = _ConnectionInfoProvider.getConnectionInfo(sConnectionAliasId);
-			this.sRemoteUrl = ccConnectionInfo.getAttribute('connection_url').replace(/\/$/gi, '');
-			if ((ccConnectionInfo.getAttribute('protocol') == 'https') && (this.sRemoteUrl)) {
-				this.bValidConnectionConfig = true;
-				var iHttpTimeout = parseInt(ccConnectionInfo.getAttribute('connection_timeout'));
-				this.iHttpTimeout = (iHttpTimeout) ? iHttpTimeout : this.iHttpTimeout;
-				this.sCredentialId = '';
-				this.sCredentialPw = '';
-				this.sCredentialType = ccConnectionInfo.getCredentialAttribute('type');
-				if (this.sCredentialType == 'basic_auth') {
-					this.sCredentialId = ccConnectionInfo.getCredentialAttribute('user_name');
-					this.sCredentialPw = ccConnectionInfo.getCredentialAttribute('password');
-				} else if (this.sCredentialType == 'oauth_2_0') {
-					this.sCredentialType = 'oauth2';
-					this.sCredentialId = ccConnectionInfo.getCredentialAttribute('sys_id');
-				} // if basic				
-				this.sMutualAuthProfile = '';
-				if (ccConnectionInfo.getAttribute('mutual_auth') == 'true') {
-					this.sMutualAuthProfile = ccConnectionInfo.getAttribute('sys_protocol_profile.protocol');
-				} // if protocol profile 
-				this.sMIDServerName = '';
-				if (ccConnectionInfo.getAttribute('use_mid') == 'true') {
-					var sMIDServerId = '';
-					var sMIDServerSelection = ccConnectionInfo.getAttribute('mid_selection');
-					var grMIDServer = new GlideRecord('ecc_agent');
-					if (sMIDServerSelection == 'specific_mid_server') {
-						sMIDServerId = ccConnectionInfo.getAttribute('mid_server');
-					} else {
-						try {
-							var sncMidSelector = new SNC.MidSelector();
-							if (sMIDServerSelection == 'specific_mid_cluster') {
-								var sMIDClusterId = ccConnectionInfo.getAttribute('mid_cluster');
-								if (sMIDClusterId) {
-									sMIDServerId = sncMidSelector.selectAnyDegradedOrBetterMidServerFromClusterEx('', sMIDClusterId);
-								} // if mid cluster
-							} else if (sMIDServerSelection == 'auto_select') {
-								var oMIDServerCapabilities = this._gtObject.parseJSON(ccConnectionInfo.getAttribute('capabilities'));
-								var aMIDServerHost = [ccConnectionInfo.getAttribute('host')];
-								var sMIDServerApp = ccConnectionInfo.getAttribute('application');
-								sMIDServerId = sncMidSelector.selectAnyMidServer(sMIDServerApp, aMIDServerHost, oMIDServerCapabilities);
-							} // if mid selection
-						} catch (oEx) {
-							if ((sMIDServerSelection == 'auto_select') && (String(oEx).indexOf('Unable to resolve host name') != -1)) {
-								try {
-									oMIDServerCapabilities = this._gtObject.parseJSON(ccConnectionInfo.getAttribute('capabilities'));
-									sMIDServerApp = ccConnectionInfo.getAttribute('application');
-									sMIDServerId = sncMidSelector.selectAnyMidServer(sMIDServerApp, [], oMIDServerCapabilities);
-								} catch (oEx) {
+			if (ccConnectionInfo) {
+				this.sRemoteUrl = ccConnectionInfo.getAttribute('connection_url').replace(/\/$/gi, '');
+				if ((ccConnectionInfo.getAttribute('protocol') == 'https') && (this.sRemoteUrl)) {
+					this.bValidConnectionConfig = true;
+					var iHttpTimeout = parseInt(ccConnectionInfo.getAttribute('connection_timeout'));
+					this.iHttpTimeout = (iHttpTimeout) ? iHttpTimeout : this.iHttpTimeout;
+					this.sCredentialId = '';
+					this.sCredentialPw = '';
+					this.sCredentialType = ccConnectionInfo.getCredentialAttribute('type');
+					if (this.sCredentialType == 'basic_auth') {
+						this.sCredentialId = ccConnectionInfo.getCredentialAttribute('user_name');
+						this.sCredentialPw = ccConnectionInfo.getCredentialAttribute('password');
+					} else if (this.sCredentialType == 'oauth_2_0') {
+						this.sCredentialType = 'oauth2';
+						this.sCredentialId = ccConnectionInfo.getCredentialAttribute('sys_id');
+					} // if basic				
+					this.sMutualAuthProfile = '';
+					if (ccConnectionInfo.getAttribute('mutual_auth') == 'true') {
+						this.sMutualAuthProfile = ccConnectionInfo.getAttribute('sys_protocol_profile.protocol');
+					} // if protocol profile 
+					this.sMIDServerName = '';
+					if (ccConnectionInfo.getAttribute('use_mid') == 'true') {
+						var sMIDServerId = '';
+						var sMIDServerSelection = ccConnectionInfo.getAttribute('mid_selection');
+						var grMIDServer = new GlideRecord('ecc_agent');
+						if (sMIDServerSelection == 'specific_mid_server') {
+							sMIDServerId = ccConnectionInfo.getAttribute('mid_server');
+						} else {
+							try {
+								var sncMidSelector = new SNC.MidSelector();
+								if (sMIDServerSelection == 'specific_mid_cluster') {
+									var sMIDClusterId = ccConnectionInfo.getAttribute('mid_cluster');
+									if (sMIDClusterId) {
+										sMIDServerId = sncMidSelector.selectAnyDegradedOrBetterMidServerFromClusterEx('', sMIDClusterId);
+									} // if mid cluster
+								} else if (sMIDServerSelection == 'auto_select') {
+									var oMIDServerCapabilities = this._gtObject.parseJSON(ccConnectionInfo.getAttribute('capabilities'));
+									var aMIDServerHost = [ccConnectionInfo.getAttribute('host')];
+									var sMIDServerApp = ccConnectionInfo.getAttribute('application');
+									sMIDServerId = sncMidSelector.selectAnyMidServer(sMIDServerApp, aMIDServerHost, oMIDServerCapabilities);
+								} // if mid selection
+							} catch (oEx) {
+								if ((sMIDServerSelection == 'auto_select') && (String(oEx).indexOf('Unable to resolve host name') != -1)) {
+									try {
+										oMIDServerCapabilities = this._gtObject.parseJSON(ccConnectionInfo.getAttribute('capabilities'));
+										sMIDServerApp = ccConnectionInfo.getAttribute('application');
+										sMIDServerId = sncMidSelector.selectAnyMidServer(sMIDServerApp, [], oMIDServerCapabilities);
+									} catch (oEx) {
+										gs.error('global.GlobalToolsRESTAPI._setConnectionFromAlias error selecting MID Server: ' + String(oEx));
+									} // if other error
+								} else {
 									gs.error('global.GlobalToolsRESTAPI._setConnectionFromAlias error selecting MID Server: ' + String(oEx));
-								} // if other error
-							} else {
-								gs.error('global.GlobalToolsRESTAPI._setConnectionFromAlias error selecting MID Server: ' + String(oEx));
-							} // if error resolved host
-						} // try
-					} // if specific mid
-					if ((sMIDServerId) && (grMIDServer.get(sMIDServerId))) {
-						this.sMIDServerName = grMIDServer.getValue('name');
+								} // if error resolved host
+							} // try
+						} // if specific mid
+						if ((sMIDServerId) && (grMIDServer.get(sMIDServerId))) {
+							this.sMIDServerName = grMIDServer.getValue('name');
+						} // if mid server
 					} // if mid server
-				} // if mid server
-			} // if valid url
+				} // if valid url
+			} // if connection info
 		} // if valid alias
 	}, // function _setConnectionFromAlias
 
@@ -181,7 +183,7 @@ GlobalToolsRESTAPI.prototype = {
 		sDisplayValue = ((sDisplayValue == 'true') || (sDisplayValue == 'all')) ? '&sysparm_display_value=' + sDisplayValue : '';
 		sLimit = (sLimit) ? sLimit : this.sLimit;
 		var sUrl = 'api/now/table/' + sTable + '?' + sExcludeRefLink + 'sysparm_limit=' + sLimit + this.sQueryNoDomain + sOffset + sQuery + sDisplayValue;
-		if (this._gtArray.isValidArray(aFields)) { 
+		if (this._gtArray.isValidArray(aFields)) {
 			var sFields = '&sysparm_fields=' + encodeURIComponent(aFields.join(','));
 			if (String(this.sRemoteUrl + sUrl + sFields).length < 2000) {
 				sUrl += sFields;
@@ -195,7 +197,7 @@ GlobalToolsRESTAPI.prototype = {
 	doNOWRESTCount: function (sTable, sQuery, sGroupByField, bOrderByCount, sDisplayValue) {
 		if ((this.bValidConnectionConfig) && (!this.checkAccess(gs.getCallerScopeName()))) { return; }
 		if (!sTable) {
-			return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_400_001_ErrorMessage'), 'error_code': '400'};
+			return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_400_001_ErrorMessage'), 'error_code': '400' };
 		} // if no table
 		sQuery = (sQuery) ? '&sysparm_query=' + encodeURIComponent(sQuery) : '';
 		sGroupByField = (sGroupByField) ? '&sysparm_group_by=' + encodeURIComponent(sGroupByField) : '';
@@ -330,13 +332,13 @@ GlobalToolsRESTAPI.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 11:42:21</sys_created_on>
         <sys_id>a95f09e21b0731105e14b8449b4bcb29</sys_id>
-        <sys_mod_count>80</sys_mod_count>
+        <sys_mod_count>81</sys_mod_count>
         <sys_name>GlobalToolsRESTAPI</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a95f09e21b0731105e14b8449b4bcb29</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-01-02 14:13:06</sys_updated_on>
+        <sys_updated_on>2024-01-06 16:57:28</sys_updated_on>
     </sys_script_include>
 </record_update>
