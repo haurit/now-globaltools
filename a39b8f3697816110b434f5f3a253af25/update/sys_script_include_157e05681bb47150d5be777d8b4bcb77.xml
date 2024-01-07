@@ -31,10 +31,23 @@ GlobalToolsTable.prototype = {
 
 	isValidTable: function (sTable) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
-		if ((sTable) && (new GlideRecord(sTable).isValid())) {
+		if ((sTable) && (new GlideRecord(String(sTable)).isValid())) {
 			return true;
 		} // if table is valid
 	}, // function isValidTable
+
+	isValidDBView: function (sTable) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (sTable) {
+			var grDBView = new GlideRecord('sys_db_view');
+			grDBView.addEncodedQuery('name=' + sTable);
+			grDBView.setLimit(1);
+			grDBView.query();
+			if (grDBView.hasNext()) {
+				return true;
+			} // if db view exists
+		} // if table
+	}, // function isValidDBView
 
 	getRecordClass: function (grRecord) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
@@ -85,6 +98,26 @@ GlobalToolsTable.prototype = {
 			gs.error('global.GlobalToolsTable.getTableExtensions Exception during function for sTable: ' + sTable + ' oExeption: ' + String(oExeption));
 		} // catch errors
 	}, // function getTableExtensions
+
+	isTableUpdateSynched: function (sTable) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		try {
+			if (this.isValidTable(sTable)) {
+				var aTableHierarchy = this.getTableHierarchy(sTable);
+				var bIsMetaData = (aTableHierarchy.indexOf('sys_metadata') != -1) ? true : false;
+				if (bIsMetaData) {
+					var grDict = new GlideRecord('sys_dictionary');
+					grDict.addEncodedQuery('internal_type=collection^name=' + sTable + '^attributesLIKEupdate_synch');
+					grDict.query();
+					if (grDict.hasNext()) {
+						return true;
+					} // if has attr update synch
+				} // if metadata
+			} // if valid table
+		} catch (oExeption) {
+			gs.error('global.GlobalToolsTable.isTableUpdateSynched Exception during function for sTable: ' + sTable + ' oExeption: ' + String(oExeption));
+		} // catch errors
+	}, // function isTableUpdateSynched
 
 	// Get cross scope access information for a table
 	getTableScopeInfo: function (sTable) {
@@ -140,7 +173,7 @@ GlobalToolsTable.prototype = {
 			if (grDictOrOverride) {
 				return grDictOrOverride.getValue('element');
 			} // if dict or override
-		}
+		} // if valid table
 	}, // function getDisplayField
 
 	getFields: function (oTableOrRecord, bOmitSysId) {
@@ -176,12 +209,12 @@ GlobalToolsTable.prototype = {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sTable) && (this.isValidTable(sTable)) && (sField)) {
 			var aTables = this.getTableHierarchy(sTable);
-			var fDict = new GlideRecord('sys_dictionary');
-			fDict.addEncodedQuery('element=' + sField + '^nameIN' + aTables.join(',') + '^internal_type=reference');
-			fDict.setLimit(1);
-			fDict.query();
-			if (fDict.next()) {
-				return fDict.getValue('reference');
+			var grDict = new GlideRecord('sys_dictionary');
+			grDict.addEncodedQuery('element=' + sField + '^nameIN' + aTables.join(',') + '^internal_type=reference');
+			grDict.setLimit(1);
+			grDict.query();
+			if (grDict.next()) {
+				return grDict.getValue('reference');
 			} // if dict
 		} else {
 			gs.warn('global.GlobalToolsTable.getRefTableName no table or field provided!');
@@ -201,14 +234,14 @@ GlobalToolsTable.prototype = {
 				if (bCheckRefTableHierarchy) {
 					aRefTables = j2js(GlideDBObjectManager.get().getHierarchy(sRefTable));
 				} // if check extended ref tables
-				var fDict = new GlideRecord('sys_dictionary');
-				fDict.addEncodedQuery('nameIN' + aTables.join(',') + '^internal_type=reference^referenceIN' + aRefTables.join(','));
-				fDict.query();
-				while ((fDict.next()) && (sReturnField == '')) {
+				var grDict = new GlideRecord('sys_dictionary');
+				grDict.addEncodedQuery('nameIN' + aTables.join(',') + '^internal_type=reference^referenceIN' + aRefTables.join(','));
+				grDict.query();
+				while ((grDict.next()) && (sReturnField == '')) {
 					if (sReturnType == 'array') {
-						aReturnFields.push(fDict.getValue('element'));
+						aReturnFields.push(grDict.getValue('element'));
 					} else {
-						sReturnField = fDict.getValue('element');
+						sReturnField = grDict.getValue('element');
 					} // if return array
 				} // while dict
 				if (sReturnType == 'array') {
@@ -329,13 +362,13 @@ GlobalToolsTable.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:03:21</sys_created_on>
         <sys_id>157e05681bb47150d5be777d8b4bcb77</sys_id>
-        <sys_mod_count>84</sys_mod_count>
+        <sys_mod_count>87</sys_mod_count>
         <sys_name>GlobalToolsTable</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_157e05681bb47150d5be777d8b4bcb77</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-27 16:54:45</sys_updated_on>
+        <sys_updated_on>2024-01-07 07:12:39</sys_updated_on>
     </sys_script_include>
 </record_update>
