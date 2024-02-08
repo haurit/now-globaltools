@@ -60,7 +60,6 @@ GlobalToolsTable.prototype = {
 		} // if valid record
 	}, // function getRecordClass
 
-	// Convenience function to get absolute base class (to avoid scope issues)
 	getAbsoluteBase: function (sTable) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		try {
@@ -72,7 +71,6 @@ GlobalToolsTable.prototype = {
 		} // catch errors
 	}, // function getAbsoluteBase
 
-	// Convenience function to get table hierarchy (to avoid scope issues)
 	getTableHierarchy: function (sTable) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		try {
@@ -84,7 +82,6 @@ GlobalToolsTable.prototype = {
 		} // catch errors
 	}, // function getTableHierarchy
 
-	// Convenience function to get table extentions (to avoid scope issues)
 	getTableExtensions: function (sTable, bAllExtensions) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		try {
@@ -119,7 +116,6 @@ GlobalToolsTable.prototype = {
 		} // catch errors
 	}, // function isTableUpdateSynched
 
-	// Get cross scope access information for a table
 	getTableScopeInfo: function (sTable) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (!this.isValidTable(sTable)) {
@@ -132,7 +128,7 @@ GlobalToolsTable.prototype = {
 			'create': false,
 			'write': false,
 			'delete': false
-		};
+		}; // scope info object
 		var grTable = new GlideRecord('sys_db_object');
 		if (grTable.get('name', sTable)) {
 			oScopeInfo['id'] = grTable.getValue('sys_scope');
@@ -176,6 +172,23 @@ GlobalToolsTable.prototype = {
 		} // if valid table
 	}, // function getDisplayField
 
+	getFieldLabel: function (oTableOrRecord, sField) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var sType = this._gt.getType(oTableOrRecord);
+		var grRecord;
+		if ((sType == 'string') && (this.isValidTable(oTableOrRecord))) {
+			grRecord = new GlideRecord(oTableOrRecord);
+			grRecord.initialize();
+		} else if (sType.indexOf('gliderecord') != -1) {
+			grRecord = oTableOrRecord;
+		} else {
+			return sField;
+		} // if string or gliderecord
+		sFieldLabel = (grRecord.isValidField(sField)) ? grRecord[sField].getLabel() : '';
+		sFieldLabel = (sFieldLabel) ? sFieldLabel : sField;
+		return sFieldLabel;
+	}, // function getFieldLabel
+
 	getFields: function (oTableOrRecord, bOmitSysId) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sType = this._gt.getType(oTableOrRecord);
@@ -188,7 +201,7 @@ GlobalToolsTable.prototype = {
 			grTable = oTableOrRecord;
 		} else {
 			return [];
-		} // if empty or string
+		} // if string or gliderecord
 		var aFields = grTable.getFields();
 		for (var i = 0; i < aFields.size(); i++) {
 			geField = aFields.get(i);
@@ -204,7 +217,6 @@ GlobalToolsTable.prototype = {
 	*	Reference Field Functions
 	************************************************************************************************************/
 
-	// Get reference field name based on reference table
 	getRefTable: function (sTable, sField) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sTable) && (this.isValidTable(sTable)) && (sField)) {
@@ -217,11 +229,10 @@ GlobalToolsTable.prototype = {
 				return grDict.getValue('reference');
 			} // if dict
 		} else {
-			gs.warn('global.GlobalToolsTable.getRefTableName no table or field provided!');
+			gs.warn('global.GlobalToolsTable.getRefTable no table or field provided!');
 		} // if table and field
-	}, // function getRefTableName
+	}, // function getRefTable
 
-	// Get reference field name based on reference table
 	getRefFieldName: function (grRecord, sRefTable, bCheckRefTableHierarchy, sReturnType) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sReturnField = '';
@@ -257,7 +268,6 @@ GlobalToolsTable.prototype = {
 	*	Dictionary Functions
 	************************************************************************************************************/
 
-	// Get dictionary record or value respecting overrides
 	getDictOrOverrideValue: function (sTable, sField, sAttributeName, bReturnRecord, sAddlDictQuery) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var oReturnValue;
@@ -362,13 +372,13 @@ GlobalToolsTable.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:03:21</sys_created_on>
         <sys_id>157e05681bb47150d5be777d8b4bcb77</sys_id>
-        <sys_mod_count>87</sys_mod_count>
+        <sys_mod_count>90</sys_mod_count>
         <sys_name>GlobalToolsTable</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_157e05681bb47150d5be777d8b4bcb77</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-01-07 07:12:39</sys_updated_on>
+        <sys_updated_on>2024-02-08 15:53:00</sys_updated_on>
     </sys_script_include>
 </record_update>

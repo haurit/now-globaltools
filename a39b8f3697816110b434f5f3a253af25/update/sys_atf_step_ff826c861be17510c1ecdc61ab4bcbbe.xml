@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 05:37:15</sys_created_on>
         <sys_id>ff826c861be17510c1ecdc61ab4bcbbe</sys_id>
-        <sys_mod_count>59</sys_mod_count>
+        <sys_mod_count>62</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_ff826c861be17510c1ecdc61ab4bcbbe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-01-07 07:10:54</sys_updated_on>
+        <sys_updated_on>2024-02-08 15:58:51</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsTable Tests">ccd68ce11b6db110d5be777d8b4bcbe6</test>
         <timeout/>
@@ -49,9 +49,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 05:37:15</sys_created_on>
         <sys_id>7c54a8c61be17510c1ecdc61ab4bcb31</sys_id>
-        <sys_mod_count>59</sys_mod_count>
+        <sys_mod_count>62</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-01-07 07:10:55</sys_updated_on>
+        <sys_updated_on>2024-02-08 15:58:51</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -123,10 +123,17 @@
 	_gtATF.runATF('getDisplayField', undefined, 'cmdb_ci_server');&#13;
 	_gtATF.runATF('getDisplayField', undefined, 'invalidtable');&#13;
 &#13;
+	grRecord = _gtATF.getRecord('incident', 'active=true');&#13;
+	_gtATF.runATF('getFieldLabel', undefined);&#13;
+	_gtATF.runATF('getFieldLabel', undefined, 'incident');&#13;
+	_gtATF.runATF('getFieldLabel', 'Caller', 'incident', 'caller_id');&#13;
+	_gtATF.runATF('getFieldLabel', undefined, grRecord);&#13;
+	_gtATF.runATF('getFieldLabel', 'Caller', grRecord, 'caller_id');&#13;
+&#13;
 	_gtATF.runATF('getFields', '&gt;10', 'task');&#13;
 	_gtATF.runATF('getFields', '&gt;10', 'incident');&#13;
 	_gtATF.runATF('getFields', '&gt;10', 'cmdb_ci_server'); //&#13;
-	_gtATF.runATF('getFields', ['context_map', 'level', 'message', 'source', 'source_application_family', 'source_package', 'sys_class_name', 'sys_created_by', 'sys_created_on', 'sys_id'], 'syslog');&#13;
+	_gtATF.runATF('getFields', ['context_map', 'level', 'message', 'source', 'sequence', 'source_application_family', 'source_package', 'sys_class_name', 'sys_created_by', 'sys_created_on', 'sys_id'], 'syslog');&#13;
 	_gtATF.runATF('getFields', 0, 'invalidtable');&#13;
 	grRecord = _gtATF.getRecord('syslog', 'sys_class_name=syslog');&#13;
 	if (grRecord) {&#13;
@@ -146,7 +153,7 @@
 	_gtATF.runATF('getRefFieldName', undefined, grRecord, 'invalidreftable');&#13;
 	_gtATF.runATF('getRefFieldName', 'resolved_by', grRecord, 'sys_user');&#13;
 	_gtATF.runATF('getRefFieldName', 'resolved_by', grRecord, 'sys_user', true);&#13;
-	_gtATF.runATF('getRefFieldName', ['resolved_by', 'caller_id', 'reopened_by', 'opened_by', 'closed_by', 'assigned_to'], grRecord, 'sys_user', true, 'array');&#13;
+	_gtATF.runATF('getRefFieldName', ['resolved_by', 'caller_id', 'reopened_by', 'opened_by', 'closed_by', 'assigned_to', 'task_for'], grRecord, 'sys_user', true, 'array');&#13;
 &#13;
 	_gtATF.runATF('getDictOrOverrideValue', undefined);&#13;
 	_gtATF.runATF('getDictOrOverrideValue', undefined, 'invalidtable');&#13;
@@ -171,7 +178,7 @@
 	_gtATF.runATF('getFieldChoices', [['antivirus', 'email', 'internal application'], ['inquiry', 'inquiry', 'inquiry'], ['antivirus (Antivirus)', 'email (Email)', 'internal application (Internal Application)']], 'incident', 'subcategory', 'inquiry');&#13;
 &#13;
 	_gtATF.runATF('getMandatoryFields', ['name', 'type'], 'sys_sg_parameter_screen'); // icon should not be shown, dict override to remove it&#13;
-	_gtATF.runATF('getMandatoryFields', ['it_application_owner', 'name', 'short_description'], 'cmdb_ci_business_app');&#13;
+	_gtATF.runATF('getMandatoryFields', ['company', 'it_application_owner', 'name', 'short_description'], 'cmdb_ci_business_app');&#13;
 	_gtATF.runATF('getMandatoryFields', undefined, 'invalidtable');&#13;
 &#13;
 	return _gtATF.endATF();&#13;
