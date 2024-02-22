@@ -93,9 +93,10 @@
 				credential aliases and some shortcuts for instance to instance requests.</li>
 			<li>Added script include GlobalToolsAttachment with functions to handle attachment operations.</li>
 		</ol>
-		<h3>1.0.32 - 02.2024</h3>
+		<h3>1.0.3 - 02.2024</h3>
 		<ol>
 			<li>Added function getFieldLabel</li>
+			<li>Added parameter bReturnDictId to getFields function</li>
 		</ol>
 		<h2>Problem Statement</h2>
 		<p>Many functions are not available in scoped applications which hinders the developent of reusable solution
@@ -665,7 +666,7 @@
 		<p><strong>Returns:</strong>&#160;Returns a string representing the label of the field or&#160;<code>undefined</code>&#160;if table or field is not found.</p>
 		<h2>getFields</h2>
 		<p>
-			<strong>Purpose:</strong>&#160;This function retrieves the list of field names for a given table or
+			<strong>Purpose:</strong>&#160;This function retrieves the list of field names or dictionary ids for a given table or
 			GlideRecord
 			object.
 		</p>
@@ -673,9 +674,10 @@
 			<strong>Parameters:</strong>
 			<li><code>oTableOrRecord</code>: A string representing the table name or a GlideRecord object.</li>
 			<li><code>bOmitSysId</code>: (Optional) if "true", don't add sys_id to the list.</li>
+			<li><code>bReturnDictId</code>: (Optional) if "true", return the &#160;<code>SysId</code>&#160; of the Dictionary [sys_dictionary] record.</li>
 		</p>
 		<p>
-			<strong>Returns:</strong>&#160;Returns an array of field names for the specified table or GlideRecord
+			<strong>Returns:</strong>&#160;Returns an array of field names or dictionary ids for the specified table or GlideRecord
 			object.
 		</p>
 		<h2>getRefTable</h2>
@@ -1757,13 +1759,13 @@ Count sGroupByField and  bOrderByCount:
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>153</sys_mod_count>
+        <sys_mod_count>155</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-02-13 06:13:15</sys_updated_on>
+        <sys_updated_on>2024-02-22 09:31:52</sys_updated_on>
     </sys_ui_page>
 </record_update>
