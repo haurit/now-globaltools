@@ -300,6 +300,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 			edElementDescriptor,
 			sDependentField,
 			sDependentFieldValue,
+			grDict,
 			aChoicesRetVal,
 			aChoices,
 			aDependentValues,
@@ -370,13 +371,18 @@ GlobalToolsRecordWriteValidate.prototype = {
 							sValue = this._validateReferenceFieldValues(sField, oField, aValues, geElement, edElementDescriptor, sInternalType, sValueType);
 							this.grRecord.setValue(sField, sValue);
 							bFieldDone = true;
-						} else if ((edElementDescriptor.isChoiceTable()) && (this._getValue('aIgnoreChoiceFields', ['short_description'], this.oRecordConfig).indexOf(sField) == -1)) {
+						} else if ((edElementDescriptor.isChoiceTable()) && (this._getValue('aIgnoreChoiceFields', ['short_description'], this.oRecordConfig).indexOf(sField) == -1) && (['sys_class_name'].indexOf(sInternalType) == -1)) {
 							sDependentField = (this.oDependentFields.hasOwnProperty(sField)) ? this.oDependentFields[sField] : '';
 							sDependentFieldValue = '';
 							if (sDependentField) {
 								sDependentFieldValue = this._getValue(sDependentField, this.grRecord.getValue(sDependentField), this.oRecordValues);
 							} // if dependent field
-							aChoicesRetVal = this._gtTable.getFieldChoices(this.sTargetTable, sField, sDependentFieldValue);
+							grDict = this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, '', true);
+							if ((grDict) && (grDict.getValue('choice_table')) && (grDict.getValue('choice_field'))) {
+								aChoicesRetVal = this._gtTable.getFieldChoices(grDict.getValue('choice_table'), grDict.getValue('choice_field'), sDependentFieldValue);
+							} else {
+								aChoicesRetVal = this._gtTable.getFieldChoices(this.sTargetTable, sField, sDependentFieldValue);
+							} // if choice table/field
 							aChoices = aChoicesRetVal[0];
 							aDependentValues = aChoicesRetVal[1];
 							aChoiceDisplayValues = aChoicesRetVal[2];
@@ -407,103 +413,105 @@ GlobalToolsRecordWriteValidate.prototype = {
 								this._errorHandler('400_021', 'Invalid boolean value', '', [sField, sValue], true, false);
 							} // if value is not boolean
 						} // if type is bool
-						if (sInternalType == 'glide_date_time') {
-							var gdtTest = new GlideDateTime(sValue);
-							if (!gdtTest.isValid()) {
-								this._errorHandler('400_023', 'Invalid date/time value', '', [sField, sValue, gs.getDateTimeFormat()], true, false);
-							} else {
-								this.grRecord[sField].setDisplayValue(sValue);
-							} // if date is not valid
-							bFieldDone = true;
-						} // if type is datetime
-						if (sInternalType == 'glide_date') {
-							var gdTest = new GlideDate();
-							gdTest.setDisplayValue(sValue);
-							if (!gdTest.isValid()) {
-								this._errorHandler('400_024', 'Invalid date value', '', [sField, sValue, gs.getDateFormat()], true, false);
-							} else {
-								this.grRecord[sField].setDisplayValue(sValue);
-							} // if date is not valid
-							bFieldDone = true;
-						} // if type is date
-						if (sInternalType == 'glide_time') {
-							var gtTest = new GlideTime();
-							gtTest.setDisplayValue(sValue);
-							if (!gtTest.isValid()) {
-								this._errorHandler('400_025', 'Invalid time value', '', [sField, sValue, gs.getTimeFormat()], true, false);
-							} else {
-								this.grRecord[sField].setDisplayValue(sValue);
-							} // if time is not valid
-							bFieldDone = true;
-						} // if type is time
-						if (sInternalType == 'glide_duration') {
-							var gduTest = new GlideDuration();
-							gduTest.setDisplayValue(sValue);
-							if (!gduTest.isValid()) {
-								this._errorHandler('400_034', 'Invalid duraction value', '', [sField, sValue, 'd hh:mm:ss'], true, false);
-							} else {
-								this.grRecord[sField].setDisplayValue(sValue);
-							} // if duration is not valid
-							bFieldDone = true;
-						} // if type is time
-						if (sInternalType == 'integer') {
-							if (isNaN(parseInt(sValue))) {
-								this._errorHandler('400_026', 'Invalid integer number value', '', [sField, sValue], true, false);
-							} else {
-								this.grRecord.setValue(sField, parseInt(sValue));
-							} // if not integer
-							bFieldDone = true;
-						} // if type is integer
-						if (sInternalType == 'float') {
-							if (isNaN(parseFloat(sValue))) {
-								this._errorHandler('400_027', 'Invalid floating point number value', '', [sField, sValue], true, false);
-							} else {
-								this.grRecord.setValue(sField, parseFloat(sValue));
-							} // if not float
-							bFieldDone = true;
-						} // if type is float
-						if (sInternalType == 'email') {
-							var reEmail = new RegExp('^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,15})+$');
-							if ((!reEmail.test(sValue)) || (sValue.length < 6) || (sValue.length > 200)) {
-								this._errorHandler('400_028', 'Invalid email address value', '', [sField, sValue], true, false);
+						if (!gs.nil(sValue)) {
+							if (sInternalType == 'glide_date_time') {
+								var gdtTest = new GlideDateTime(sValue);
+								if (!gdtTest.isValid()) {
+									this._errorHandler('400_023', 'Invalid date/time value', '', [sField, sValue, gs.getDateTimeFormat()], true, false);
+								} else {
+									this.grRecord[sField].setDisplayValue(sValue);
+								} // if date is not valid
 								bFieldDone = true;
-							} // if not valid email
-						} // if type is email
-						if (sInternalType == 'ph_number') {
-							var rePhone = /^\+?[1-9]\d{1,14}$/;
-							if (!rePhone.test(sValue)) {
-								this._errorHandler('400_029', 'Invalid phone number value', '', [sField, sValue], true, false);
+							} // if type is datetime
+							if (sInternalType == 'glide_date') {
+								var gdTest = new GlideDate();
+								gdTest.setDisplayValue(sValue);
+								if (!gdTest.isValid()) {
+									this._errorHandler('400_024', 'Invalid date value', '', [sField, sValue, gs.getDateFormat()], true, false);
+								} else {
+									this.grRecord[sField].setDisplayValue(sValue);
+								} // if date is not valid
 								bFieldDone = true;
-							} // if not valid E.164 phone
-						} // if type is phone
-						if ((sInternalType == 'ip_addr') || (sInternalType == 'ip_address')) {
-							var reIPAddress = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-							if ((!reIPAddress.test(sValue)) || (sValue.length < 3)) {
-								this._errorHandler('400_030', 'Invalid ip address value', '', [sField, sValue], true, false);
+							} // if type is date
+							if (sInternalType == 'glide_time') {
+								var gtTest = new GlideTime();
+								gtTest.setDisplayValue(sValue);
+								if (!gtTest.isValid()) {
+									this._errorHandler('400_025', 'Invalid time value', '', [sField, sValue, gs.getTimeFormat()], true, false);
+								} else {
+									this.grRecord[sField].setDisplayValue(sValue);
+								} // if time is not valid
 								bFieldDone = true;
-							} // if not valid ip address
-						} // if type is ip address
-						if (sInternalType == 'table_name') {
-							if (!this._gtTable.isValidTable(sValue)) {
-								this._errorHandler('400_036', 'Invalid table', '', [sField, sValue], true, false);
-							} // if not valid table
-						} // if type is table
-						if (sInternalType == 'GUID') {
-							var reSysId = new RegExp('([0-9a-f]){32}');
-							if ((!reSysId.test(sValue)) && (!String(sValue) == '-1') && (!String(sValue) == 'global')) {
-								this._errorHandler('400_037', 'Invalid GUID value', '', [sField, sValue], true, false);
+							} // if type is time
+							if (sInternalType == 'glide_duration') {
+								var gduTest = new GlideDuration();
+								gduTest.setDisplayValue(sValue);
+								if (!gduTest.isValid()) {
+									this._errorHandler('400_034', 'Invalid duraction value', '', [sField, sValue, 'd hh:mm:ss'], true, false);
+								} else {
+									this.grRecord[sField].setDisplayValue(sValue);
+								} // if duration is not valid
 								bFieldDone = true;
-							} // if not valid GUID
-						} // if type is GUID
-						if (sInternalType == 'document_id') {
-							sDependentField = (this.oDependentFields.hasOwnProperty(sField)) ? this.oDependentFields[sField] : '';
-							var sDocumentIdTable = this._getValue(sDependentField, '', this.oRecordValues);
-							sDocumentIdTable = (sDocumentIdTable) ? sDocumentIdTable : this.grRecord.getValue(sDependentField);
-							if ((!sDocumentIdTable) || (!this._gtTable.isValidTable(sDocumentIdTable)) || (!this._gtRead.checkRecordByField(sDocumentIdTable, 'sys_id', sValue))) {
-								this._errorHandler('400_035', 'Invalid document id or table', '', [sField, sValue, sDocumentIdTable], true, false);
+							} // if type is time
+							if (sInternalType == 'integer') {
+								if (isNaN(parseInt(sValue))) {
+									this._errorHandler('400_026', 'Invalid integer number value', '', [sField, sValue], true, false);
+								} else {
+									this.grRecord.setValue(sField, parseInt(sValue));
+								} // if not integer
 								bFieldDone = true;
-							} // if not valid document
-						} // if type is document id
+							} // if type is integer
+							if (sInternalType == 'float') {
+								if (isNaN(parseFloat(sValue))) {
+									this._errorHandler('400_027', 'Invalid floating point number value', '', [sField, sValue], true, false);
+								} else {
+									this.grRecord.setValue(sField, parseFloat(sValue));
+								} // if not float
+								bFieldDone = true;
+							} // if type is float
+							if (sInternalType == 'email') {
+								var reEmail = new RegExp('^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,15})+$');
+								if ((!reEmail.test(sValue)) || (sValue.length < 6) || (sValue.length > 200)) {
+									this._errorHandler('400_028', 'Invalid email address value', '', [sField, sValue], true, false);
+									bFieldDone = true;
+								} // if not valid email
+							} // if type is email
+							if (sInternalType == 'ph_number') {
+								var rePhone = /^\+?[1-9]\d{1,14}$/;
+								if (!rePhone.test(sValue)) {
+									this._errorHandler('400_029', 'Invalid phone number value', '', [sField, sValue], true, false);
+									bFieldDone = true;
+								} // if not valid E.164 phone
+							} // if type is phone
+							if ((sInternalType == 'ip_addr') || (sInternalType == 'ip_address')) {
+								var reIPAddress = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+								if ((!reIPAddress.test(sValue)) || (sValue.length < 3)) {
+									this._errorHandler('400_030', 'Invalid ip address value', '', [sField, sValue], true, false);
+									bFieldDone = true;
+								} // if not valid ip address
+							} // if type is ip address
+							if (sInternalType == 'table_name') {
+								if (!this._gtTable.isValidTable(sValue)) {
+									this._errorHandler('400_036', 'Invalid table', '', [sField, sValue], true, false);
+								} // if not valid table
+							} // if type is table
+							if (sInternalType == 'GUID') {
+								var reSysId = new RegExp('([0-9a-f]){32}');
+								if ((!reSysId.test(sValue)) && (!String(sValue) == '-1') && (!String(sValue) == 'global')) {
+									this._errorHandler('400_037', 'Invalid GUID value', '', [sField, sValue], true, false);
+									bFieldDone = true;
+								} // if not valid GUID
+							} // if type is GUID
+							if (sInternalType == 'document_id') {
+								sDependentField = (this.oDependentFields.hasOwnProperty(sField)) ? this.oDependentFields[sField] : '';
+								var sDocumentIdTable = this._getValue(sDependentField, '', this.oRecordValues);
+								sDocumentIdTable = (sDocumentIdTable) ? sDocumentIdTable : this.grRecord.getValue(sDependentField);
+								if ((!sDocumentIdTable) || (!this._gtTable.isValidTable(sDocumentIdTable)) || (!this._gtRead.checkRecordByField(sDocumentIdTable, 'sys_id', sValue))) {
+									this._errorHandler('400_035', 'Invalid document id or table', '', [sField, sValue, sDocumentIdTable], true, false);
+									bFieldDone = true;
+								} // if not valid document
+							} // if type is document id
+						} // if value is not nil
 					} // if field not validated
 				} else if (this.bLog) {
 					gs.warn(this.bLogPrefix + 'sTable: ' + this.sTargetTable + ' sField: ' + sField + ' empty field type!');
@@ -897,6 +905,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		var grRecordTest = new GlideRecord(this.sTargetTable);
 		var bErrorOnAddlFieldsInBody = this._getValue('bErrorOnAddlFieldsInBody', false, this.oRecordConfig); // only for backwards compatibility
 		var bErrorOnAddlFieldsInValues = this._getValue('bErrorOnAddlFieldsInValues', bErrorOnAddlFieldsInBody, this.oRecordConfig);
+		var bErrorOnInvalidFieldsInValues = this._getValue('bErrorOnInvalidFieldsInValues', true, this.oRecordConfig);
 		var aMandatoryFields = this.aMandatoryFields.join(',').split(','); // copy values, not reference
 		var iMandatoryField = -1;
 		var aAddlFieldsInValues = [];
@@ -918,7 +927,11 @@ GlobalToolsRecordWriteValidate.prototype = {
 					iMandatoryField = aMandatoryFields.indexOf(sField);
 					aMandatoryFields.splice(iMandatoryField, 1);
 				} else if (this.aAllRecordValueFields.indexOf(sField) != -1) {
-					this._errorHandler('400_013', 'Invalid field in values object', '', [sField], true, false);
+					if (bErrorOnInvalidFieldsInValues) {
+						this._errorHandler('400_013', 'Invalid field in values object', '', [sField], true, false);
+					} else if (this.oRecordValues.hasOwnProperty(sField)) {
+						delete this.oRecordValues[sField];
+					} // if field
 				} else {
 					this._errorHandler('400_011', 'Invalid field in config object', '', [sField], true, false);
 				} // if field in array
@@ -1299,13 +1312,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>611</sys_mod_count>
+        <sys_mod_count>614</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-03-22 06:37:08</sys_updated_on>
+        <sys_updated_on>2024-03-22 09:58:28</sys_updated_on>
     </sys_script_include>
 </record_update>
