@@ -5,7 +5,7 @@
         <api_name>global.GlobalToolsRecordWriteValidate</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development&#13;
+        <description>Tools to support (scoped) app development
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
         <name>GlobalToolsRecordWriteValidate</name>
         <script><![CDATA[var GlobalToolsRecordWriteValidate = Class.create();
@@ -339,66 +339,68 @@ GlobalToolsRecordWriteValidate.prototype = {
 							this._errorHandler('400_022', 'Invalid array value', '', [sField, sValue], true, false);
 						} // if array
 					} // if field list
-					if ((sInternalType == 'string') && (sValueType == 'array') && (!gs.nil(sValue))) {
-						if (edElementDescriptor.getLength() > 255) {
-							sValue = sValue.join('\n');
-						} else {
-							sValue = sValue.join(', ');
-						} // if length > 255 assume multiline
-					} // if string and value is array
-					if ((sInternalType == 'journal_input') && (!gs.nil(sValue))) {
-						if (sValueType == 'array') {
-							this.grRecord[sField].setJournalEntry(sValue.join('\n'));
-						} else {
-							this.grRecord[sField].setJournalEntry(sValue);
-						} // if array
-						bFieldDone = true;
-					} // if journal
-					if (sInternalType == 'reference') {
-						sValue = this._validateReferenceFieldValues(sField, oField, sValue, geElement, edElementDescriptor, sInternalType, sValueType);
-						this.grRecord.setValue(sField, sValue);
-						bFieldDone = true;
-					} else if (sInternalType == 'glide_list') {
-						aValues.length = 0;
-						sValue = (sValueType == 'array') ? sValue : sValue.split(',');
-						if ((this.bIsValidRecord) && (this.grRecord.getValue(sField)) && (this._getValue('bAddValues', false, oField) == true)) {
-							aValues = this._unique([].concat(sValue, this.grRecord.getValue(sField).split(',')));
-						} else {
-							aValues = sValue;
-						} // if add value
-						sValue = this._validateReferenceFieldValues(sField, oField, aValues, geElement, edElementDescriptor, sInternalType, sValueType);
-						this.grRecord.setValue(sField, sValue);
-						bFieldDone = true;
-					} else if ((edElementDescriptor.isChoiceTable()) && (this._getValue('aIgnoreChoiceFields', ['short_description'], this.oRecordConfig).indexOf(sField) == -1)) {
-						sDependentField = (this.oDependentFields.hasOwnProperty(sField)) ? this.oDependentFields[sField] : '';
-						sDependentFieldValue = '';
-						if (sDependentField) {
-							sDependentFieldValue = this._getValue(sDependentField, this.grRecord.getValue(sDependentField), this.oRecordValues);
-						} // if dependent field
-						aChoicesRetVal = this._gtTable.getFieldChoices(this.sTargetTable, sField, sDependentFieldValue);
-						aChoices = aChoicesRetVal[0];
-						aDependentValues = aChoicesRetVal[1];
-						aChoiceDisplayValues = aChoicesRetVal[2];
-						bMatch = false;
-						if (this._isValidArray(aChoices)) {
-							bMatch = aChoices.some(function (sChoiceValue, iIndex) {
-								if ((String(sValue)) == String(sChoiceValue)) {
-									if ((sDependentField) && (!sDependentFieldValue) && (this._isValidArray(aDependentValues)) && (aDependentValues.length >= iIndex)) {
-										this.grRecord.setValue(sDependentField, aDependentValues[iIndex]); // set dependent field if empty for first choice match dependent value
-										this._setValue(sDependentField, aDependentValues[iIndex], this.oRecordValues);
-									} // if dependent field but no value
-									return true;
-								} // if same choice
-							}, this); // each choice value
-							if (!bMatch) {
-								this._errorHandler('400_019', 'Invalid value in choice list field', '', [sField, sValue, aChoiceDisplayValues.join(', ')], true, false);
-								bFieldDone = true;
-							} // if invalid choice
-						} else {
-							this._errorHandler('400_018', 'Invalid choice list configuration', '', [this.sTargetTable, sField], true, false);
+					if (!gs.nil(sValue)) {
+						if ((sInternalType == 'string') && (sValueType == 'array')) {
+							if (edElementDescriptor.getLength() > 255) {
+								sValue = sValue.join('\n');
+							} else {
+								sValue = sValue.join(', ');
+							} // if length > 255 assume multiline
+						} // if string and value is array
+						if (sInternalType == 'journal_input') {
+							if (sValueType == 'array') {
+								this.grRecord[sField].setJournalEntry(sValue.join('\n'));
+							} else {
+								this.grRecord[sField].setJournalEntry(sValue);
+							} // if array
 							bFieldDone = true;
-						} // if choice
-					} // if value, reference, glide_list or choice
+						} // if journal
+						if (sInternalType == 'reference') {
+							sValue = this._validateReferenceFieldValues(sField, oField, sValue, geElement, edElementDescriptor, sInternalType, sValueType);
+							this.grRecord.setValue(sField, sValue);
+							bFieldDone = true;
+						} else if (sInternalType == 'glide_list') {
+							aValues.length = 0;
+							sValue = (sValueType == 'array') ? sValue : sValue.split(',');
+							if ((this.bIsValidRecord) && (this.grRecord.getValue(sField)) && (this._getValue('bAddValues', false, oField) == true)) {
+								aValues = this._unique([].concat(sValue, this.grRecord.getValue(sField).split(',')));
+							} else {
+								aValues = sValue;
+							} // if add value
+							sValue = this._validateReferenceFieldValues(sField, oField, aValues, geElement, edElementDescriptor, sInternalType, sValueType);
+							this.grRecord.setValue(sField, sValue);
+							bFieldDone = true;
+						} else if ((edElementDescriptor.isChoiceTable()) && (this._getValue('aIgnoreChoiceFields', ['short_description'], this.oRecordConfig).indexOf(sField) == -1)) {
+							sDependentField = (this.oDependentFields.hasOwnProperty(sField)) ? this.oDependentFields[sField] : '';
+							sDependentFieldValue = '';
+							if (sDependentField) {
+								sDependentFieldValue = this._getValue(sDependentField, this.grRecord.getValue(sDependentField), this.oRecordValues);
+							} // if dependent field
+							aChoicesRetVal = this._gtTable.getFieldChoices(this.sTargetTable, sField, sDependentFieldValue);
+							aChoices = aChoicesRetVal[0];
+							aDependentValues = aChoicesRetVal[1];
+							aChoiceDisplayValues = aChoicesRetVal[2];
+							bMatch = false;
+							if (this._isValidArray(aChoices)) {
+								bMatch = aChoices.some(function (sChoiceValue, iIndex) {
+									if ((String(sValue)) == String(sChoiceValue)) {
+										if ((sDependentField) && (!sDependentFieldValue) && (this._isValidArray(aDependentValues)) && (aDependentValues.length >= iIndex)) {
+											this.grRecord.setValue(sDependentField, aDependentValues[iIndex]); // set dependent field if empty for first choice match dependent value
+											this._setValue(sDependentField, aDependentValues[iIndex], this.oRecordValues);
+										} // if dependent field but no value
+										return true;
+									} // if same choice
+								}, this); // each choice value
+								if (!bMatch) {
+									this._errorHandler('400_019', 'Invalid value in choice list field', '', [sField, sValue, aChoiceDisplayValues.join(', ')], true, false);
+									bFieldDone = true;
+								} // if invalid choice
+							} else {
+								this._errorHandler('400_018', 'Invalid choice list configuration', '', [this.sTargetTable, sField], true, false);
+								bFieldDone = true;
+							} // if choice
+						} // if value, reference, glide_list or choice
+					} // if value is not nil
 					if (!bFieldDone == true) {
 						if (sInternalType == 'boolean') {
 							if (!(sValue == 0 || sValue == 1 || sValue == 'true' || sValue == 'false' || sValue == '0' || sValue == '1' || sValue == true || sValue == false || sValue == '') || (sValueType == 'boolean')) {
@@ -1091,8 +1093,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 				gfQueryCondition.setCaseSensitive(false);
 				bMatch = (gfQueryCondition.match(grRefRecord, true));
 			} else if ((sReferenceQualifier) && (sReferenceQualifier.startsWith('javascript:'))) {
-				var sAdvRefQualifierResult = this._evaluateAdvRefQualifier(sField);
-				if (sAdvRefQualifierResult != undefined || sAdvRefQualifierResult != '') {
+				var sAdvRefQualifierResult = String(this._evaluateAdvRefQualifier(sField));
+				if ((sAdvRefQualifierResult != 'undefined') && (sAdvRefQualifierResult != 'null') && (sAdvRefQualifierResult != '')) {
 					gfQueryCondition = new GlideFilter(sAdvRefQualifierResult, '');
 					gfQueryCondition.setCaseSensitive(false);
 					bMatch = (gfQueryCondition.match(grRefRecord, true));
@@ -1288,7 +1290,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _parseRecordError
 
 	type: 'GlobalToolsRecordWriteValidate',
-	version: '1.0.2',
+	version: '1.0.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -1297,13 +1299,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>606</sys_mod_count>
+        <sys_mod_count>611</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-14 07:21:28</sys_updated_on>
+        <sys_updated_on>2024-03-22 06:37:08</sys_updated_on>
     </sys_script_include>
 </record_update>

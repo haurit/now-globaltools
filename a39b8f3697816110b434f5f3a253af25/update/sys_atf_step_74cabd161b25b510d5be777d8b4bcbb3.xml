@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>74cabd161b25b510d5be777d8b4bcbb3</sys_id>
-        <sys_mod_count>315</sys_mod_count>
+        <sys_mod_count>316</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_74cabd161b25b510d5be777d8b4bcbb3</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-02-22 09:55:30</sys_updated_on>
+        <sys_updated_on>2024-03-22 06:58:03</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRecordWriteValidate Tests">a44784251b6db110d5be777d8b4bcb92</test>
         <timeout/>
@@ -35,9 +35,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>56dabd161b25b510d5be777d8b4bcb3a</sys_id>
-        <sys_mod_count>315</sys_mod_count>
+        <sys_mod_count>316</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-02-22 09:55:30</sys_updated_on>
+        <sys_updated_on>2024-03-22 06:58:03</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -308,6 +308,7 @@
 		var aErrorsExpected = ['400_005', '400_010', '400_011', '400_021', '400_024', '400_023', '400_026', '400_028', '400_029', '400_015', '400_019', '400_002', '400_003', '400_012', '400_013', '400_031', '403_001', '403_002', '400_032', '500_002'];&#13;
 		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
 			var oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			gs.info('tomtom: ' + JSON.stringify(oErrorDiff) + ' aErrorsExpected: ' + aErrorsExpected + ' aErrorArray: ' + aErrorArray);&#13;
 			_gtATF.addError('validateAndWrite', 'Test 101 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
 		} // if same error&#13;
 &#13;
@@ -1152,7 +1153,6 @@
 &#13;
 	if (bRunSingleTest) {&#13;
 		&#13;
-		/*&#13;
 		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
 &#13;
 		oRecordConfig = {&#13;
@@ -1177,7 +1177,6 @@
 			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
 			_gtATF.addError('validateAndWrite', 'Test 112 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
 		} // if same error&#13;
-		*/&#13;
 		&#13;
 		if (grRecord) {&#13;
 			gs.info('GlobalToolsRecordWriteValidate Tests record: ' + grRecord.getDisplayValue() + ' oError: ' + JSON.stringify(oError));&#13;
