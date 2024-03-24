@@ -5,19 +5,19 @@
         <commented_message/>
         <key>GlobalToolsRecordWriteValidate_400_020_ErrorDetail</key>
         <language>en</language>
-        <message>The user {0} is not in group {1} and the field {2} has a dependency on {3}.</message>
+        <message>The user {1} is not in group {3} and the field {0} has a dependency on {4}.</message>
         <sys_class_name>sys_ui_message</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-10-27 07:14:01</sys_created_on>
         <sys_id>1bf685cf878af110211fa7980cbb3591</sys_id>
-        <sys_mod_count>1</sys_mod_count>
+        <sys_mod_count>2</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate_400_020_ErrorDetail</sys_name>
-        <sys_package display_value="Global" source="global">global</sys_package>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_message_1bf685cf878af110211fa7980cbb3591</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-10-28 13:27:50</sys_updated_on>
+        <sys_updated_on>2024-03-24 09:37:58</sys_updated_on>
     </sys_ui_message>
     <sys_claim action="INSERT_OR_UPDATE">
         <claim_owner_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</claim_owner_scope>
