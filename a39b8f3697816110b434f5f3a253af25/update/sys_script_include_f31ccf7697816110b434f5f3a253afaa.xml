@@ -383,7 +383,7 @@ GlobalTools.prototype = {
 			gsEvaluator.putVariable('param_' + String(i), arguments[i]);
 			aArguments.push('param_' + String(i));
 		} // each argument after script and scope
-		sFunction = sFunction.replace('function (', 'function tempname(');
+		sFunction = sFunction.replace(/function\s*\(/i, 'function tempname(');
 		sFunction = 'result = tempname(' + aArguments.join(',') + ');\n' + sFunction;
 		var grScriptInclude = new GlideRecord('sys_script_include');
 		if (grScriptInclude.get('name', 'GlobalTools')) {
@@ -439,13 +439,13 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>143</sys_mod_count>
+        <sys_mod_count>144</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-03-26 07:49:40</sys_updated_on>
+        <sys_updated_on>2024-03-26 09:37:41</sys_updated_on>
     </sys_script_include>
 </record_update>
