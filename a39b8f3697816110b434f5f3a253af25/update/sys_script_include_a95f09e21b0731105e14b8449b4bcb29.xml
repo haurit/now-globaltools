@@ -10,9 +10,10 @@ Functions are only available for global scope and specific scopes defined in the
         <name>GlobalToolsRESTAPI</name>
         <script><![CDATA[var GlobalToolsRESTAPI = Class.create();
 GlobalToolsRESTAPI.prototype = {
-	initialize: function (oConnectionAlias, bLog, bQueryNoDomain) {
+	initialize: function (oConnectionAlias, bLog, bQueryNoDomain, sLogLevel) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this.bLog = (bLog) ? bLog : false;
+		this.sLogLevel = ((sLogLevel) && (['basic', 'elevated', 'all'].indexOf(sLogLevel) != -1)) ? sLogLevel : '';
 		this.bValidConnectionConfig = false;
 		this.sQueryNoDomain = (bQueryNoDomain === true) ? '&sysparm_query_no_domain=true' : '';
 		this.iHttpTimeout = 0;
@@ -121,6 +122,7 @@ GlobalToolsRESTAPI.prototype = {
 	getConnectionConfig: function (bStringify) {
 		var oConfig = {
 			'bLog': this.bLog,
+			'sLogLevel': this.sLogLevel,
 			'bValidConnectionConfig': this.bValidConnectionConfig,
 			'sQueryNoDomain': this.sQueryNoDomain,
 			'iHttpTimeout': this.iHttpTimeout,
@@ -140,7 +142,7 @@ GlobalToolsRESTAPI.prototype = {
 
 	testNOWConnection: function () {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
-		return this.doRESTRequest('api/now/table/task?sysparm_limit=1' + this.sQueryNoDomain, 'get', '', '', true);
+		return this.doRESTRequest('api/now/table/task?sysparm_limit=1' + this.sQueryNoDomain, 'get', '', '', '', true);
 	}, // function testNOWConnection
 
 	getRemoteRecord: function (sTable, sQuery) {
@@ -194,7 +196,7 @@ GlobalToolsRESTAPI.prototype = {
 		return this.doRESTRequest(sUrl, 'GET', oRequestBodyOrAttachmentInfo);
 	}, // function doNOWRESTQuery
 
-	doNOWRESTCount: function (sTable, sQuery, sGroupByField, bOrderByCount, sDisplayValue) {
+	doNOWRESTCount: function (sTable, sQuery, sGroupByField, bOrderByCount, sDisplayValue, bOmitEmptyValue) {
 		if ((this.bValidConnectionConfig) && (!this.checkAccess(gs.getCallerScopeName()))) { return; }
 		if (!sTable) {
 			return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_400_001_ErrorMessage'), 'error_code': '400' };
@@ -202,7 +204,8 @@ GlobalToolsRESTAPI.prototype = {
 		sQuery = (sQuery) ? '&sysparm_query=' + encodeURIComponent(sQuery) : '';
 		sGroupByField = (sGroupByField) ? '&sysparm_group_by=' + encodeURIComponent(sGroupByField) : '';
 		var sOrderBy = ((bOrderByCount) && (sGroupByField)) ? '&sysparm_order_by=' + encodeURIComponent('COUNT^DESC') : '';
-		sDisplayValue = ((sDisplayValue == 'true') || (sDisplayValue == 'all')) ? '&sysparm_display_value=' + sDisplayValue : '';
+		sDisplayValue = ((String(sDisplayValue) == 'true') || (sDisplayValue == 'all')) ? '&sysparm_display_value=' + sDisplayValue : '';
+		bOmitEmptyValue= (bOmitEmptyValue === true) ? true : false;
 		var sUrl = 'api/now/stats/' + sTable + '?sysparm_count=true' + sQuery + sGroupByField + sOrderBy + sDisplayValue;
 		var oRESTResults = this.doRESTRequest(sUrl);
 		if ((typeof oRESTResults == 'object') && (oRESTResults.hasOwnProperty('error_code'))) {
@@ -216,10 +219,10 @@ GlobalToolsRESTAPI.prototype = {
 			} else if ((oRESTResults) && (Array.isArray(oRESTResults))) {
 				var oResult = {};
 				oRESTResults.forEach(function (oRESTResult) {
-					if ((oRESTResult) && (oRESTResult.hasOwnProperty('stats')) && (oRESTResult['stats'].hasOwnProperty('count')) && (oRESTResult.hasOwnProperty('groupby_fields')) && (oRESTResult['groupby_fields'][0].hasOwnProperty('value'))) {
+					if ((oRESTResult) && (oRESTResult.hasOwnProperty('stats')) && (oRESTResult['stats'].hasOwnProperty('count')) && (oRESTResult.hasOwnProperty('groupby_fields')) && ((bOmitEmptyValue === false) || (oRESTResult['groupby_fields'][0].hasOwnProperty('value')))) {
 						var sResult = oRESTResult['stats']['count'];
 						var sValue = oRESTResult['groupby_fields'][0]['value'];
-						if ((sResult) && (sValue) && (isNaN(sResult) === false)) {
+						if ((sResult) && (isNaN(sResult) === false) && ((bOmitEmptyValue === false) || (sValue))) {
 							oResult[sValue] = Number(sResult);
 						} // if result is number
 					} // if rest result has properties
@@ -229,7 +232,7 @@ GlobalToolsRESTAPI.prototype = {
 		} // if success
 	}, // function doRESTCount
 
-	doRESTRequest: function (sUrl, sMethod, oRequestBodyOrAttachmentInfo, oHeader, bTestConnection) {
+	doRESTRequest: function (sUrl, sMethod, oRequestBodyOrAttachmentInfo, oHeader, sLogLevel, bTestConnection) {
 		if ((this.bValidConnectionConfig) && (!this.checkAccess(gs.getCallerScopeName()))) { return; }
 		sMethod = (['put', 'post', 'patch'].indexOf(sMethod.toLowerCase()) != -1) ? sMethod : 'get';
 		var bSaveResponseBodyAsAttachment = false;
@@ -241,6 +244,11 @@ GlobalToolsRESTAPI.prototype = {
 		if (this.iHttpTimeout > 0) {
 			oRequest.setHttpTimeout(this.iHttpTimeout);
 		} // if time out
+		if ((sLogLevel) && (['basic', 'elevated', 'all'].indexOf(sLogLevel) != -1)) {
+			oRequest.setLogLevel(sLogLevel);
+		} else if (this.sLogLevel) {
+			oRequest.setLogLevel(this.sLogLevel);
+		} // if log level
 		if ((sMethod == 'get') && (oRequestBodyOrAttachmentInfo)) {
 			var sAttachmentRecordTable = (oRequestBodyOrAttachmentInfo.hasOwnProperty('sTable')) ? oRequestBodyOrAttachmentInfo['sTable'] : '';
 			var sAttachmentRecordSysId = (oRequestBodyOrAttachmentInfo.hasOwnProperty('sSysId')) ? oRequestBodyOrAttachmentInfo['sSysId'] : '';
@@ -324,7 +332,7 @@ GlobalToolsRESTAPI.prototype = {
 	}, // function doRESTRequest
 
 	type: 'GlobalToolsRESTAPI',
-	version: '1.0.2',
+	version: '1.0.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -332,13 +340,13 @@ GlobalToolsRESTAPI.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 11:42:21</sys_created_on>
         <sys_id>a95f09e21b0731105e14b8449b4bcb29</sys_id>
-        <sys_mod_count>81</sys_mod_count>
+        <sys_mod_count>89</sys_mod_count>
         <sys_name>GlobalToolsRESTAPI</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a95f09e21b0731105e14b8449b4bcb29</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-01-06 16:57:28</sys_updated_on>
+        <sys_updated_on>2024-04-02 07:50:16</sys_updated_on>
     </sys_script_include>
 </record_update>

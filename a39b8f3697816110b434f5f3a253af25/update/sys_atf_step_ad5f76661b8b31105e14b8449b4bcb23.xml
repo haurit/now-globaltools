@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 19:46:45</sys_created_on>
         <sys_id>ad5f76661b8b31105e14b8449b4bcb23</sys_id>
-        <sys_mod_count>105</sys_mod_count>
+        <sys_mod_count>118</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_ad5f76661b8b31105e14b8449b4bcb23</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-19 11:59:51</sys_updated_on>
+        <sys_updated_on>2024-04-02 07:59:33</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRESTAPI Tests">cbcefa261b8b31105e14b8449b4bcb58</test>
         <timeout/>
@@ -49,9 +49,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 19:46:45</sys_created_on>
         <sys_id>e99fba661b8b31105e14b8449b4bcbb2</sys_id>
-        <sys_mod_count>105</sys_mod_count>
+        <sys_mod_count>118</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-19 11:59:51</sys_updated_on>
+        <sys_updated_on>2024-04-02 07:59:33</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 	var bLog = false;&#13;
 	var _gtRecordWrite = new global.GlobalToolsRecordWrite();&#13;
@@ -59,33 +59,33 @@
 	var _gtATF = new global.GlobalToolsATF('GlobalToolsRESTAPI', _gtRESTAPI, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
 	var grRecord;&#13;
 &#13;
-	_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'bValidConnectionConfig': false, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': undefined, 'sCredentialType': undefined, 'sCredentialId': undefined, 'sMutualAuthProfile': undefined, 'sMIDServerName': undefined });&#13;
+	_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'sLogLevel':'', 'bValidConnectionConfig': false, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': undefined, 'sCredentialType': undefined, 'sCredentialId': undefined, 'sMutualAuthProfile': undefined, 'sMIDServerName': undefined });&#13;
 &#13;
-	_gtATF.runATF('getConnectionConfig', '{"bLog":false,"bValidConnectionConfig":false,"sQueryNoDomain":"","iHttpTimeout":0,"sLimit":"1000"}', true);&#13;
+	_gtATF.runATF('getConnectionConfig', '{"bLog":false,"sLogLevel":"","bValidConnectionConfig":false,"sQueryNoDomain":"","iHttpTimeout":0,"sLimit":"1000"}', true);&#13;
 &#13;
-	_gtRESTAPI = new global.GlobalToolsRESTAPI('sugus', true, true);&#13;
+	_gtRESTAPI = new global.GlobalToolsRESTAPI('sugus', true, true, 'all');&#13;
 	_gtATF._ScriptIncludeRef = _gtRESTAPI;&#13;
 &#13;
-	_gtATF.runATF('getConnectionConfig', { 'bLog': true, 'bValidConnectionConfig': false, 'sQueryNoDomain': '&amp;sysparm_query_no_domain=true', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': undefined, 'sCredentialType': undefined, 'sCredentialId': undefined, 'sMutualAuthProfile': undefined, 'sMIDServerName': undefined });&#13;
+	_gtATF.runATF('getConnectionConfig', { 'bLog': true, 'sLogLevel':'all', 'bValidConnectionConfig': false, 'sQueryNoDomain': '&amp;sysparm_query_no_domain=true', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': undefined, 'sCredentialType': undefined, 'sCredentialId': undefined, 'sMutualAuthProfile': undefined, 'sMIDServerName': undefined });&#13;
 &#13;
 	grRecord = _gtATF.getRecord('sys_alias', 'name=Sidebar Teams Graph Credentials'); // use existing alias because sys_alias extends from sys_metadata and I don't want to create and delete ATF artefacts&#13;
 	if (grRecord) {&#13;
 &#13;
 		_gtRESTAPI = new global.GlobalToolsRESTAPI(grRecord);&#13;
 		_gtATF._ScriptIncludeRef = _gtRESTAPI;&#13;
-		_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://graph.microsoft.com', 'sCredentialType': '', 'sCredentialId': undefined, 'sMutualAuthProfile': '', 'sMIDServerName': '' });&#13;
+		_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'sLogLevel':'', 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://graph.microsoft.com', 'sCredentialType': '', 'sCredentialId': undefined, 'sMutualAuthProfile': '', 'sMIDServerName': '' });&#13;
 &#13;
 		_gtRESTAPI = new global.GlobalToolsRESTAPI(grRecord.getUniqueValue());&#13;
 		_gtATF._ScriptIncludeRef = _gtRESTAPI;&#13;
-		_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://graph.microsoft.com', 'sCredentialType': '', 'sCredentialId': undefined, 'sMutualAuthProfile': '', 'sMIDServerName': '' });&#13;
+		_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'sLogLevel':'', 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://graph.microsoft.com', 'sCredentialType': '', 'sCredentialId': undefined, 'sMutualAuthProfile': '', 'sMIDServerName': '' });&#13;
 &#13;
 		_gtRESTAPI = new global.GlobalToolsRESTAPI(grRecord.getValue('name'));&#13;
 		_gtATF._ScriptIncludeRef = _gtRESTAPI;&#13;
-		_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://graph.microsoft.com', 'sCredentialType': '', 'sCredentialId': undefined, 'sMutualAuthProfile': '', 'sMIDServerName': '' });&#13;
+		_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'sLogLevel':'', 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://graph.microsoft.com', 'sCredentialType': '', 'sCredentialId': undefined, 'sMutualAuthProfile': '', 'sMIDServerName': '' });&#13;
 &#13;
 		_gtRESTAPI = new global.GlobalToolsRESTAPI(grRecord.getValue('id'));&#13;
 		_gtATF._ScriptIncludeRef = _gtRESTAPI;&#13;
-		_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://graph.microsoft.com', 'sCredentialType': '', 'sCredentialId': undefined, 'sMutualAuthProfile': '', 'sMIDServerName': '' });&#13;
+		_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'sLogLevel':'', 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://graph.microsoft.com', 'sCredentialType': '', 'sCredentialId': undefined, 'sMutualAuthProfile': '', 'sMIDServerName': '' });&#13;
 &#13;
 	} // if alias&#13;
 &#13;
@@ -119,7 +119,7 @@
 &#13;
 			_gtRESTAPI = new global.GlobalToolsRESTAPI(sAliasId);&#13;
 			_gtATF._ScriptIncludeRef = _gtRESTAPI;&#13;
-			_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 60000, 'sLimit': '1000', 'sRemoteUrl': 'https://' + gs.getProperty('instance_name') + '.service-now.com', 'sCredentialType': 'basic_auth', 'sCredentialId': sUserName, 'sMutualAuthProfile': '', 'sMIDServerName': '' });&#13;
+			_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'sLogLevel':'', 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 60000, 'sLimit': '1000', 'sRemoteUrl': 'https://' + gs.getProperty('instance_name') + '.service-now.com', 'sCredentialType': 'basic_auth', 'sCredentialId': sUserName, 'sMutualAuthProfile': '', 'sMIDServerName': '' });&#13;
 &#13;
 			var grMIDServer = _gtATF.getRecord('ecc_agent', 'status=Up');&#13;
 			var sMIDServerId = (grMIDServer) ? grMIDServer.getUniqueValue() : '';&#13;
@@ -131,7 +131,7 @@
 				grConnection.update();&#13;
 				_gtRESTAPI = new global.GlobalToolsRESTAPI(sAliasId);&#13;
 				_gtATF._ScriptIncludeRef = _gtRESTAPI;&#13;
-				_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://' + gs.getProperty('instance_name') + '.service-now.com', 'sCredentialType': 'basic_auth', 'sCredentialId': sUserName, 'sMutualAuthProfile': '', 'sMIDServerName': grMIDServer.getValue('name') });&#13;
+				_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'sLogLevel':'', 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://' + gs.getProperty('instance_name') + '.service-now.com', 'sCredentialType': 'basic_auth', 'sCredentialId': sUserName, 'sMutualAuthProfile': '', 'sMIDServerName': grMIDServer.getValue('name') });&#13;
 &#13;
 				var grMIDCluster = _gtATF.getRecord('ecc_agent_cluster_member_m2m', 'agent=' + sMIDServerId);&#13;
 				var sMIDClusterId = (grMIDCluster) ? grMIDCluster.getValue('cluster') : '';&#13;
@@ -143,7 +143,7 @@
 					grConnection.update();&#13;
 					_gtRESTAPI = new global.GlobalToolsRESTAPI(sAliasId);&#13;
 					_gtATF._ScriptIncludeRef = _gtRESTAPI;&#13;
-					_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://' + gs.getProperty('instance_name') + '.service-now.com', 'sCredentialType': 'basic_auth', 'sCredentialId': sUserName, 'sMutualAuthProfile': '', 'sMIDServerName': grMIDServer.getValue('name') });&#13;
+					_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'sLogLevel':'', 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://' + gs.getProperty('instance_name') + '.service-now.com', 'sCredentialType': 'basic_auth', 'sCredentialId': sUserName, 'sMutualAuthProfile': '', 'sMIDServerName': grMIDServer.getValue('name') });&#13;
 				} // if mid cluster&#13;
 &#13;
 				grConnection.setValue('use_mid', true);&#13;
@@ -153,7 +153,7 @@
 				grConnection.update();&#13;
 				_gtRESTAPI = new global.GlobalToolsRESTAPI(sAliasId);&#13;
 				_gtATF._ScriptIncludeRef = _gtRESTAPI;&#13;
-				_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://' + gs.getProperty('instance_name') + '.service-now.com', 'sCredentialType': 'basic_auth', 'sCredentialId': sUserName, 'sMutualAuthProfile': '', 'sMIDServerName': grMIDServer.getValue('name') });&#13;
+				_gtATF.runATF('getConnectionConfig', { 'bLog': false, 'sLogLevel':'', 'bValidConnectionConfig': true, 'sQueryNoDomain': '', 'iHttpTimeout': 0, 'sLimit': '1000', 'sRemoteUrl': 'https://' + gs.getProperty('instance_name') + '.service-now.com', 'sCredentialType': 'basic_auth', 'sCredentialId': sUserName, 'sMutualAuthProfile': '', 'sMIDServerName': grMIDServer.getValue('name') });&#13;
 &#13;
 				grConnection.setValue('use_mid', false);&#13;
 			} // if mid server			&#13;
@@ -175,6 +175,12 @@
 			_gtATF.runATF('doNOWRESTCount', /database/gi, 'incident', 'active=true', 'category');&#13;
 &#13;
 			_gtATF.runATF('doNOWRESTCount', /database/gi, 'incident', 'active=true', 'category', true);&#13;
+&#13;
+			_gtATF.runATF('doNOWRESTCount', /Inquiry.\/.Help/gi, 'incident', 'active=true', 'category', true, true);&#13;
+&#13;
+			_gtATF.runATF('doNOWRESTCount', /\{"":\d+\}/gi, 'incident', 'active=true^assigned_toISEMPTY', 'assigned_to');&#13;
+&#13;
+			_gtATF.runATF('doNOWRESTCount', {}, 'incident', 'active=true^assigned_toISEMPTY', 'assigned_to', '', '', true);&#13;
 &#13;
 		} // if alias and creds&#13;
 	} // if id&#13;
