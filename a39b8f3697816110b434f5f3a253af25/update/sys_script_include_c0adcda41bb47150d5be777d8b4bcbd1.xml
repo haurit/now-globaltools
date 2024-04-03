@@ -62,7 +62,7 @@ GlobalToolsRecordWrite.prototype = {
 					grRecord.setWorkflow(false);
 				} // if no workflow
 				if (bNoEngine) {
-					grRecord.setUseEngine(false);
+					grRecord.setUseEngines(false);
 				} // if no engine (data policy)
 				if (bNoAutoSysFields) {
 					grRecord.autoSysFields(false);
@@ -145,6 +145,54 @@ GlobalToolsRecordWrite.prototype = {
 			gs.error('GlobalToolsRecordWrite.doRecord Error: ' + ex.toString());
 		} // try end
 	}, // function doRecord
+
+	// Insert or fetch a record with minimal information (e.g. just a name)
+	doRecordByName: function (sTargetTable, sName) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		try {
+			if ((sTargetTable) && (sName) && (this._gtTable.isValidTable(sTargetTable))) {
+				var sNameField = '';
+				sName = String(sName);
+				var aNameFields = ['name', 'user_name', 'display_name', 'title', 'short_description'];
+				var grRecord = new GlideRecord(sTargetTable);
+				grRecord.setWorkflow(false);
+				grRecord.setUseEngines(false);
+				aNameFields.some(function (sField) {
+					if (grRecord.isValidField(sField)) {
+						sNameField = sField;
+						return true;
+					} // if name field is valid
+				}, this); // find valid name field
+				var sDisplayNameField = this._gtTable.getDisplayField(sTargetTable);
+				sNameField = (sNameField) ? sNameField : sDisplayNameField;
+				if (sNameField) {
+					var sQuery = sNameField + '=' + sName;
+					grRecord.addEncodedQuery(sQuery);
+					grRecord.setLimit(1);
+					grRecord._query();
+					if (grRecord.next()) {
+						return grRecord.getUniqueValue();
+					} else {
+						grRecord.initialize();
+						grRecord.setValue(sNameField, sName);
+						if ((sNameField != sDisplayNameField) && (!grRecord.getValue(sDisplayNameField)) && (sDisplayNameField != 'number')) {
+							grRecord.setValue(sDisplayNameField, sName);
+						} // if display name field is different, empty and not number
+						var sId = grRecord.insert();
+						if (!sId) {
+							gs.error('GlobalToolsRecordWrite.doRecordByName Error inserting record in table: ' + sTargetTable + ': ' + grRecord.getLastErrorMessage());
+						} // if no id
+						return sId;
+					} // if found
+				} else {
+					gs.error('GlobalToolsRecordWrite.doRecordByName Error no name field found for table: ' + sTargetTable);
+					return;
+				} // if name field found
+			} // if valid target table
+		} catch (ex) {
+			gs.error('GlobalToolsRecordWrite.doRecordByName Error: ' + ex.toString());
+		} // try end
+	}, // function doRecordByName
 
 	// Global scoped updateMultiple function to overcome scope issue
 	updateMultiple: function (oValues, oConfig) {
@@ -230,13 +278,13 @@ GlobalToolsRecordWrite.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 09:59:44</sys_created_on>
         <sys_id>c0adcda41bb47150d5be777d8b4bcbd1</sys_id>
-        <sys_mod_count>26</sys_mod_count>
+        <sys_mod_count>30</sys_mod_count>
         <sys_name>GlobalToolsRecordWrite</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_c0adcda41bb47150d5be777d8b4bcbd1</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-27 16:52:35</sys_updated_on>
+        <sys_updated_on>2024-04-03 15:23:48</sys_updated_on>
     </sys_script_include>
 </record_update>
