@@ -317,26 +317,26 @@ GlobalToolsRecordWriteValidate.prototype = {
 			sInternalType = 'NA';
 			bNoActionError = true;
 			sErrorHandling = '',
-			bFieldDone = false;
+				bFieldDone = false;
 			if (this.grRecord.isValidField(sField)) {
 				geElement = this.grRecord.getElement(sField);
 				edElementDescriptor = geElement.getED();
 				sInternalType = String(edElementDescriptor.getInternalType());
 				if (!gs.nil(sInternalType)) {
 					//gs.info('GlobalToolsRecordWriteValidate new type sField: ' + sField + ' sInternalType: ' + sInternalType + ' sValue: ' + sValue);
-					oTransformConfig = this._getValue('oTransformConfig/oFieldMap/' + sField, '', this.oRecordConfig);
-					if (oTransformConfig) {
-						sValue = this._getValue('oMap/' + sValue, sValue, oTransformConfig);
-					} // transform config
-					oTransformConfig = this._getValue('oTransformConfig/oTypeMap/' + sInternalType, '', this.oRecordConfig);
-					if (oTransformConfig) {
-						if (oTransformConfig.hasOwnProperty('oMap')) {
+					if (sValue) {
+						oTransformConfig = this._getValue('oTransformConfig/oFieldMap/' + sField, '', this.oRecordConfig);
+						if ((oTransformConfig) && (oTransformConfig.hasOwnProperty('oMap'))) {
 							sValue = this._getValue('oMap/' + sValue, sValue, oTransformConfig);
-						} // if map
-					} // transform config
-					if (sValue != this._getValue(sField, '', this.oRecordValues)) {
-						this._setValue(sField, sValue, this.oRecordValues);
-					} // if value changed
+						} // transform config
+						oTransformConfig = this._getValue('oTransformConfig/oTypeMap/' + sInternalType, '', this.oRecordConfig);
+						if ((oTransformConfig) && (oTransformConfig.hasOwnProperty('oMap'))) {
+							sValue = this._getValue('oMap/' + sValue, sValue, oTransformConfig);
+						} // transform config
+						if (sValue != this._getValue(sField, '', this.oRecordValues)) {
+							this._setValue(sField, sValue, this.oRecordValues);
+						} // if value changed
+					} // if value
 					if (sInternalType == 'field_list') {
 						if (sValueType == 'array') {
 							this.grRecord.setValue(sField, sValue.join(','));
@@ -1375,13 +1375,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>626</sys_mod_count>
+        <sys_mod_count>627</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-04 07:56:41</sys_updated_on>
+        <sys_updated_on>2024-04-04 14:04:05</sys_updated_on>
     </sys_script_include>
 </record_update>
