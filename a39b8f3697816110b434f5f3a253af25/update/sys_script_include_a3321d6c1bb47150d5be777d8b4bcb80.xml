@@ -411,10 +411,11 @@ GlobalToolsRecordWriteValidate.prototype = {
 											sValue = this._getValue('sDefaultValueInvalidChoice', this._getValue('sErrorHandlingChoiceName', 'DataQualityIssue', this.oRecordConfig), oField);
 											this._setValue(sField, sValue, this.oRecordValues);
 											this.grRecord.setValue(sField, sValue);
-											bFieldDone = true;
+											this._errorHandler('value', '400_019', 'Invalid value in choice list field (default value)', '', [sField, sValue, aChoiceDisplayValues.join(', ')], false, false);
 										} else if (sErrorHandling == 'leaveempty') {
 											this._setValue(sField, '', this.oRecordValues);
 											this.grRecord.setValue(sField, '');
+											this._errorHandler('value', '400_019', 'Invalid value in choice list field (leave empty)', '', [sField, sValue, aChoiceDisplayValues.join(', ')], false, false);
 										} else {
 											if (sErrorHandling == 'warn') {
 												this._setValue(sField, sValue, this.oRecordValues);
@@ -1117,6 +1118,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 					sRefValue = this._gtWrite.doRecordByName(sRefTable, sErrorHandlingRecordName);
 					if (sRefValue) {
 						aValues.push(sRefValue);
+						this._errorHandler('value', '400_015', 'Invalid value in reference field (not found, created)', '', [sField, String(sRefInput), sRefValue, sRefTable], false, false);
 					} else {
 						this._errorHandler('value', '400_015', 'Invalid value in reference field (not found, not created)', '', [sField, String(sRefInput), '', sRefTable], true, false);
 					} // if error writing record
@@ -1375,13 +1377,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>627</sys_mod_count>
+        <sys_mod_count>629</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-04 14:04:05</sys_updated_on>
+        <sys_updated_on>2024-04-04 15:51:14</sys_updated_on>
     </sys_script_include>
 </record_update>
