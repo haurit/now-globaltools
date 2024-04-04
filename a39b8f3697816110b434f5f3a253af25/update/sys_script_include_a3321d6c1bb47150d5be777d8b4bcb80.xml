@@ -1102,7 +1102,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 				this._errorHandler('config', '500_006', 'Error getting reference field value', '', [sField, sRefTable, String(sRefInput), aRecordByKeysError.join(', ')], true, false);
 			} else if (!sRefValue) {
 				sDefaultValueInvalidReference = this._getValue('sDefaultValueInvalidReference', '', oField);
-				if ((['ignore', 'replace', 'warn'].indexOf(sErrorHandling) != -1) && (sDefaultValueInvalidReference)) {
+				if ((['ignore', 'replace', 'warn'].indexOf(sErrorHandling) != -1) && (sDefaultValueInvalidReference) && (sDefaultValueInvalidReference != 'NULL')) {
 					aValues.push(sDefaultValueInvalidReference);
 				} else if ((sErrorHandling == 'leaveempty') || (sDefaultValueInvalidReference == 'NULL')) {
 					aValues.push('');
@@ -1375,13 +1375,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>625</sys_mod_count>
+        <sys_mod_count>626</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-03 16:46:11</sys_updated_on>
+        <sys_updated_on>2024-04-04 07:56:41</sys_updated_on>
     </sys_script_include>
 </record_update>
