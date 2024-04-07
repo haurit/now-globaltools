@@ -30,7 +30,7 @@ GlobalToolsRecordWrite.prototype = {
 			var bLog = (String(oConfig['bLog']) == 'true') ? true : false;
 			if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord oValues: ' + JSON.stringify(oValues)); }
 			if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord oConfig: ' + JSON.stringify(oConfig)); }
-			var sId = '', sQuery = '', aQuery = [], bQueryEmptyFieldDone = false;
+			var sQuery = '', aQuery = [], bQueryEmptyFieldDone = false;
 			var bQueryEmptyFields = (String(oConfig['bQueryEmptyFields']) == 'true') ? true : false; // default is false
 			var aQueryFields = (Array.isArray(oConfig['aQueryFields'])) ? oConfig['aQueryFields'] : [oConfig['aQueryFields']];
 			aQueryFields.forEach(function (sField) {
@@ -81,13 +81,19 @@ GlobalToolsRecordWrite.prototype = {
 				if (bNoDomain) {
 					grRecord.queryNoDomain();
 				} else {
-					grRecord.query();
+					grRecord._query();
 				} // if no domain
-				var bFound = grRecord.next();
+				var bFound = grRecord._next();
+				var sId = (bFound) ? grRecord.getUniqueValue() : '';
 				if (bDelete) {
-					var oDeleteReturnValue = grRecord.deleteRecord();
-					if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord bDelete: ' + bDelete + ' oDeleteReturnValue: ' + oDeleteReturnValue); }
-					return oDeleteReturnValue;
+					if ((bFound)) {
+						var oDeleteReturnValue = grRecord.deleteRecord();
+						if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord bDelete: ' + bDelete + ' oDeleteReturnValue: ' + oDeleteReturnValue); }
+						return oDeleteReturnValue;
+					} else {
+						oError['code'] = '004';
+						oError['message'] = 'error deleting: record not found';
+					} // if not found
 				} else {
 					if (oConfig['oValues']) {
 						Object.keys(oConfig['oValues']).forEach(function (sField) {
@@ -108,13 +114,10 @@ GlobalToolsRecordWrite.prototype = {
 						}); // each field
 					} // if target fields
 					if ((bUpdate) && (bFound)) {
-						sId = grRecord.getUniqueValue();
 						if (!grRecord.update()) {
 							oError['code'] = '002';
 							oError['message'] = 'error updating: ' + grRecord.getLastErrorMessage();
-							if (bLog) {
-								gs.warn('GlobalToolsRecordWrite.doRecord error updating record: ' + sId + ' with msg: ' + grRecord.getLastErrorMessage() + ' (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
-							} // if log
+							if (bLog) { gs.warn('GlobalToolsRecordWrite.doRecord error updating record: ' + sId + ' with msg: ' + grRecord.getLastErrorMessage() + ' (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')'); } // if log
 						} // if error updating
 					} else if ((bInsert) && (!bFound)) {
 						if ((bKeepSysId) && (oValues['sys_id'])) {
@@ -124,9 +127,7 @@ GlobalToolsRecordWrite.prototype = {
 						if (!sId) {
 							oError['code'] = '003';
 							oError['message'] = 'error inserting: ' + grRecord.getLastErrorMessage();
-							if (bLog) {
-								gs.warn('GlobalToolsRecordWrite.doRecord error inserting record with msg: ' + grRecord.getLastErrorMessage() + ' (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
-							} // if log
+							if (bLog) { gs.warn('GlobalToolsRecordWrite.doRecord error inserting record with msg: ' + grRecord.getLastErrorMessage() + ' (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')'); } // if log
 						} // if error inserting
 					} // if insert
 					if (bLog) { gs.error('GlobalToolsRecordWrite.doRecord  bInsert: ' + bInsert + ' bUpdate: ' + bUpdate + ' sId: ' + sId); }
@@ -135,9 +136,7 @@ GlobalToolsRecordWrite.prototype = {
 			} else {
 				oError['code'] = '004';
 				oError['message'] = 'missing table';
-				if (bLog) {
-					gs.warn('GlobalToolsRecordWrite.doRecord missing target table (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')');
-				} // if log
+				if (bLog) { gs.warn('GlobalToolsRecordWrite.doRecord missing target table (oConfig: ' + JSON.stringify(oConfig) + ' oValues: ' + JSON.stringify(oValues) + ')'); } // if log
 			} // if target table
 		} catch (ex) {
 			oError['code'] = '005';
@@ -278,13 +277,13 @@ GlobalToolsRecordWrite.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 09:59:44</sys_created_on>
         <sys_id>c0adcda41bb47150d5be777d8b4bcbd1</sys_id>
-        <sys_mod_count>30</sys_mod_count>
+        <sys_mod_count>31</sys_mod_count>
         <sys_name>GlobalToolsRecordWrite</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_c0adcda41bb47150d5be777d8b4bcbd1</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-03 15:23:48</sys_updated_on>
+        <sys_updated_on>2024-04-06 15:29:21</sys_updated_on>
     </sys_script_include>
 </record_update>
