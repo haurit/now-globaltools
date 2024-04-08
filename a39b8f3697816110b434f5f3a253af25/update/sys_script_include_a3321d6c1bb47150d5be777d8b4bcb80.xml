@@ -5,7 +5,7 @@
         <api_name>global.GlobalToolsRecordWriteValidate</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development
+        <description>Tools to support (scoped) app development&#13;
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
         <name>GlobalToolsRecordWriteValidate</name>
         <script><![CDATA[var GlobalToolsRecordWriteValidate = Class.create();
@@ -1070,10 +1070,6 @@ GlobalToolsRecordWriteValidate.prototype = {
 		var sErrorHandling = this._getValue('sErrorHandlingReference', 'reject', this.oRecordConfig);
 		sErrorHandling = this._getValue('oErrorHandlingByReferenceTable/' + sRefTable, sErrorHandling, this.oRecordConfig);
 		sErrorHandling = this._getValue('sErrorHandling', sErrorHandling, oField);
-		var oErrorHandlingMappingTable = '';
-		if (sErrorHandling == 'mappingtable') {
-			oErrorHandlingMappingTable = this._getValue('oErrorHandlingMappingTable', '', this.oRecordConfig);
-		} // if error handling map table
 		var sRefLookupScript = '', sDefaultValueInvalidReference = '';
 		aValuesInput.forEach(function (sRefInput, iIndex) {
 			var aRecordByKeysError = [];
@@ -1117,25 +1113,13 @@ GlobalToolsRecordWriteValidate.prototype = {
 					if (sErrorHandling == 'warn') {
 						this._errorHandler('value', '400_015', 'Invalid value in reference field (not found)', '', [sField, String(sRefInput), '', sRefTable], false, false);
 					} // if warn
-				} else if ((sErrorHandling == 'create') || (sErrorHandling == 'mappingtable')) {
+				} else if (sErrorHandling == 'create') {
 					sErrorHandlingRecordName = this._getValue('sErrorHandlingReferenceRecordName', 'DataQualityIssue', this.oRecordConfig);
 					sErrorHandlingRecordName = this._getValue('sErrorHandlingRecordName', sErrorHandlingRecordName, oField);
 					sRefValue = this._gtWrite.doRecordByName(sRefTable, sErrorHandlingRecordName);
 					if (sRefValue) {
 						aValues.push(sRefValue);
-						if ((sErrorHandling == 'mappingtable') && (oErrorHandlingMappingTable) && (oErrorHandlingMappingTable.hasOwnProperty('oConfig')) && (oErrorHandlingMappingTable.hasOwnProperty('oValues'))) {
-							this._gtObject.setValue('oValues/' + this._gtObject.getValue('oConfig/sSourceField', 'source_value', oErrorHandlingMappingTable), sRefInput, oErrorHandlingMappingTable);
-							this._gtObject.setValue('oValues/' + this._gtObject.getValue('oConfig/sTargetField', 'target_value', oErrorHandlingMappingTable), sRefValue, oErrorHandlingMappingTable);
-							this._gtObject.setValue('oValues/' + this._gtObject.getValue('oConfig/sTargetTable', 'table', oErrorHandlingMappingTable), sRefTable, oErrorHandlingMappingTable);
-							if (!this._gtObject.getValue('oConfig/aQueryFields', '', oErrorHandlingMappingTable)) {
-								this._gtObject.setValue('oConfig/aQueryFields', [this._gtObject.getValue('oConfig/sSourceField', 'source_value', oErrorHandlingMappingTable), this._gtObject.getValue('oConfig/sTargetField', 'target_value', oErrorHandlingMappingTable), this._gtObject.getValue('oConfig/sTargetTable', 'table', oErrorHandlingMappingTable)], oErrorHandlingMappingTable);
-							} // if no query fields
-							if (!this._gtWrite.doRecord(oErrorHandlingMappingTable['oValues'], oErrorHandlingMappingTable['oConfig'])) {
-								this._errorHandler('value', '400_015', 'Invalid value in reference field (not found, not mapped)', '', [sField, String(sRefInput), sRefValue, sRefTable], false, false);
-							} // if not mapped
-						} else {
-							this._errorHandler('value', '400_015', 'Invalid value in reference field (not found, created)', '', [sField, String(sRefInput), sRefValue, sRefTable], false, false);
-						} // if mapping table
+						this._errorHandler('value', '400_015', 'Invalid value in reference field (not found, created)', '', [sField, String(sRefInput), sRefValue, sRefTable], false, false);
 					} else {
 						this._errorHandler('value', '400_015', 'Invalid value in reference field (not found, not created)', '', [sField, String(sRefInput), '', sRefTable], true, false);
 					} // if error writing record
@@ -1394,13 +1378,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>631</sys_mod_count>
+        <sys_mod_count>632</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-06 10:21:50</sys_updated_on>
+        <sys_updated_on>2024-04-08 12:22:54</sys_updated_on>
     </sys_script_include>
 </record_update>
