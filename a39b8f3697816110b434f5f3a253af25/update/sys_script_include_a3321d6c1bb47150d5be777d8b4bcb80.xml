@@ -23,6 +23,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this._gtRead = new global.GlobalToolsRecordRead();
 		this._gtWrite = new global.GlobalToolsRecordWrite();
 		this._gtTable = new global.GlobalToolsTable();
+		this._mappingCfgMgr = '';
+		if (gs.isValidScriptFromScope('MappingConfigManager', 'x_snc_mapping_cm')) {
+			this._mappingCfgMgr = new x_snc_mapping_cm.MappingConfigManager();
+		} // if valid mapping config mgr
 	}, // function initialize
 
 	checkAccess: function (sCallerScope) {
@@ -303,9 +307,12 @@ GlobalToolsRecordWriteValidate.prototype = {
 			edElementDescriptor,
 			sDependentField,
 			sDependentFieldValue,
+			sFirstTable,
 			grDict,
 			aChoicesRetVal,
 			aChoices,
+			sChoiceTable,
+			sChoiceField,
 			aDependentValues,
 			aChoiceDisplayValues,
 			bMatch;
@@ -387,8 +394,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 									sDependentFieldValue = this._getValue(sDependentField, this.grRecord.getValue(sDependentField), this.oRecordValues);
 								} // if dependent field
 								grDict = this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, '', true);
-								if ((grDict) && (grDict.getValue('choice_table')) && (grDict.getValue('choice_field'))) {
-									aChoicesRetVal = this._gtTable.getFieldChoices(grDict.getValue('choice_table'), grDict.getValue('choice_field'), sDependentFieldValue);
+								sChoiceTable = grDict.getValue('choice_table');
+								sChoiceField = grDict.getValue('choice_field');
+								if ((sChoiceTable) && (sChoiceField)) {
+									aChoicesRetVal = this._gtTable.getFieldChoices(sChoiceTable, sChoiceField, sDependentFieldValue);
 								} else {
 									aChoicesRetVal = this._gtTable.getFieldChoices(this.sTargetTable, sField, sDependentFieldValue);
 								} // if choice table/field
@@ -416,6 +425,18 @@ GlobalToolsRecordWriteValidate.prototype = {
 											this._setValue(sField, '', this.oRecordValues);
 											this.grRecord.setValue(sField, '');
 											this._errorHandler('value', '400_019', 'Invalid value in choice list field (leave empty)', '', [sField, sValue, aChoiceDisplayValues.join(', ')], false, false);
+										} else if ((sErrorHandling == 'mapping') && (this._mappingCfgMgr)) {
+											sFirstTable = ((edElementDescriptor) && (!edElementDescriptor.isFirstTableName())) ? edElementDescriptor.getFirstTableName() : '';
+											sFirstTable = (sFirstTable) ? sFirstTable : this.sTargetTable;
+											if ((sChoiceTable) && (sChoiceField)) {
+												sValue = this._mappingCfgMgr.doMappingValue(sFirstTable, sValue, '', sChoiceTable, sChoiceField);
+											} else {
+												sValue = this._mappingCfgMgr.doMappingValue(sFirstTable, sValue, '', sFirstTable, sField);
+											} // if choice table
+											if (sValue) {
+												this._setValue(sField, sValue, this.oRecordValues);
+												this.grRecord.setValue(sField, sValue);
+											} // if value
 										} else {
 											if (sErrorHandling == 'warn') {
 												this._setValue(sField, sValue, this.oRecordValues);
@@ -1070,7 +1091,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		var sErrorHandling = this._getValue('sErrorHandlingReference', 'reject', this.oRecordConfig);
 		sErrorHandling = this._getValue('oErrorHandlingByReferenceTable/' + sRefTable, sErrorHandling, this.oRecordConfig);
 		sErrorHandling = this._getValue('sErrorHandling', sErrorHandling, oField);
-		var sRefLookupScript = '', sDefaultValueInvalidReference = '';
+		var sRefLookupScript = '', sDefaultValueInvalidReference = '', sFirstTable = '';
 		aValuesInput.forEach(function (sRefInput, iIndex) {
 			var aRecordByKeysError = [];
 			iIndex = (sValueType == 'array') ? iIndex : null;
@@ -1108,10 +1129,17 @@ GlobalToolsRecordWriteValidate.prototype = {
 					aValues.push(sDefaultValueInvalidReference);
 				} else if ((sErrorHandling == 'leaveempty') || (sDefaultValueInvalidReference == 'NULL')) {
 					aValues.push('');
-				} else if (['ignore', 'warn'].indexOf(sErrorHandling) != -1) {
+				} else if (['ignore', 'warn', 'mapping'].indexOf(sErrorHandling) != -1) {
 					aValues.push(sRefInput);
 					if (sErrorHandling == 'warn') {
 						this._errorHandler('value', '400_015', 'Invalid value in reference field (not found)', '', [sField, String(sRefInput), '', sRefTable], false, false);
+					} else if ((sErrorHandling == 'mapping') && (this._mappingCfgMgr)) {
+						sFirstTable = ((edElementDescriptor) && (!edElementDescriptor.isFirstTableName())) ? edElementDescriptor.getFirstTableName() : '';
+						sFirstTable = (sFirstTable) ? sFirstTable : this.sTargetTable;
+						sRefValue = this._mappingCfgMgr.doMappingValue(sFirstTable, sRefInput, '', sRefTable);
+						if (sRefValue) {
+							aValues.push(sRefValue);
+						} // if ref value
 					} // if warn
 				} else if (sErrorHandling == 'create') {
 					sErrorHandlingRecordName = this._getValue('sErrorHandlingReferenceRecordName', 'DataQualityIssue', this.oRecordConfig);
@@ -1378,13 +1406,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>632</sys_mod_count>
+        <sys_mod_count>633</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-08 12:22:54</sys_updated_on>
+        <sys_updated_on>2024-04-10 19:16:59</sys_updated_on>
     </sys_script_include>
 </record_update>
