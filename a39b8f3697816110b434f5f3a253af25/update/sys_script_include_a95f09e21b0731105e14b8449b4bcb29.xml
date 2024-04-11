@@ -182,6 +182,7 @@ GlobalToolsRESTAPI.prototype = {
 		var sExcludeRefLink = (bIncludeRefLink) ? '' : 'sysparm_exclude_reference_link=true&';
 		sOffset = (sOffset) ? '&sysparm_offset=' + sOffset : '';
 		sQuery = (sQuery) ? '&sysparm_query=' + encodeURIComponent(sQuery) : '';
+		sDisplayValue = String(sDisplayValue);
 		sDisplayValue = ((sDisplayValue == 'true') || (sDisplayValue == 'all')) ? '&sysparm_display_value=' + sDisplayValue : '';
 		sLimit = (sLimit) ? sLimit : this.sLimit;
 		var sUrl = 'api/now/table/' + sTable + '?' + sExcludeRefLink + 'sysparm_limit=' + sLimit + this.sQueryNoDomain + sOffset + sQuery + sDisplayValue;
@@ -340,13 +341,13 @@ GlobalToolsRESTAPI.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 11:42:21</sys_created_on>
         <sys_id>a95f09e21b0731105e14b8449b4bcb29</sys_id>
-        <sys_mod_count>89</sys_mod_count>
+        <sys_mod_count>90</sys_mod_count>
         <sys_name>GlobalToolsRESTAPI</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a95f09e21b0731105e14b8449b4bcb29</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-02 07:50:16</sys_updated_on>
+        <sys_updated_on>2024-04-11 06:44:53</sys_updated_on>
     </sys_script_include>
 </record_update>
