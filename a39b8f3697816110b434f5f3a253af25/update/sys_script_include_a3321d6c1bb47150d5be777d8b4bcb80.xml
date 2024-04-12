@@ -331,6 +331,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 				sInternalType = String(edElementDescriptor.getInternalType());
 				if (!gs.nil(sInternalType)) {
 					//gs.info('GlobalToolsRecordWriteValidate new type sField: ' + sField + ' sInternalType: ' + sInternalType + ' sValue: ' + sValue);
+					sErrorHandling = this._getValue('oErrorHandling/oFieldType/' + sInternalType + '/sErrorHandling', 'reject', this.oRecordConfig);
+					sErrorHandling = this._getValue('sErrorHandling', sErrorHandling, oField);
+					bNoActionError = (sErrorHandling != 'warn');
 					if (sValue) {
 						oTransformConfig = this._getValue('oTransformConfig/oFieldMap/' + sField, '', this.oRecordConfig);
 						if ((oTransformConfig) && (oTransformConfig.hasOwnProperty('oMap'))) {
@@ -349,7 +352,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 							this.grRecord.setValue(sField, sValue.join(','));
 							bFieldDone = true;
 						} else {
-							this._errorHandler('value', '400_022', 'Invalid array value', '', [sField, sValue], true, false);
+							this._errorHandler('value', '400_022', 'Invalid array value', '', [sField, sValue], bNoActionError, false);
 						} // if array
 					} // if field list
 					if (!gs.nil(sValue)) {
@@ -384,7 +387,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 							this.grRecord.setValue(sField, sValue);
 							bFieldDone = true;
 						} else if ((edElementDescriptor.isChoiceTable()) && (this._getValue('aIgnoreChoiceFields', ['short_description'], this.oRecordConfig).indexOf(sField) == -1) && (['sys_class_name'].indexOf(sInternalType) == -1)) {
-							sErrorHandling = this._getValue('sErrorHandlingChoice', 'reject', this.oRecordConfig);
+							sErrorHandling = this._getValue('oErrorHandling/oFieldType/choice/sErrorHandling', 'reject', this.oRecordConfig);
 							sErrorHandling = this._getValue('sErrorHandling', sErrorHandling, oField);
 							if (sErrorHandling != 'ignore') {
 								bNoActionError = (sErrorHandling != 'warn');
@@ -417,7 +420,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 									}, this); // each choice value
 									if (!bMatch) {
 										if (sErrorHandling == 'replace') {
-											sValue = this._getValue('sDefaultValueInvalidChoice', this._getValue('sErrorHandlingChoiceName', 'DataQualityIssue', this.oRecordConfig), oField);
+											sValue = this._getValue('sDefaultValue', this._getValue('oErrorHandling/oFieldType/choice/sChoiceName', 'DataQualityIssue', this.oRecordConfig), oField);
 											this._setValue(sField, sValue, this.oRecordValues);
 											this.grRecord.setValue(sField, sValue);
 											this._errorHandler('value', '400_019', 'Invalid value in choice list field (default value)', '', [sField, sValue, aChoiceDisplayValues.join(', ')], false, false);
@@ -453,17 +456,17 @@ GlobalToolsRecordWriteValidate.prototype = {
 							} // if ignore do nothing
 						} // if value, reference, glide_list or choice
 					} // if value is not nil
-					if (!bFieldDone == true) {
+					if ((!bFieldDone == true) && (sErrorHandling != 'ignore')) {
 						if (sInternalType == 'boolean') {
 							if (!(sValue == 0 || sValue == 1 || sValue == 'true' || sValue == 'false' || sValue == '0' || sValue == '1' || sValue == true || sValue == false || sValue == '') || (sValueType == 'boolean')) {
-								this._errorHandler('value', '400_021', 'Invalid boolean value', '', [sField, sValue], true, false);
+								this._errorHandler('value', '400_021', 'Invalid boolean value', '', [sField, sValue], bNoActionError, false);
 							} // if value is not boolean
 						} // if type is bool
 						if (!gs.nil(sValue)) {
 							if (sInternalType == 'glide_date_time') {
 								var gdtTest = new GlideDateTime(sValue);
 								if (!gdtTest.isValid()) {
-									this._errorHandler('value', '400_023', 'Invalid date/time value', '', [sField, sValue, gs.getDateTimeFormat()], true, false);
+									this._errorHandler('value', '400_023', 'Invalid date/time value', '', [sField, sValue, gs.getDateTimeFormat()], bNoActionError, false);
 								} else {
 									this.grRecord[sField].setDisplayValue(sValue);
 								} // if date is not valid
@@ -473,7 +476,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 								var gdTest = new GlideDate();
 								gdTest.setDisplayValue(sValue);
 								if (!gdTest.isValid()) {
-									this._errorHandler('value', '400_024', 'Invalid date value', '', [sField, sValue, gs.getDateFormat()], true, false);
+									this._errorHandler('value', '400_024', 'Invalid date value', '', [sField, sValue, gs.getDateFormat()], bNoActionError, false);
 								} else {
 									this.grRecord[sField].setDisplayValue(sValue);
 								} // if date is not valid
@@ -483,7 +486,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 								var gtTest = new GlideTime();
 								gtTest.setDisplayValue(sValue);
 								if (!gtTest.isValid()) {
-									this._errorHandler('value', '400_025', 'Invalid time value', '', [sField, sValue, gs.getTimeFormat()], true, false);
+									this._errorHandler('value', '400_025', 'Invalid time value', '', [sField, sValue, gs.getTimeFormat()], bNoActionError, false);
 								} else {
 									this.grRecord[sField].setDisplayValue(sValue);
 								} // if time is not valid
@@ -493,7 +496,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 								var gduTest = new GlideDuration();
 								gduTest.setDisplayValue(sValue);
 								if (!gduTest.isValid()) {
-									this._errorHandler('value', '400_034', 'Invalid duraction value', '', [sField, sValue, 'd hh:mm:ss'], true, false);
+									this._errorHandler('value', '400_034', 'Invalid duraction value', '', [sField, sValue, 'd hh:mm:ss'], bNoActionError, false);
 								} else {
 									this.grRecord[sField].setDisplayValue(sValue);
 								} // if duration is not valid
@@ -501,7 +504,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 							} // if type is time
 							if (sInternalType == 'integer') {
 								if (isNaN(parseInt(sValue))) {
-									this._errorHandler('value', '400_026', 'Invalid integer number value', '', [sField, sValue], true, false);
+									this._errorHandler('value', '400_026', 'Invalid integer number value', '', [sField, sValue], bNoActionError, false);
 								} else {
 									this.grRecord.setValue(sField, parseInt(sValue));
 								} // if not integer
@@ -509,7 +512,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 							} // if type is integer
 							if (sInternalType == 'float') {
 								if (isNaN(parseFloat(sValue))) {
-									this._errorHandler('value', '400_027', 'Invalid floating point number value', '', [sField, sValue], true, false);
+									this._errorHandler('value', '400_027', 'Invalid floating point number value', '', [sField, sValue], bNoActionError, false);
 								} else {
 									this.grRecord.setValue(sField, parseFloat(sValue));
 								} // if not float
@@ -518,33 +521,33 @@ GlobalToolsRecordWriteValidate.prototype = {
 							if (sInternalType == 'email') {
 								var reEmail = new RegExp('^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,15})+$');
 								if ((!reEmail.test(sValue)) || (sValue.length < 6) || (sValue.length > 200)) {
-									this._errorHandler('value', '400_028', 'Invalid email address value', '', [sField, sValue], true, false);
+									this._errorHandler('value', '400_028', 'Invalid email address value', '', [sField, sValue], bNoActionError, false);
 									bFieldDone = true;
 								} // if not valid email
 							} // if type is email
 							if (sInternalType == 'ph_number') {
 								var rePhone = /^\+?[1-9]\d{1,14}$/;
 								if (!rePhone.test(sValue)) {
-									this._errorHandler('value', '400_029', 'Invalid phone number value', '', [sField, sValue], true, false);
+									this._errorHandler('value', '400_029', 'Invalid phone number value', '', [sField, sValue], bNoActionError, false);
 									bFieldDone = true;
 								} // if not valid E.164 phone
 							} // if type is phone
 							if ((sInternalType == 'ip_addr') || (sInternalType == 'ip_address')) {
 								var reIPAddress = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 								if ((!reIPAddress.test(sValue)) || (sValue.length < 3)) {
-									this._errorHandler('value', '400_030', 'Invalid ip address value', '', [sField, sValue], true, false);
+									this._errorHandler('value', '400_030', 'Invalid ip address value', '', [sField, sValue], bNoActionError, false);
 									bFieldDone = true;
 								} // if not valid ip address
 							} // if type is ip address
 							if (sInternalType == 'table_name') {
 								if (!this._gtTable.isValidTable(sValue)) {
-									this._errorHandler('value', '400_036', 'Invalid table', '', [sField, sValue], true, false);
+									this._errorHandler('value', '400_036', 'Invalid table', '', [sField, sValue], bNoActionError, false);
 								} // if not valid table
 							} // if type is table
 							if (sInternalType == 'GUID') {
 								var reSysId = new RegExp('([0-9a-f]){32}');
 								if ((!reSysId.test(sValue)) && (!String(sValue) == '-1') && (!String(sValue) == 'global')) {
-									this._errorHandler('value', '400_037', 'Invalid GUID value', '', [sField, sValue], true, false);
+									this._errorHandler('value', '400_037', 'Invalid GUID value', '', [sField, sValue], bNoActionError, false);
 									bFieldDone = true;
 								} // if not valid GUID
 							} // if type is GUID
@@ -553,7 +556,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 								var sDocumentIdTable = this._getValue(sDependentField, '', this.oRecordValues);
 								sDocumentIdTable = (sDocumentIdTable) ? sDocumentIdTable : this.grRecord.getValue(sDependentField);
 								if ((!sDocumentIdTable) || (!this._gtTable.isValidTable(sDocumentIdTable)) || (!this._gtRead.checkRecordByField(sDocumentIdTable, 'sys_id', sValue))) {
-									this._errorHandler('value', '400_035', 'Invalid document id or table', '', [sField, sValue, '', sDocumentIdTable], true, false);
+									this._errorHandler('value', '400_035', 'Invalid document id or table', '', [sField, sValue, '', sDocumentIdTable], bNoActionError, false);
 									bFieldDone = true;
 								} // if not valid document
 							} // if type is document id
@@ -1088,10 +1091,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 		var aValuesInput = (sValueType == 'array') ? oValue : [oValue];
 		var sRefTable = this._getValue('sRefTable', '', oField);
 		sRefTable = (sRefTable) ? sRefTable : this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'reference');
-		var sErrorHandling = this._getValue('sErrorHandlingReference', 'reject', this.oRecordConfig);
-		sErrorHandling = this._getValue('oErrorHandlingByReferenceTable/' + sRefTable, sErrorHandling, this.oRecordConfig);
+		var sErrorHandling = this._getValue('oErrorHandling/oFieldType/reference/sErrorHandling', 'reject', this.oRecordConfig);
+		sErrorHandling = this._getValue('oErrorHandling/oFieldType/reference/oByReferenceTable/' + sRefTable, sErrorHandling, this.oRecordConfig);
 		sErrorHandling = this._getValue('sErrorHandling', sErrorHandling, oField);
-		var sRefLookupScript = '', sDefaultValueInvalidReference = '', sFirstTable = '';
+		var sRefLookupScript = '', sDefaultValue = '', sFirstTable = '';
 		aValuesInput.forEach(function (sRefInput, iIndex) {
 			var aRecordByKeysError = [];
 			iIndex = (sValueType == 'array') ? iIndex : null;
@@ -1124,10 +1127,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 			if (aRecordByKeysError.length > 0) {
 				this._errorHandler('config', '500_006', 'Error getting reference field value', '', [sField, sRefTable, String(sRefInput), aRecordByKeysError.join(', ')], true, false);
 			} else if (!sRefValue) {
-				sDefaultValueInvalidReference = this._getValue('sDefaultValueInvalidReference', '', oField);
-				if ((['ignore', 'replace', 'warn'].indexOf(sErrorHandling) != -1) && (sDefaultValueInvalidReference) && (sDefaultValueInvalidReference != 'NULL')) {
-					aValues.push(sDefaultValueInvalidReference);
-				} else if ((sErrorHandling == 'leaveempty') || (sDefaultValueInvalidReference == 'NULL')) {
+				sDefaultValue = this._getValue('sDefaultValue', '', oField);
+				if ((['ignore', 'replace', 'warn'].indexOf(sErrorHandling) != -1) && (sDefaultValue) && (sDefaultValue != 'NULL')) {
+					aValues.push(sDefaultValue);
+				} else if ((sErrorHandling == 'leaveempty') || (sDefaultValue == 'NULL')) {
 					aValues.push('');
 				} else if (['ignore', 'warn'].indexOf(sErrorHandling) != -1) {
 					aValues.push(sRefInput);
@@ -1142,7 +1145,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 						aValues.push(sRefValue);
 					} // if ref value
 				} else if (sErrorHandling == 'create') {
-					sErrorHandlingRecordName = this._getValue('sErrorHandlingReferenceRecordName', 'DataQualityIssue', this.oRecordConfig);
+					sErrorHandlingRecordName = this._getValue('oErrorHandling/oFieldType/reference/sRecordName', 'DataQualityIssue', this.oRecordConfig);
 					sErrorHandlingRecordName = this._getValue('sErrorHandlingRecordName', sErrorHandlingRecordName, oField);
 					sRefValue = this._gtWrite.doRecordByName(sRefTable, sErrorHandlingRecordName);
 					if (sRefValue) {
@@ -1155,9 +1158,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 					this._errorHandler('value', '400_015', 'Invalid value in reference field (not found)', '', [sField, String(sRefInput), '', sRefTable], true, false);
 				} // if replace with default value
 			} else {
-				if (['ignore', 'replace', 'create'].indexOf(sErrorHandling) != -1) {
+				if (['ignore', 'replace', 'create', 'leaveempty'].indexOf(sErrorHandling) != -1) {
 					aValues.push(sRefValue);
-				} else if (this._validateReferenceEntry(sField, sRefValue, sRefTable, geElement, edElementDescriptor, sInternalType, (sErrorHandling != 'warn'))) {
+				} else if (this._validateReferenceEntry(sField, sRefValue, sRefTable, geElement, edElementDescriptor, sInternalType, (['warn', 'mapping'].indexOf(sErrorHandling) != -1))) {
 					aValues.push(sRefValue);
 				} // if exist and not warn or reject
 			} // if not found by key
@@ -1340,7 +1343,11 @@ GlobalToolsRecordWriteValidate.prototype = {
 	_errorHandler: function (sErrorType, sErrorCode, sErrorMessage, aErrorMessageArgs, aErrorDetailArgs, bNoActionError, bFatalError) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this.oError[this.sTableSequenceId]['bError'] = true;
-		if (bNoActionError) {
+		var sErrorHandling = this._getValue('oErrorHandling/oErrorType/' + sErrorType, 'reject', this.oRecordConfig);
+		if (sErrorHandling == 'ignore') {
+			return '';
+		} // if ignore
+		if ((bNoActionError) && (sErrorHandling == 'reject')) {
 			this.oError[this.sTableSequenceId]['bNoActionError'] = true;
 		} // if no action
 		if (bFatalError) {
@@ -1406,13 +1413,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>634</sys_mod_count>
+        <sys_mod_count>639</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-10 20:37:46</sys_updated_on>
+        <sys_updated_on>2024-04-12 05:35:13</sys_updated_on>
     </sys_script_include>
 </record_update>
