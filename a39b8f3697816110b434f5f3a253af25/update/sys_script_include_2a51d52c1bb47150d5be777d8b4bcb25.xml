@@ -137,7 +137,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function sumRecordsField
 
 	// Function for scoped apps to query one gliderecord with the options (ensures the real record class)
-	getRecord: function (sTable, sQueryOrSysId, bWorkflow, bAutoSysFields, bQueryNoDomain) {
+	getRecord: function (sTable, sQueryOrSysId, bWorkflow, bAutoSysFields, bQueryNoDomain, bNoEngines) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sQueryOrSysId)) {
 			gs.warn('GlobalToolsRecordRead.getRecord called with invalid table ' + sTable + ' or query is empty!');
@@ -159,6 +159,9 @@ GlobalToolsRecordRead.prototype = {
 		if (bAutoSysFields === false) {
 			grRecord.autoSysFields(false);
 		} // if autosysfields false
+		if (bNoEngines) {
+			grRecord.setUseEngines(false);
+		} // if no engines
 		if (bQueryNoDomain === true) {
 			grRecord.queryNoDomain();
 		} else {
@@ -561,13 +564,13 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>109</sys_mod_count>
+        <sys_mod_count>110</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-10 15:53:05</sys_updated_on>
+        <sys_updated_on>2024-04-24 07:20:46</sys_updated_on>
     </sys_script_include>
 </record_update>
