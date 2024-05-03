@@ -1339,6 +1339,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 		var aCustomScripts = this._getValue('aCustomScripts', [], this.oRecordConfig);
 		var oParams = {
 			bLog: this._getValue('bLog', false, this.oRecordConfig),
+			sAction: this.sAction,
+			bIsValidRecord: this.bIsValidRecord,
 			oRecordConfig: this.oRecordConfig,
 			oRecordValues: this.oRecordValues,
 			sTargetTable: this.sTargetTable,
@@ -1350,7 +1352,11 @@ GlobalToolsRecordWriteValidate.prototype = {
 			bScriptRunBefore = ((oCustomScript.hasOwnProperty('bRunBefore')) && (oCustomScript['bRunBefore'] === true)) ? true : false;
 			if (bScriptRunBefore === bRunBefore) {
 				if ((oCustomScript.hasOwnProperty('sScript')) && (oCustomScript['sScript'])) {
-					sErrorMessage = this._gt.runFunction(oCustomScript['sScript'], oParams);
+					try {
+						sErrorMessage = this._gt.runFunction(oCustomScript['sScript'], oParams);
+					} catch (oEx) {
+						this._errorHandler('runtime', '500_010', 'Error processing custom script.', '', [JSON.stringify(oCustomScript), String(oEx)], false, false);
+					} // try stateflow
 				} // if script
 			} // if run before
 		}, this); // each custom script
@@ -1461,13 +1467,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>654</sys_mod_count>
+        <sys_mod_count>656</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-29 07:05:58</sys_updated_on>
+        <sys_updated_on>2024-05-03 09:33:08</sys_updated_on>
     </sys_script_include>
 </record_update>
