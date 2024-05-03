@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ui_message">
+    <sys_ui_message action="INSERT_OR_UPDATE">
+        <application/>
+        <code/>
+        <commented_message/>
+        <key>GlobalToolsRecordWriteValidate_500_010_ErrorMessage</key>
+        <language>en</language>
+        <message>Error processing custom script</message>
+        <sys_class_name>sys_ui_message</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-04-27 12:47:31</sys_created_on>
+        <sys_id>e04ee0821bbd461030d6fdd49b4bcbb7</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>GlobalToolsRecordWriteValidate_500_010_ErrorMessage</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_ui_message_e04ee0821bbd461030d6fdd49b4bcbb7</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-04-27 12:47:31</sys_updated_on>
+    </sys_ui_message>
+</record_update>

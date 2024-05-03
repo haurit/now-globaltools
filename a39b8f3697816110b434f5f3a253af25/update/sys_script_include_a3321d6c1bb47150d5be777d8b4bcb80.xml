@@ -56,6 +56,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 				if ((this.bLog) && (this.sLogLevel == 'debug')) {
 					gs.debug(this.bLogPrefix + ' sTargetTable: ' + this.sTargetTable + ' canDoAction: ' + this._canDoAction() + ' bDoAction: ' + this._getValue('bDoAction', true, this.oRecordConfig));
 				} // if log and debug
+				this._runCustomScripts(true);
 				if ((this._canDoAction()) && (this._getValue('bDoAction', true, this.oRecordConfig))) {
 					if ((this._getValue('bUseIRE', false, this.oRecordConfig)) && ((this.bIsValidRecord) || (!this._getValue('bKeepSysId', false, this.oRecordConfig)))) {
 						this._createIREPayload();
@@ -63,6 +64,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 					} else {
 						this._writeRecord();
 					} // if IRE
+					if (this._canContinue()) {
+						this._runCustomScripts();
+					} // if can continue
 				} // if can write
 			} // if validation passed
 			if (new GlideImpersonate().isImpersonating()) {
@@ -87,6 +91,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 				if ((this.bLog) && (this.sLogLevel == 'debug')) {
 					gs.debug(this.bLogPrefix + ' sTargetTable: ' + this.sTargetTable + ' canDoAction: ' + this._canDoAction() + ' bDoAction: ' + this._getValue('bDoAction', true, this.oRecordConfig));
 				} // if log and debug
+				this._runCustomScripts(true); // run before scripts
 				if ((this._canDoAction()) && (this._getValue('bDoAction', true, this.oRecordConfig))) {
 					this._createIREPayload();
 				} // if can write
@@ -619,6 +624,18 @@ GlobalToolsRecordWriteValidate.prototype = {
 			if (this.sRecordId == 'Unknown') {
 				this.sRecordId = '-1';
 			} // if unknown
+			var aIREWarnings = this._getValue('warnings', [], aItems[0]);
+			if (this._gtArray.isValidArray(aIREWarnings)) {
+				aIREWarnings.forEach(function (oIREWarning) {
+					this._errorHandler('record', '406_001', 'Warning IRE action', [this._getValue('error', 'N/A', oIREWarning)], [this._getValue('message', 'N/A', oIREWarning)], false, false);
+				}, this); // each warning
+			} // if errors
+			var aIREErrors = this._getValue('errors', [], aItems[0]);
+			if (this._gtArray.isValidArray(aIREErrors)) {
+				aIREErrors.forEach(function (oIREError) {
+					this._errorHandler('record', '406_002', 'Error IRE action', [this._getValue('error', 'N/A', oIREError)], [this._getValue('message', 'N/A', oIREError)], true, false);
+				}, this); // each error
+			} // if errors
 		} // if item
 		if (this._getValue('bLogIREOutput', false, this.oRecordConfig)) {
 			gs.info(this.bLogPrefix + 'sTable: ' + this.sTargetTable + ' this.sRecordId: ' + this.sRecordId + ' sIREPayload: ' + JSON.stringify(JSON.parse(sIREOutput), null, 2));
@@ -1317,6 +1334,28 @@ GlobalToolsRecordWriteValidate.prototype = {
 		return (!this.bError);
 	}, // function _runBusinessLogic
 
+	_runCustomScripts: function (bRunBefore) {
+		bRunBefore = (bRunBefore === true) ? true : false;
+		var aCustomScripts = this._getValue('aCustomScripts', [], this.oRecordConfig);
+		var oParams = {
+			bLog: this._getValue('bLog', false, this.oRecordConfig),
+			oRecordConfig: this.oRecordConfig,
+			oRecordValues: this.oRecordValues,
+			sTargetTable: this.sTargetTable,
+			grRecord: this.grRecord,
+			grRecordOld: this.grRecordOld
+		}; // params
+		var bScriptRunBefore = false;
+		aCustomScripts.forEach(function (oCustomScript) {
+			bScriptRunBefore = ((oCustomScript.hasOwnProperty('bRunBefore')) && (oCustomScript['bRunBefore'] === true)) ? true : false;
+			if (bScriptRunBefore === bRunBefore) {
+				if ((oCustomScript.hasOwnProperty('sScript')) && (oCustomScript['sScript'])) {
+					sErrorMessage = this._gt.runFunction(oCustomScript['sScript'], oParams);
+				} // if script
+			} // if run before
+		}, this); // each custom script
+	}, // function _runCustomScripts
+
 	/***********************************************************************************************************
 	*	Error handling functions
 	************************************************************************************************************/
@@ -1422,13 +1461,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>646</sys_mod_count>
+        <sys_mod_count>654</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-24 06:54:10</sys_updated_on>
+        <sys_updated_on>2024-04-29 07:05:58</sys_updated_on>
     </sys_script_include>
 </record_update>
