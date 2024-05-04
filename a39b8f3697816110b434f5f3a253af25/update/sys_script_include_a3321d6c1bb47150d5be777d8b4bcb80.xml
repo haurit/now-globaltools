@@ -285,7 +285,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 			if ((this.grRecord.isValidField('sys_class_name')) && (!this.grRecord.getValue('sys_class_name'))) {
 				this.grRecord.setValue('sys_class_name', this.sTargetTable);
 			} // if sys class name is empty on glide record --> workaround for reference qualifiers looking for the class name
-		} // if insert
+		} // if valid record
 		this._validateApplyTemplate();
 		this._validateImpersonate();
 		this._runImpersonate(); // impersonate before checking ACLs
@@ -438,7 +438,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 													this.grRecord.setValue(sField, '');
 													this._errorHandler('value', '400_019', 'Invalid value in choice list field (leave empty)', '', [sField, sValue, aChoiceDisplayValues.join(', ')], false, false);
 												} else if ((sErrorHandling == 'mapping') && (this._mappingCfgMgr)) {
-													sFirstTable = ((edElementDescriptor) && (!edElementDescriptor.isFirstTableName())) ? edElementDescriptor.getFirstTableName() : '';
+													sFirstTable = (edElementDescriptor) ? edElementDescriptor.getFirstTableName() : '';
 													sFirstTable = (sFirstTable) ? sFirstTable : this.sTargetTable;
 													if ((sChoiceTable) && (sChoiceField)) {
 														sValue = this._mappingCfgMgr.doMappingValue(sFirstTable, sValue, '', sChoiceTable, sChoiceField);
@@ -1164,7 +1164,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 						this._errorHandler('value', '400_015', 'Invalid value in reference field (not found)', '', [sField, String(sRefInput), '', sRefTable], false, false);
 					} // if warn
 				} else if ((sErrorHandling == 'mapping') && (this._mappingCfgMgr)) {
-					sFirstTable = ((edElementDescriptor) && (!edElementDescriptor.isFirstTableName())) ? edElementDescriptor.getFirstTableName() : '';
+					sFirstTable = (edElementDescriptor) ? edElementDescriptor.getFirstTableName() : '';
 					sFirstTable = (sFirstTable) ? sFirstTable : this.sTargetTable;
 					sRefValue = this._mappingCfgMgr.doMappingValue(sFirstTable, sRefInput, '', sRefTable);
 					if (sRefValue) {
@@ -1467,13 +1467,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>656</sys_mod_count>
+        <sys_mod_count>658</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-05-03 09:33:08</sys_updated_on>
+        <sys_updated_on>2024-05-04 09:36:54</sys_updated_on>
     </sys_script_include>
 </record_update>
