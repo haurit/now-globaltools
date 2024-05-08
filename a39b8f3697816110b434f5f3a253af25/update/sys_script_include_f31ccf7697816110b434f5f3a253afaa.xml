@@ -256,7 +256,7 @@ GlobalTools.prototype = {
 	}, // function getHTMLDiffFromXML
 
 	// Schedule ScriptInclude Function
-	scheduleScript: function (sScriptInclude, sFunction, iSeconds, aFunctionArgs, aClassArgs, sScheduleName) {
+	scheduleScript: function (sScriptInclude, sFunction, iSeconds, aFunctionArgs, aClassArgs, sScheduleName, sDocument, sDocumentKey) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		function parseArgs(aArgs) {
 			var aReturn = [];
@@ -309,6 +309,12 @@ GlobalTools.prototype = {
 		var grTrigger = new GlideRecord('sys_trigger');
 		grTrigger.newRecord();
 		grTrigger.setValue('name', sScheduleName);
+		if (sDocument) {
+			grTrigger.setValue('document', sDocument);
+		} // if doc
+		if (sDocumentKey) {
+			grTrigger.setValue('document_key', sDocumentKey);
+		} // if doc id
 		grTrigger.setValue('trigger_type', '0');
 		grTrigger.setValue('next_action', dtDelay);
 		grTrigger.setValue('script', aScript.join('\n'));
@@ -349,7 +355,7 @@ GlobalTools.prototype = {
 				} // if delay
 			} // if action
 		} catch (oExeption) {
-			gs.warn('global.GlobalTools.scheduleHandler Exception during schedule sEvent: ' + sEvent, oExeption);
+			gs.warn('global.GlobalTools.scheduleHandler Exception during schedule sEvent: ' + sEvent,  String(oExeption));
 		} // catch errors
 	}, // function scheduleHandler
 
@@ -358,6 +364,34 @@ GlobalTools.prototype = {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		gs.sleep(iMilliseconds);
 	}, // function sleep
+
+	// Overcome scopeing issue with workaround for workspaces getGlideURI issue (CS7215882)
+	getUrl: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var sUrl = '';
+		try {
+			sUrl = String(gs.action.getGlideURI());
+			if (sUrl == 'null') {
+				return;
+			} else if (sUrl == 'api/now/graphql?api=api') {
+				var gTransaction = GlideTransaction.get();
+				if (gTransaction) {
+					var oRequest = gTransaction.getRequest();
+					if (oRequest) {
+						var sReferer = oRequest.getHeader('Referer');
+						if (sReferer) {
+							sUrl = sReferer;
+						} else {
+							return;
+						} // if referer
+					} // if request
+				} // if transaction
+			} // if 
+		} catch (oExeption) {
+			gs.warn('global.GlobalTools.getUrl Exception during function call.', String(oExeption));
+		} // catch errors
+		return sUrl;
+	}, // function getUrl
 
 	// Overcome scopeing issue
 	getExecutionTrackerbyId: function (sId) {
@@ -377,7 +411,7 @@ GlobalTools.prototype = {
 			gsEvaluator.putVariable('param_' + String(i), arguments[i]);
 			aArguments.push('param_' + String(i));
 		} // each argument after script and scope
-		sFunction = sFunction.replace('function (', 'function tempname(');
+		sFunction = sFunction.replace(/function\s*\(/i, 'function tempname(');
 		sFunction = 'result = tempname(' + aArguments.join(',') + ');\n' + sFunction;
 		var grScriptInclude = new GlideRecord('sys_script_include');
 		if (grScriptInclude.get('name', 'GlobalTools')) {
@@ -424,7 +458,7 @@ GlobalTools.prototype = {
 	}, // runFunctionInScope
 
 	type: 'GlobalTools',
-	version: '1.0.2',
+	version: '1.0.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -433,13 +467,13 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>142</sys_mod_count>
+        <sys_mod_count>150</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-01-02 14:07:58</sys_updated_on>
+        <sys_updated_on>2024-04-24 07:14:51</sys_updated_on>
     </sys_script_include>
 </record_update>

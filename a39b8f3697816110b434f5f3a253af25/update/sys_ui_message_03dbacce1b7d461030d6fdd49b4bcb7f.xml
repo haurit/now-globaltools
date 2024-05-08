@@ -3,20 +3,20 @@
         <application/>
         <code/>
         <commented_message/>
-        <key>GlobalToolsRecordWriteValidate_400_037_ErrorDetail</key>
+        <key>GlobalToolsRecordWriteValidate_406_001_ErrorMessage</key>
         <language>en</language>
-        <message>The field type of "{0}" is GUID but the value "{1}"  is not a valid GUID.</message>
+        <message>Warning processing IRE: {0}</message>
         <sys_class_name>sys_ui_message</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2023-11-09 07:40:09</sys_created_on>
-        <sys_id>20a9005f1bd2f1104422dc61ab4bcb37</sys_id>
-        <sys_mod_count>1</sys_mod_count>
-        <sys_name>GlobalToolsRecordWriteValidate_400_037_ErrorDetail</sys_name>
+        <sys_created_on>2024-04-27 12:37:02</sys_created_on>
+        <sys_id>03dbacce1b7d461030d6fdd49b4bcb7f</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>GlobalToolsRecordWriteValidate_406_001_ErrorMessage</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
-        <sys_update_name>sys_ui_message_20a9005f1bd2f1104422dc61ab4bcb37</sys_update_name>
+        <sys_update_name>sys_ui_message_03dbacce1b7d461030d6fdd49b4bcb7f</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-04 15:46:54</sys_updated_on>
+        <sys_updated_on>2024-04-27 12:53:58</sys_updated_on>
     </sys_ui_message>
 </record_update>

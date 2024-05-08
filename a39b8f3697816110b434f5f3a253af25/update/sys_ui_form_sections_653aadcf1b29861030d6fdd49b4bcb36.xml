@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update>
+    <sys_ui_form_sections form_id="653aadcf1b29861030d6fdd49b4bcb36" sys_domain="global" table="sn_ent_medical_asset" version="3">
+        <sys_ui_form_section action="INSERT_OR_UPDATE">
+            <position>0</position>
+            <sys_created_by>tom.hauri</sys_created_by>
+            <sys_created_on>2024-04-18 09:27:42</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>3d3aadcf1b29861030d6fdd49b4bcb76</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_overrides/>
+            <sys_ui_form display_value="sn_ent_medical_asset" name="sn_ent_medical_asset" sys_domain="global" view="Default view">653aadcf1b29861030d6fdd49b4bcb36</sys_ui_form>
+            <sys_ui_section caption="NULL" display_value="" name="sn_ent_medical_asset" sys_domain="global" view="Default view">b13aadcf1b29861030d6fdd49b4bcb6f</sys_ui_section>
+            <sys_updated_by>tom.hauri</sys_updated_by>
+            <sys_updated_on>2024-04-18 09:27:42</sys_updated_on>
+        </sys_ui_form_section>
+        <sys_ui_form_section action="INSERT_OR_UPDATE">
+            <position>1</position>
+            <sys_created_by>tom.hauri</sys_created_by>
+            <sys_created_on>2024-04-18 09:27:42</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>353aadcf1b29861030d6fdd49b4bcb87</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_overrides/>
+            <sys_ui_form display_value="sn_ent_medical_asset" name="sn_ent_medical_asset" sys_domain="global" view="Default view">653aadcf1b29861030d6fdd49b4bcb36</sys_ui_form>
+            <sys_ui_section caption="General" display_value="General" name="sn_ent_medical_asset" sys_domain="global" view="Default view">b13aadcf1b29861030d6fdd49b4bcb77</sys_ui_section>
+            <sys_updated_by>tom.hauri</sys_updated_by>
+            <sys_updated_on>2024-04-18 09:27:42</sys_updated_on>
+        </sys_ui_form_section>
+        <sys_ui_form_section action="INSERT_OR_UPDATE">
+            <position>2</position>
+            <sys_created_by>tom.hauri</sys_created_by>
+            <sys_created_on>2024-04-18 09:27:42</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>f53aadcf1b29861030d6fdd49b4bcb4e</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_overrides/>
+            <sys_ui_form display_value="sn_ent_medical_asset" name="sn_ent_medical_asset" sys_domain="global" view="Default view">653aadcf1b29861030d6fdd49b4bcb36</sys_ui_form>
+            <sys_ui_section caption="Financial" display_value="Financial" name="sn_ent_medical_asset" sys_domain="global" view="Default view">6d3aadcf1b29861030d6fdd49b4bcb46</sys_ui_section>
+            <sys_updated_by>tom.hauri</sys_updated_by>
+            <sys_updated_on>2024-04-18 09:27:42</sys_updated_on>
+        </sys_ui_form_section>
+        <sys_ui_form_section action="INSERT_OR_UPDATE">
+            <position>3</position>
+            <sys_created_by>tom.hauri</sys_created_by>
+            <sys_created_on>2024-04-18 09:27:42</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>3d3aadcf1b29861030d6fdd49b4bcb6e</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_overrides/>
+            <sys_ui_form display_value="sn_ent_medical_asset" name="sn_ent_medical_asset" sys_domain="global" view="Default view">653aadcf1b29861030d6fdd49b4bcb36</sys_ui_form>
+            <sys_ui_section caption="Contracts" display_value="Contracts" name="sn_ent_medical_asset" sys_domain="global" view="Default view">7d3aadcf1b29861030d6fdd49b4bcb4e</sys_ui_section>
+            <sys_updated_by>tom.hauri</sys_updated_by>
+            <sys_updated_on>2024-04-18 09:27:42</sys_updated_on>
+        </sys_ui_form_section>
+        <sys_ui_form_section action="INSERT_OR_UPDATE">
+            <position>4</position>
+            <sys_created_by>tom.hauri</sys_created_by>
+            <sys_created_on>2024-04-18 09:27:42</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>fd3aadcf1b29861030d6fdd49b4bcb98</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_overrides/>
+            <sys_ui_form display_value="sn_ent_medical_asset" name="sn_ent_medical_asset" sys_domain="global" view="Default view">653aadcf1b29861030d6fdd49b4bcb36</sys_ui_form>
+            <sys_ui_section caption="Activities" display_value="Activities" name="sn_ent_medical_asset" sys_domain="global" view="Default view">353aadcf1b29861030d6fdd49b4bcb95</sys_ui_section>
+            <sys_updated_by>tom.hauri</sys_updated_by>
+            <sys_updated_on>2024-04-18 09:27:42</sys_updated_on>
+        </sys_ui_form_section>
+        <sys_ui_form_section action="INSERT_OR_UPDATE">
+            <position>5</position>
+            <sys_created_by>tom.hauri</sys_created_by>
+            <sys_created_on>2024-04-18 09:27:41</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>e53aadcf1b29861030d6fdd49b4bcb46</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_overrides/>
+            <sys_ui_form display_value="sn_ent_medical_asset" name="sn_ent_medical_asset" sys_domain="global" view="Default view">653aadcf1b29861030d6fdd49b4bcb36</sys_ui_form>
+            <sys_ui_section caption="Audit" display_value="Audit" name="sn_ent_medical_asset" sys_domain="global" view="Default view">293aadcf1b29861030d6fdd49b4bcb40</sys_ui_section>
+            <sys_updated_by>tom.hauri</sys_updated_by>
+            <sys_updated_on>2024-04-18 09:27:41</sys_updated_on>
+        </sys_ui_form_section>
+        <sys_ui_form_section action="INSERT_OR_UPDATE">
+            <position>6</position>
+            <sys_created_by>tom.hauri</sys_created_by>
+            <sys_created_on>2024-04-18 09:27:41</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>a13aadcf1b29861030d6fdd49b4bcb40</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_overrides/>
+            <sys_ui_form display_value="sn_ent_medical_asset" name="sn_ent_medical_asset" sys_domain="global" view="Default view">653aadcf1b29861030d6fdd49b4bcb36</sys_ui_form>
+            <sys_ui_section caption="Depreciation" display_value="Depreciation" name="sn_ent_medical_asset" sys_domain="global" view="Default view">293aadcf1b29861030d6fdd49b4bcb38</sys_ui_section>
+            <sys_updated_by>tom.hauri</sys_updated_by>
+            <sys_updated_on>2024-04-18 09:27:41</sys_updated_on>
+        </sys_ui_form_section>
+        <sys_ui_form_section action="INSERT_OR_UPDATE">
+            <position>7</position>
+            <sys_created_by>tom.hauri</sys_created_by>
+            <sys_created_on>2024-04-18 09:27:42</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>bd3aadcf1b29861030d6fdd49b4bcb94</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_overrides/>
+            <sys_ui_form display_value="sn_ent_medical_asset" name="sn_ent_medical_asset" sys_domain="global" view="Default view">653aadcf1b29861030d6fdd49b4bcb36</sys_ui_form>
+            <sys_ui_section caption="RFID" display_value="RFID" name="sn_ent_medical_asset" sys_domain="global" view="Default view">b93aadcf1b29861030d6fdd49b4bcb87</sys_ui_section>
+            <sys_updated_by>tom.hauri</sys_updated_by>
+            <sys_updated_on>2024-04-18 09:27:42</sys_updated_on>
+        </sys_ui_form_section>
+        <sys_ui_form action="INSERT_OR_UPDATE">
+            <name>sn_ent_medical_asset</name>
+            <roles/>
+            <sys_class_name>sys_ui_form</sys_class_name>
+            <sys_created_by>tom.hauri</sys_created_by>
+            <sys_created_on>2024-04-18 09:27:41</sys_created_on>
+            <sys_domain>global</sys_domain>
+            <sys_domain_path>/</sys_domain_path>
+            <sys_id>653aadcf1b29861030d6fdd49b4bcb36</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>sn_ent_medical_asset</sys_name>
+            <sys_overrides/>
+            <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+            <sys_update_name>sys_ui_form_sections_653aadcf1b29861030d6fdd49b4bcb36</sys_update_name>
+            <sys_updated_by>tom.hauri</sys_updated_by>
+            <sys_updated_on>2024-04-18 09:27:41</sys_updated_on>
+            <sys_user/>
+            <view display_value="Default view" name="NULL">Default view</view>
+            <view_name/>
+        </sys_ui_form>
+    </sys_ui_form_sections>
+</record_update>
