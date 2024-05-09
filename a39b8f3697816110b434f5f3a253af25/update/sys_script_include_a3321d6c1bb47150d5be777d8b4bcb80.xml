@@ -305,6 +305,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 			aValues,
 			sValueType,
 			sInternalType,
+			sErrorHandling,
 			oTransformConfig,
 			bFieldDone,
 			bNoActionError,
@@ -321,7 +322,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 			aDependentValues,
 			aChoiceDisplayValues,
 			bMatch;
-		var sErrorHandling = this._getValue('oErrorHandling/oFieldType/all/sErrorHandling', 'reject', this.oRecordConfig);
+		var sErrorHandlingDefault = this._getValue('oErrorHandling/oFieldType/all/sErrorHandling', 'reject', this.oRecordConfig);
 		this.aAllRecordFields.forEach(function (sField) {
 			oField = this._getValue(sField, {}, this.oFieldsObjects);
 			sValue = this._getValue(sField, '', this.oRecordValues);
@@ -331,7 +332,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 				sValueType = this._gt.getType(sValue);
 				sInternalType = 'NA';
 				bNoActionError = true;
-				sErrorHandling = '';
+				sErrorHandling = sErrorHandlingDefault;
 				bFieldDone = false;
 				if (this.grRecord.isValidField(sField)) {
 					geElement = this.grRecord.getElement(sField);
@@ -1473,13 +1474,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>659</sys_mod_count>
+        <sys_mod_count>660</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-05-08 12:24:20</sys_updated_on>
+        <sys_updated_on>2024-05-09 05:19:21</sys_updated_on>
     </sys_script_include>
 </record_update>
