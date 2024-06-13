@@ -40,7 +40,7 @@
         <user_role/>
         <vendor/>
         <vendor_prefix/>
-        <version>1.0.4</version>
+        <version>1.0.5</version>
     </sys_app>
     <sys_translated_text action="delete_multiple" query="documentkey=a39b8f3697816110b434f5f3a253af25"/>
     <sys_attachment action="INSERT_OR_UPDATE">

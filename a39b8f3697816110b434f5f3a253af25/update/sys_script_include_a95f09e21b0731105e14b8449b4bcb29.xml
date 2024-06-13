@@ -206,7 +206,7 @@ GlobalToolsRESTAPI.prototype = {
 		sGroupByField = (sGroupByField) ? '&sysparm_group_by=' + encodeURIComponent(sGroupByField) : '';
 		var sOrderBy = ((bOrderByCount) && (sGroupByField)) ? '&sysparm_order_by=' + encodeURIComponent('COUNT^DESC') : '';
 		sDisplayValue = ((String(sDisplayValue) == 'true') || (sDisplayValue == 'all')) ? '&sysparm_display_value=' + sDisplayValue : '';
-		bOmitEmptyValue= (bOmitEmptyValue === true) ? true : false;
+		bOmitEmptyValue = (bOmitEmptyValue === true) ? true : false;
 		var sUrl = 'api/now/stats/' + sTable + '?sysparm_count=true' + sQuery + sGroupByField + sOrderBy + sDisplayValue;
 		var oRESTResults = this.doRESTRequest(sUrl);
 		if ((typeof oRESTResults == 'object') && (oRESTResults.hasOwnProperty('error_code'))) {
@@ -333,7 +333,7 @@ GlobalToolsRESTAPI.prototype = {
 	}, // function doRESTRequest
 
 	type: 'GlobalToolsRESTAPI',
-	version: '1.0.4',
+	version: '1.0.5',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -341,13 +341,13 @@ GlobalToolsRESTAPI.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 11:42:21</sys_created_on>
         <sys_id>a95f09e21b0731105e14b8449b4bcb29</sys_id>
-        <sys_mod_count>90</sys_mod_count>
+        <sys_mod_count>99</sys_mod_count>
         <sys_name>GlobalToolsRESTAPI</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a95f09e21b0731105e14b8449b4bcb29</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-11 06:44:53</sys_updated_on>
+        <sys_updated_on>2024-06-12 06:44:15</sys_updated_on>
     </sys_script_include>
 </record_update>
