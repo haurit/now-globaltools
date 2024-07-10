@@ -132,6 +132,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this.aFieldsSimple = [];
 		this.oFieldsObjects = {};
 		this.aFieldsComplex = [];
+		this.aFieldsIgnore = [];
 		this.aFieldsKeyFields = [];
 		this.aRecordKeyFields = [];
 		this.aMandatoryFields = this._getValue('aMandatoryFields', [], this.oRecordConfig);
@@ -152,11 +153,15 @@ GlobalToolsRecordWriteValidate.prototype = {
 				this.aFieldsSimple.push(oField);
 			} else if (this._gtObject.isObject(oField)) {
 				if (oField.hasOwnProperty('sField')) {
-					this.aFieldsComplex.push(oField['sField']);
-					this.oFieldsObjects[oField['sField']] = oField;
-					if (oField.hasOwnProperty('aKeys')) {
-						this._getFieldsFromKeyArrays(oField['aKeys'], 'field');
-					} // if keys
+					if ((oField.hasOwnProperty('sFieldAction')) && (oField['sFieldAction'] == 'ignore')) {
+						this.aFieldsIgnore.push(oField['sField']);
+					} else {
+						this.aFieldsComplex.push(oField['sField']);
+						this.oFieldsObjects[oField['sField']] = oField;
+						if (oField.hasOwnProperty('aKeys')) {
+							this._getFieldsFromKeyArrays(oField['aKeys'], 'field');
+						} // if keys
+					} // if field action ignore
 				} else {
 					this._errorHandler('config', '400_031', 'Invalid field configuration in config object (missing field property)', '', [JSON.stringify(oField)], true, false);
 				} // if field
@@ -166,7 +171,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		}, this); // each field
 		if (this.grRecord) {
 			this.aAllRecordValueFields.forEach(function (sField) {
-				if (this.grRecord.isValidField(sField)) {
+				if ((this.grRecord.isValidField(sField)) && (this.aFieldsIgnore.indexOf(sField) == -1)) {
 					this.aRecordValueFields.push(sField);
 				} // if valid field
 			}, this); // each record value field
@@ -301,6 +306,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var oField,
 			sValue,
+			sSourceField,
+			sSourceFieldValue,
 			sFixedValue,
 			aValues,
 			sValueType,
@@ -326,6 +333,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this.aAllRecordFields.forEach(function (sField) {
 			oField = this._getValue(sField, {}, this.oFieldsObjects);
 			sValue = this._getValue(sField, '', this.oRecordValues);
+			sSourceField = this._getValue('sSourceField', '', oField);
+			if ((sSourceField) && (sSourceField != sField)) {
+				sValue = this._getValue(sSourceField, sValue, this.oRecordValues);
+			} // if source field and diff from field (and has value) replace value
 			sFixedValue = this._getValue('sFixedValue', '', oField);
 			try {
 				aValues = [];
@@ -1483,13 +1494,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>661</sys_mod_count>
+        <sys_mod_count>663</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-06-17 11:34:48</sys_updated_on>
+        <sys_updated_on>2024-07-10 12:54:10</sys_updated_on>
     </sys_script_include>
 </record_update>

@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-27 14:26:38</sys_created_on>
         <sys_id>03b908e51b6db110d5be777d8b4bcbf6</sys_id>
-        <sys_mod_count>118</sys_mod_count>
+        <sys_mod_count>142</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_03b908e51b6db110d5be777d8b4bcbf6</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-05-08 12:30:04</sys_updated_on>
+        <sys_updated_on>2024-07-10 08:25:08</sys_updated_on>
         <table/>
         <test display_value="GlobalTools Tests">171600e11b6db110d5be777d8b4bcbbc</test>
         <timeout/>
@@ -49,16 +49,16 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-27 14:26:38</sys_created_on>
         <sys_id>ff4a88e51b6db110d5be777d8b4bcb1a</sys_id>
-        <sys_mod_count>118</sys_mod_count>
+        <sys_mod_count>142</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-05-08 12:30:04</sys_updated_on>
+        <sys_updated_on>2024-07-10 08:25:08</sys_updated_on>
         <value>(function(outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
 	var _gt = new global.GlobalTools();&#13;
 	var _gtATF = new global.GlobalToolsATF('GlobalTools', _gt, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
 	var grRecord;&#13;
-	&#13;
+&#13;
 	_gtATF.runATF('nsub', 'na', '', 'na');&#13;
 	_gtATF.runATF('nsub', undefined, '');&#13;
 	_gtATF.runATF('nsub', 'val', 'val', 'na');&#13;
@@ -97,6 +97,18 @@
 	_gtATF.runATF('getType', 'undefined', undefined);&#13;
 	_gtATF.runATF('getType', 'undefined');&#13;
 &#13;
+	_gtATF.runATF('getCommonTypeFromArray', undefined);&#13;
+	_gtATF.runATF('getCommonTypeFromArray', undefined, 'sugus');&#13;
+	_gtATF.runATF('getCommonTypeFromArray', undefined, {'sugus': 'gugus'});&#13;
+	_gtATF.runATF('getCommonTypeFromArray', undefined, 1);&#13;
+	_gtATF.runATF('getCommonTypeFromArray', undefined, [1, 'sugus']);&#13;
+	_gtATF.runATF('getCommonTypeFromArray', undefined, [1, 2, ['sugus'], 3, 4]);&#13;
+	_gtATF.runATF('getCommonTypeFromArray', 'number', [1,4,3,4,6,8]);&#13;
+	_gtATF.runATF('getCommonTypeFromArray', 'string', ['sugus', 'gugus', 'test']);&#13;
+	_gtATF.runATF('getCommonTypeFromArray', 'array', [['sugus', 'gugus'], ['test']]);&#13;
+	_gtATF.runATF('getCommonTypeFromArray', 'object', [{'sugus': 'gugus'}, {'test': 'best'}]);&#13;
+	_gtATF.runATF('getCommonTypeFromArray', 'glidedate', [new GlideDate(new Date()), new GlideDate(new Date()), new GlideDate(new Date())]);&#13;
+&#13;
 	_gtATF.runATF('isEqual', true, 'test', 'test');&#13;
 	_gtATF.runATF('isEqual', false, 'test', 'test1');&#13;
 	_gtATF.runATF('isEqual', true, 100, 100);&#13;
@@ -113,6 +125,21 @@
 	_gtATF.runATF('isEqual', false, {'test': ['a', 'b']}, {'test': ['c', 'a']});&#13;
 	_gtATF.runATF('isEqual', true, {'test': {'test0': 'a', 'test1': ['a', 'b']}}, {'test': {'test1': ['b', 'a'], 'test0': 'a'}});&#13;
 	_gtATF.runATF('isEqual', false, {'test': {'test0': 'a', 'test1': ['a', 'b']}}, {'test': {'test1': ['b', 'a']}, 'test0': 'b'});&#13;
+&#13;
+	_gtATF.runATF('deepSort', '', '');&#13;
+	_gtATF.runATF('deepSort', 'sugus', 'sugus');&#13;
+	_gtATF.runATF('deepSort', {}, {});&#13;
+	_gtATF.runATF('deepSort', 1, 1);&#13;
+	_gtATF.runATF('deepSort', [], []);&#13;
+	_gtATF.runATF('deepSort', ['a', 'b', 'C'], ['b', 'C', 'a']);&#13;
+	_gtATF.runATF('deepSort', [['a', 'b'], ['b']], [['b'], ['b', 'a']]);&#13;
+	_gtATF.runATF('deepSort', ['b', ['b', 'a']], [['b', 'a'], 'b']); // use generic sort, as not the same type&#13;
+	_gtATF.runATF('deepSort', [1,2,3,10,20], [3,2,10,20,1]);&#13;
+	_gtATF.runATF('deepSort', [[1,2,3,10,20], [5,6,15,50,60]], [[5,50,60,6,15], [3,2,10,20,1]]);&#13;
+	_gtATF.runATF('deepSort', [[[-1,0, 100], [1,2,3,10,20]], [[1,2,3,10,20], [5,6,15,50,60]]], [[[5,50,60,6,15], [3,2,10,20,1]], [[3,2,10,20,1], [100,-1,0]]]);&#13;
+	_gtATF.runATF('deepSort', {'abc': 'def', 'sugus': 'gugus'}, {'sugus': 'gugus', 'abc': 'def'});&#13;
+	_gtATF.runATF('deepSort', {'abc': [1,2,3,10,20], 'sugus': 'gugus'}, {'sugus': 'gugus', 'abc': [3,2,10,20,1]});&#13;
+	_gtATF.runATF('deepSort', [{'ABC': 'def', 'xyz': {1: '2', 3: '1'}}, {'abc': [1,2,3,10,20], 'sugus': 'gugus'}], [{'sugus': 'gugus', 'abc': [3,2,10,20,1]}, {'xyz': {3: '1', 1: '2'}, 'ABC': 'def'}]);&#13;
 &#13;
 	_gtATF.runATF('encodeNewLineToTag', 'test', 'test');&#13;
 	_gtATF.runATF('encodeNewLineToTag', '', '');&#13;
@@ -206,7 +233,7 @@
 	if (gs.getProperty('glide.record.legacy_cross_scope_access_policy_in_script') == 'true') {&#13;
 		_gtATF.runATF('runFunctionInScope', 'string_string2_string3', 'function (sString, sString1, sString2) {return sString + "_" + sString1 + "_" + sString2;}', '', 'string', 'string2', 'string3');&#13;
 	} // only test if property is true, otherwise error is thrown which fails the test&#13;
-	&#13;
+&#13;
 	return _gtATF.endATF();&#13;
 &#13;
 })(outputs, steps, params, stepResult, assertEqual);&#13;
