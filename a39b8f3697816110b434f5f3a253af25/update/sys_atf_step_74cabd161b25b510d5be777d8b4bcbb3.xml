@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>74cabd161b25b510d5be777d8b4bcbb3</sys_id>
-        <sys_mod_count>327</sys_mod_count>
+        <sys_mod_count>344</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_74cabd161b25b510d5be777d8b4bcbb3</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-07-10 10:07:00</sys_updated_on>
+        <sys_updated_on>2024-07-16 14:52:01</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRecordWriteValidate Tests">a44784251b6db110d5be777d8b4bcb92</test>
         <timeout/>
@@ -35,9 +35,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>56dabd161b25b510d5be777d8b4bcb3a</sys_id>
-        <sys_mod_count>327</sys_mod_count>
+        <sys_mod_count>344</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-07-10 10:07:01</sys_updated_on>
+        <sys_updated_on>2024-07-16 14:52:01</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -1132,7 +1132,7 @@
 		oError = {};&#13;
 		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
 		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
-		aErrorsExpected = ['400_012', '400_013'];&#13;
+		aErrorsExpected = ['400_012'];&#13;
 		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
 			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
 			_gtATF.addError('validateAndWrite', 'Test 131 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
@@ -1143,6 +1143,11 @@
 			'sTargetTable': 'cmdb_ci_appl',&#13;
 			'sErrorReturnType': 'code',&#13;
 			'sAction': 'insert',&#13;
+			'oErrorHandling': {&#13;
+				'oErrorCode': {&#13;
+					'404_003': 'ignore', // ignore errors for CIs that don't exist (sAction: update)&#13;
+				}, // by error code&#13;
+			} // error handling&#13;
 		}; // config&#13;
 		oRecordValues = {&#13;
 			'used_for': 'Production',&#13;
@@ -1156,6 +1161,65 @@
 			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
 			_gtATF.addError('validateAndWrite', 'Test 132 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
 		} // if same error&#13;
+		&#13;
+		// Error handling ignore_reject&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'sErrorReturnType': 'code',&#13;
+			'bDelete': false,&#13;
+			'bUpdate': true,&#13;
+			oErrorHandling: { // generically the following error handling options can be configure: reject (default), ignore, warn&#13;
+				oErrorCode: {&#13;
+					'404_003': 'ignore_reject', // ignore errors for CIs that don't exist (sAction: update)&#13;
+				}, // by error code&#13;
+			} // error handling&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'active': 'true',&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = [];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 133 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+		&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'update',&#13;
+			//'bErrorOnInvalidFieldsInValues': false,&#13;
+			'bErrorOnAddlFieldsInValues': true,&#13;
+			'aFields': [&#13;
+				{ 'sField': 'short_description', 'sSourceField': 'u_title' },&#13;
+			], // fields&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+			'u_title': 'sugus',&#13;
+			//'short_description': 'test1'&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = [];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 134 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		if (grRecord.getUniqueValue() == 'sugus') {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 134 did not map value correctly from source field to field.');&#13;
+		} // if source field not applied to field correctly&#13;
+&#13;
 &#13;
 	} // if not add new test&#13;
 &#13;
@@ -1187,6 +1251,8 @@
 	*/&#13;
 &#13;
 	/* Other tests that are missing&#13;
+&#13;
+		oErrorHandling (type, field)&#13;
 		sSourceField&#13;
 		sFixedValue&#13;
 		sFieldAction&#13;
@@ -1195,9 +1261,16 @@
 	*/&#13;
 &#13;
 	if (bRunSingleTest) {&#13;
-		&#13;
-		// Put single test here for debugging&#13;
-		&#13;
+&#13;
+		var sFunction = 'validateAndWrite'; // validateAndReturnIREObject&#13;
+		oExpectedResult = (sFunction == 'validateAndWrite') ? '-1' : undefined;&#13;
+&#13;
+		// Put single test here for debugging START&#13;
+&#13;
+&#13;
+&#13;
+		// Put single test here for debugging END&#13;
+&#13;
 		if (grRecord) {&#13;
 			gs.info('GlobalToolsRecordWriteValidate Tests record: ' + grRecord.getDisplayValue() + ' oError: ' + JSON.stringify(oError));&#13;
 		} else {&#13;

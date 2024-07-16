@@ -111,10 +111,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this.sUserCurrentId = gs.getUserID();
 		this.sUserInitialId = gs.getUserID();
-		this.oRecordConfig = oRecordConfig;
-		this.oRecordValues = oRecordValues;
-		this.sRecordId = '-1';
-		this.sTargetTable = this._getValue('sTargetTable', '', this.oRecordConfig);
+		this.oRecordConfig = oRecordConfig; // initial config
+		this.oRecordValues = oRecordValues; // initial values
+		this.sRecordId = '-1'; // new record id
+		this.sTargetTable = this._getValue('sTargetTable', '', this.oRecordConfig); // target table from config
 		this._validateInput();
 		if (!this._canContinue()) {
 			return;
@@ -122,22 +122,23 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this.bLog = this._getValue('bLog', false, this.oRecordConfig);
 		this.sLogLevel = this._getValue('sLogLevel', 'error', this.oRecordConfig);
 		this.bLogPrefix = this._getValue('bLogPrefix', 'GlobalToolsRecordWriteValidate - ', this.oRecordConfig);
-		this.grRecord = (this._gtTable.isValidTable(this.sTargetTable)) ? new GlideRecord(this.sTargetTable) : '';
-		this.bIsValidRecord = false;
-		this.sAction = this._setAction();
+		this.grRecord = (this._gtTable.isValidTable(this.sTargetTable)) ? new GlideRecord(this.sTargetTable) : ''; // initiate record
+		this.bIsValidRecord = false; // false = new record
+		this.sAction = this._setAction(); // record action
 		this.sImpersonateUserId = '';
-		this.aAllRecordValueFields = Object.keys(this.oRecordValues);
-		this.aRecordValueFields = [];
-		this.aFields = this._getValue('aFields', [], this.oRecordConfig);
-		this.aFieldsSimple = [];
-		this.oFieldsObjects = {};
-		this.aFieldsComplex = [];
-		this.aFieldsIgnore = [];
-		this.aFieldsKeyFields = [];
-		this.aRecordKeyFields = [];
-		this.aMandatoryFields = this._getValue('aMandatoryFields', [], this.oRecordConfig);
-		this.bCheckDictionaryMandatory = this._getValue('bCheckDictionaryMandatory', true, this.oRecordConfig);
-		this.bAllFieldsMandatory = ((this._isValidArray(this.aMandatoryFields)) && (this.aMandatoryFields[0] == 'allfields')) ? true : false;
+		this.aAllRecordValueFields = Object.keys(this.oRecordValues); // all initial values
+		this.aRecordValueFields = []; // all record fields that are valid in current instance, not on the ignored list or are a sourcefield
+		this.aFields = this._getValue('aFields', [], this.oRecordConfig); // fields in the configuration (simple or complex fields)
+		this.aFieldsSimple = []; // fields from aFields with type string
+		this.oFieldsObjects = {}; // fields from aFields with type object with valid key sField as object
+		this.aFieldsComplex = []; // fields from aFields with type object with valid key sField as string
+		this.aFieldsIgnore = []; // fields to be completly ignored with sFieldAction = ignored
+		this.aFieldsSource = []; // fields used in sSourceValue parameter
+		this.aFieldsKeyFields = []; // fields used in reference fields keys
+		this.aRecordKeyFields = []; // fields used in main record keys
+		this.aMandatoryFields = this._getValue('aMandatoryFields', [], this.oRecordConfig); // manual mandatory fields, if initial value is allfields all fields are mandatory
+		this.bCheckDictionaryMandatory = this._getValue('bCheckDictionaryMandatory', true, this.oRecordConfig); // check dict fields for mandatory fields
+		this.bAllFieldsMandatory = ((this._isValidArray(this.aMandatoryFields)) && (this.aMandatoryFields[0] == 'allfields')) ? true : false; // all mandatory fields
 		this.aAllFields = [];
 		this.aAllRecordFields = [];
 		if ((this.bLog) && (this.sLogLevel == 'debug')) {
@@ -161,6 +162,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 						if (oField.hasOwnProperty('aKeys')) {
 							this._getFieldsFromKeyArrays(oField['aKeys'], 'field');
 						} // if keys
+						if (oField.hasOwnProperty('sSourceField')) {
+							this.aFieldsSource.push(oField['sSourceField']);
+						} // if source field
 					} // if field action ignore
 				} else {
 					this._errorHandler('config', '400_031', 'Invalid field configuration in config object (missing field property)', '', [JSON.stringify(oField)], true, false);
@@ -171,7 +175,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		}, this); // each field
 		if (this.grRecord) {
 			this.aAllRecordValueFields.forEach(function (sField) {
-				if ((this.grRecord.isValidField(sField)) && (this.aFieldsIgnore.indexOf(sField) == -1)) {
+				if (((this.grRecord.isValidField(sField)) && (this.aFieldsIgnore.indexOf(sField) == -1)) || (this.aFieldsSource.indexOf(sField) != -1)) {
 					this.aRecordValueFields.push(sField);
 				} // if valid field
 			}, this); // each record value field
@@ -203,7 +207,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 			this.aTemporaryValueFields.push(sImpersonateValueField);
 		} // if impersonate value field
 		if ((this.bLog) && (this.sLogLevel == 'debug')) {
-			gs.debug(this.bLogPrefix + ' aAllRecordValueFields: ' + this.aAllRecordValueFields + ' aRecordValueFields: ' + this.aRecordValueFields + ' aFields: ' + JSON.stringify(this.aFields) + ' aFieldsSimple: ' + this.aFieldsSimple + ' aFieldsComplex: ' + this.aFieldsComplex + ' aFieldsKeyFields: ' + this.aFieldsKeyFields + ' aRecordKeyFields: ' + this.aRecordKeyFields + ' aMandatoryFields: ' + this.aMandatoryFields + ' aAllFields: ' + this.aAllFields + ' aAllRecordFields: ' + this.aAllRecordFields + ' this.oFieldsObjects: ' + JSON.stringify(this.oFieldsObjects));
+			gs.debug(this.bLogPrefix + ' aAllRecordValueFields: ' + this.aAllRecordValueFields + ' aRecordValueFields: ' + this.aRecordValueFields + ' aFields: ' + JSON.stringify(this.aFields) + ' aFieldsSimple: ' + this.aFieldsSimple + ' aFieldsComplex: ' + this.aFieldsComplex + ' aFieldsKeyFields: ' + this.aFieldsKeyFields + ' aRecordKeyFields: ' + this.aRecordKeyFields + ' aMandatoryFields: ' + this.aMandatoryFields + ' aAllFields: ' + this.aAllFields + ' aAllRecordFields: ' + this.aAllRecordFields + ' aFieldsSource: ' + this.aFieldsSource + ' aFieldsIgnore: ' + this.aFieldsIgnore + ' this.oFieldsObjects: ' + JSON.stringify(this.oFieldsObjects));
 		} // if log and debug
 	}, // function _getFields
 
@@ -307,7 +311,6 @@ GlobalToolsRecordWriteValidate.prototype = {
 		var oField,
 			sValue,
 			sSourceField,
-			sSourceFieldValue,
 			sFixedValue,
 			aValues,
 			sValueType,
@@ -1012,14 +1015,14 @@ GlobalToolsRecordWriteValidate.prototype = {
 				return;
 			} // if field is empty
 			iMandatoryField = -1;
-			if ((bErrorOnAddlFieldsInValues) && (this.aFieldsSimple.indexOf(sField) == -1) && (this.aMandatoryFields.indexOf(sField) == -1) && (this.aFieldsComplex.indexOf(sField) == -1) && (this.aTemporaryValueFields.indexOf(sField) == -1)) {
+			if ((bErrorOnAddlFieldsInValues) && (this.aFieldsSimple.indexOf(sField) == -1) && (this.aMandatoryFields.indexOf(sField) == -1) && (this.aFieldsComplex.indexOf(sField) == -1) && (this.aTemporaryValueFields.indexOf(sField) == -1) && (this.aFieldsSource.indexOf(sField) == -1) && (this.aFieldsKeyFields.indexOf(sField) == -1) && (this.aRecordKeyFields.indexOf(sField) == -1)) {
 				aAddlFieldsInValues.push(sField);
 			} // if addl field in body
 			if (grRecordTest.isValidField(sField)) {
 				if (this._getValue('bUseGlideRecordSecure', false, this.oRecordConfig)) {
 					this._validateFieldSecurity(sField);
 				} // if glide record secure
-			} else if ((this.aFieldsKeyFields.indexOf(sField) == -1) && (this.aTemporaryValueFields.indexOf(sField) == -1)) {
+			} else if ((this.aFieldsKeyFields.indexOf(sField) == -1) && (this.aTemporaryValueFields.indexOf(sField) == -1) && (this.aFieldsSource.indexOf(sField) == -1)) {
 				if (this.aMandatoryFields.indexOf(sField) != -1) {
 					this._errorHandler('config', '400_012', 'Invalid field in mandatory fields', '', [sField], true, false);
 					iMandatoryField = aMandatoryFields.indexOf(sField);
@@ -1424,15 +1427,22 @@ GlobalToolsRecordWriteValidate.prototype = {
 	_errorHandler: function (sErrorType, sErrorCode, sErrorMessage, aErrorMessageArgs, aErrorDetailArgs, bNoActionError, bFatalError) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this.oError[this.sTableSequenceId]['bError'] = true;
-		var sErrorHandling = this._getValue('oErrorHandling/oErrorType/' + sErrorType, 'reject', this.oRecordConfig);
-		if (sErrorHandling == 'ignore') {
+		var sErrorHandlingType = this._getValue('oErrorHandling/oErrorType/' + sErrorType, 'reject', this.oRecordConfig);
+		var sErrorHandlingCode = this._getValue('oErrorHandling/oErrorCode/' + sErrorCode, '', this.oRecordConfig);
+		if ((sErrorHandlingType == 'ignore') || (sErrorHandlingCode == 'ignore')) {
 			return '';
 		} // if ignore
-		if ((bNoActionError) && (sErrorHandling == 'reject')) {
+		if ((bNoActionError) && ((sErrorHandlingType.indexOf('reject') != -1) || (sErrorHandlingCode.indexOf('reject') != -1))) {
 			this.oError[this.sTableSequenceId]['bNoActionError'] = true;
+			if ((sErrorHandlingType == 'ignore_reject') || (sErrorHandlingCode == 'ignore_reject')) {
+				return '';
+			} // if ignore_reject
 		} // if no action
-		if (bFatalError) {
+		if ((bFatalError) && ((sErrorHandlingType.indexOf('reject') != -1) || (sErrorHandlingCode.indexOf('reject') != -1))) {
 			this.oError[this.sTableSequenceId]['bFatalError'] = true;
+			if ((sErrorHandlingType == 'ignore_reject') || (sErrorHandlingCode == 'ignore_reject')) {
+				return '';
+			} // if ignore_reject
 		} // if fatal
 		sErrorCode = (sErrorCode) ? sErrorCode : -1;
 		aErrorMessageArgs = (this._isValidArray(aErrorMessageArgs)) ? aErrorMessageArgs : [];
@@ -1494,13 +1504,13 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>663</sys_mod_count>
+        <sys_mod_count>675</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-07-10 12:54:10</sys_updated_on>
+        <sys_updated_on>2024-07-16 13:58:43</sys_updated_on>
     </sys_script_include>
 </record_update>
