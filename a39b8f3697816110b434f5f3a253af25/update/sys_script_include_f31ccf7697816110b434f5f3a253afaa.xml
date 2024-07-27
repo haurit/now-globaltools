@@ -96,6 +96,24 @@ GlobalTools.prototype = {
 		return sType;
 	}, // function getType
 
+	getCommonTypeFromArray: function (aArray, bDoNotConvertCase) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var sType;
+		if ((aArray) && (Array.isArray(aArray)) && (aArray.length > 0) && (aArray[0])) {
+			var sTmpType = '';
+			aArray.some(function (oElement) {
+				sTmpType = this.getType(oElement, bDoNotConvertCase);
+				if ((!sType) && (sTmpType)) {
+					sType = sTmpType;
+				} else if (sTmpType != sType) {
+					sType = undefined;
+					return true;
+				} // if type is empty or diff
+			}, this); // each element
+		} // if valid array
+		return sType;
+	}, // function getCommonTypeFromArray
+
 	isEqual: function (oValue1, oValue2) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (((oValue1) && (!oValue2)) || ((!oValue1) && (oValue2))) {
@@ -111,8 +129,10 @@ GlobalTools.prototype = {
 			if (oValue1.length !== oValue2.length) {
 				return false;
 			} // if not same length
-			oValue1.sort();
-			oValue2.sort();
+			//oValue1.sort();
+			//oValue2.sort();
+			oValue1 = this.deepSort(oValue1);
+			oValue2 = this.deepSort(oValue2);
 			return (String(oValue1) == String(oValue2));
 		} else if (sValue1Type == 'object') {
 			var aKeys1 = Object.keys(oValue1);
@@ -141,6 +161,40 @@ GlobalTools.prototype = {
 		} // if string convert to overcome character set issues
 		return oValue1 === oValue2;
 	}, // function isEqual
+
+	// Not to be used with more than 2 levels of nested structures and works fine for small arrays objects only. 
+	deepSort: function (oValue) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var sValueType = this.getType(oValue);
+		if (sValueType == 'array') {
+			var sCommonType = this.getCommonTypeFromArray(oValue);
+			if (sCommonType == 'string') {
+				oValue.sort(function (a, b) { return a.localeCompare(b, 'en', { 'sensitivity': 'base' }); });
+			} else if (sCommonType == 'number') {
+				oValue.sort(function (a, b) { return a - b; });
+			} else if (sCommonType == 'array') {
+				oValue.forEach(function (aTmpValue, iIndex) {
+					oValue[iIndex] = this.deepSort(aTmpValue);
+				}, this); // each object key
+				oValue.sort(function (a, b) { return String(a).localeCompare(String(b), 'en', { 'sensitivity': 'base' }); });
+			} else if (sCommonType == 'object') {
+				oValue.forEach(function (oTmpValue, iIndex) {
+					oValue[iIndex] = this.deepSort(oTmpValue);
+				}, this); // each object key
+				oValue.sort(function (a, b) { return JSON.stringify(a).localeCompare(JSON.stringify(b), 'en', { 'sensitivity': 'base' }); });
+			} else {
+				oValue.sort();
+			} // if expected common type
+		} else if (sValueType == 'object') {
+			var oValueKeys = this.deepSort(Object.keys(oValue));
+			var oTmpValue = {};
+			oValueKeys.forEach(function (sValueKey) {
+				oTmpValue[sValueKey] = this.deepSort(oValue[sValueKey]);
+			}, this); // each object key
+			oValue = JSON.parse(JSON.stringify(oTmpValue));
+		} // if valid array
+		return oValue;
+	}, // function deepSort
 
 	// Encode new line to tag
 	encodeNewLineToTag: function (sValue) {
@@ -355,7 +409,7 @@ GlobalTools.prototype = {
 				} // if delay
 			} // if action
 		} catch (oExeption) {
-			gs.warn('global.GlobalTools.scheduleHandler Exception during schedule sEvent: ' + sEvent,  String(oExeption));
+			gs.warn('global.GlobalTools.scheduleHandler Exception during schedule sEvent: ' + sEvent, String(oExeption));
 		} // catch errors
 	}, // function scheduleHandler
 
@@ -467,13 +521,13 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>150</sys_mod_count>
+        <sys_mod_count>179</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-24 07:14:51</sys_updated_on>
+        <sys_updated_on>2024-07-10 12:18:10</sys_updated_on>
     </sys_script_include>
 </record_update>

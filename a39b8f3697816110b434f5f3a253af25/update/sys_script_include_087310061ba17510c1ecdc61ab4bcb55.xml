@@ -51,6 +51,7 @@ GlobalToolsATF.prototype = {
 			for (var i = 2; i < arguments.length; i++) {
 				aArguments.push(arguments[i]);
 			} // each arg after 2 mandatory params
+			var aArgumentsOriginal = aArguments.join('!=VUP=!').split('!=VUP=!'); // join/split with very unlikely pattern to preserve original order
 			var oResult = this._ScriptIncludeRef[sFunction].apply(this._ScriptIncludeRef, aArguments);
 			var sExpectedResultType = this._getType(oExpectedResult);
 			var sExpectedResultTypeComparison = '=';
@@ -109,9 +110,9 @@ GlobalToolsATF.prototype = {
 				return true;
 			} else {
 				if (sResultType == 'object') {
-					this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' test counter ' + this._iTestCount + ' expected result: ' + JSON.stringify(oExpectedResult) + ' (' + sExpectedResultType + ')' + ' result: ' + JSON.stringify(oResult) + ' (' + sResultType + ') with arguments: ' + JSON.stringify(aArguments));
+					this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' test counter ' + this._iTestCount + ' expected result: ' + JSON.stringify(oExpectedResult) + ' (' + sExpectedResultType + ')' + ' result: ' + JSON.stringify(oResult) + ' (' + sResultType + ') with arguments: ' + JSON.stringify(aArgumentsOriginal));
 				} else {
-					this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' test counter ' + this._iTestCount + ' expected result: ' + oExpectedResult + ' (' + sExpectedResultType + ')' + ' result: ' + oResult + ' (' + sResultType + ') with arguments: ' + JSON.stringify(aArguments));
+					this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' test counter ' + this._iTestCount + ' expected result: ' + oExpectedResult + ' (' + sExpectedResultType + ')' + ' result: ' + oResult + ' (' + sResultType + ') with arguments: ' + JSON.stringify(aArgumentsOriginal));
 				} // if obj
 			} // if results match
 		} else {
@@ -151,13 +152,13 @@ GlobalToolsATF.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 04:35:34</sys_created_on>
         <sys_id>087310061ba17510c1ecdc61ab4bcb55</sys_id>
-        <sys_mod_count>65</sys_mod_count>
+        <sys_mod_count>66</sys_mod_count>
         <sys_name>GlobalToolsATF</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_087310061ba17510c1ecdc61ab4bcb55</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-08 05:48:13</sys_updated_on>
+        <sys_updated_on>2024-07-09 14:57:25</sys_updated_on>
     </sys_script_include>
 </record_update>
