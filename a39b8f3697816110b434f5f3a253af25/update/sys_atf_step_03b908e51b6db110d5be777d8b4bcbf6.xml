@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-27 14:26:38</sys_created_on>
         <sys_id>03b908e51b6db110d5be777d8b4bcbf6</sys_id>
-        <sys_mod_count>142</sys_mod_count>
+        <sys_mod_count>143</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_03b908e51b6db110d5be777d8b4bcbf6</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-07-10 08:25:08</sys_updated_on>
+        <sys_updated_on>2024-08-04 08:54:26</sys_updated_on>
         <table/>
         <test display_value="GlobalTools Tests">171600e11b6db110d5be777d8b4bcbbc</test>
         <timeout/>
@@ -49,9 +49,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-27 14:26:38</sys_created_on>
         <sys_id>ff4a88e51b6db110d5be777d8b4bcb1a</sys_id>
-        <sys_mod_count>142</sys_mod_count>
+        <sys_mod_count>143</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-07-10 08:25:08</sys_updated_on>
+        <sys_updated_on>2024-08-04 08:54:26</sys_updated_on>
         <value>(function(outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -96,18 +96,6 @@
 	_gtATF.runATF('getType', 'null', null);&#13;
 	_gtATF.runATF('getType', 'undefined', undefined);&#13;
 	_gtATF.runATF('getType', 'undefined');&#13;
-&#13;
-	_gtATF.runATF('getCommonTypeFromArray', undefined);&#13;
-	_gtATF.runATF('getCommonTypeFromArray', undefined, 'sugus');&#13;
-	_gtATF.runATF('getCommonTypeFromArray', undefined, {'sugus': 'gugus'});&#13;
-	_gtATF.runATF('getCommonTypeFromArray', undefined, 1);&#13;
-	_gtATF.runATF('getCommonTypeFromArray', undefined, [1, 'sugus']);&#13;
-	_gtATF.runATF('getCommonTypeFromArray', undefined, [1, 2, ['sugus'], 3, 4]);&#13;
-	_gtATF.runATF('getCommonTypeFromArray', 'number', [1,4,3,4,6,8]);&#13;
-	_gtATF.runATF('getCommonTypeFromArray', 'string', ['sugus', 'gugus', 'test']);&#13;
-	_gtATF.runATF('getCommonTypeFromArray', 'array', [['sugus', 'gugus'], ['test']]);&#13;
-	_gtATF.runATF('getCommonTypeFromArray', 'object', [{'sugus': 'gugus'}, {'test': 'best'}]);&#13;
-	_gtATF.runATF('getCommonTypeFromArray', 'glidedate', [new GlideDate(new Date()), new GlideDate(new Date()), new GlideDate(new Date())]);&#13;
 &#13;
 	_gtATF.runATF('isEqual', true, 'test', 'test');&#13;
 	_gtATF.runATF('isEqual', false, 'test', 'test1');&#13;

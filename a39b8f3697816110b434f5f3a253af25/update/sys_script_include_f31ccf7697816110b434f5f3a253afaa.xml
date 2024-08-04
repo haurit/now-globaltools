@@ -7,12 +7,13 @@
         <client_callable>false</client_callable>
         <description>Tools to support (scoped) app development&#13;
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
+        <mobile_callable>false</mobile_callable>
         <name>GlobalTools</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var GlobalTools = Class.create();
 GlobalTools.prototype = {
 	initialize: function () {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
-		this._unique = new global.GlobalToolsArray().unique;
 	}, // function initialize
 
 	checkAccess: function (sCallerScope) {
@@ -96,24 +97,6 @@ GlobalTools.prototype = {
 		return sType;
 	}, // function getType
 
-	getCommonTypeFromArray: function (aArray, bDoNotConvertCase) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
-		var sType;
-		if ((aArray) && (Array.isArray(aArray)) && (aArray.length > 0) && (aArray[0])) {
-			var sTmpType = '';
-			aArray.some(function (oElement) {
-				sTmpType = this.getType(oElement, bDoNotConvertCase);
-				if ((!sType) && (sTmpType)) {
-					sType = sTmpType;
-				} else if (sTmpType != sType) {
-					sType = undefined;
-					return true;
-				} // if type is empty or diff
-			}, this); // each element
-		} // if valid array
-		return sType;
-	}, // function getCommonTypeFromArray
-
 	isEqual: function (oValue1, oValue2) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (((oValue1) && (!oValue2)) || ((!oValue1) && (oValue2))) {
@@ -167,7 +150,7 @@ GlobalTools.prototype = {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sValueType = this.getType(oValue);
 		if (sValueType == 'array') {
-			var sCommonType = this.getCommonTypeFromArray(oValue);
+			var sCommonType = new global.GlobalToolsArray().getCommonTypeFromArray(oValue);
 			if (sCommonType == 'string') {
 				oValue.sort(function (a, b) { return a.localeCompare(b, 'en', { 'sensitivity': 'base' }); });
 			} else if (sCommonType == 'number') {
@@ -262,7 +245,7 @@ GlobalTools.prototype = {
 			var reReplace = new RegExp('placeholder');
 			var sFieldName = '', sReplaceValue = '', sReplace = '';
 			if ((aReResults) && (Array.isArray(aReResults))) {
-				this._unique(aReResults);
+				aReResults = aReResults.filter(function (value, index, array) {return array.indexOf(value) === index;}); // do not use GlobalToolsArray, can be replaced once switch ES mode
 				aReResults.forEach(function (sReResult) {
 					sFieldName = sReResult.replace(/\[|\]/g, '');
 					if (sFieldName == 'sValue') {
@@ -511,8 +494,37 @@ GlobalTools.prototype = {
 		} // if legacy scope script policy is true
 	}, // runFunctionInScope
 
+	// Updates one or more plugins in the background
+	updatePlugins: function (sQuery, bScheduled) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((gs.isInteractive()) || (bScheduled === true)) {
+			this.scheduleScript('GlobalTools', 'updatePlugins', '0', [sQuery], [], 'GlobalToolsupdatePlugins');
+		} else {
+			var oResult = {}, oWorkerResult = {}, sSource = '';
+			var grStoreApps = new GlideRecord('sys_store_app');
+			sQuery = new global.GlobalToolsRecordRead().combineQueries('hide_on_ui=false^update_available=true', sQuery);
+			grStoreApps.addEncodedQuery(sQuery);
+			grStoreApps.query();
+			oResult['iStoreAppsFound'] = grStoreApps.getRowCount();
+			oResult['sStoreAppsQuery'] = grStoreApps.getEncodedQuery();
+			oResult['aStoreAppsUpgraded'] = {};
+			if (grStoreApps.hasNext()) {
+				var bgWorker = new sn_appclient.AppUpgrader();
+				while (grStoreApps.next()) {
+					sSource = grStoreApps.getValue('source');
+					oResult['aStoreAppsUpgraded'][sSource] = {};
+					oResult['aStoreAppsUpgraded'][sSource]['sOldVersion'] = grStoreApps.getValue('version');
+					oResult['aStoreAppsUpgraded'][sSource]['sNewVersion'] = grStoreApps.getValue('latest_version');
+					oWorkerResult = bgWorker.upgrade(grStoreApps.getUniqueValue(), grStoreApps.getValue('latest_version'), false);
+					oResult['aStoreAppsUpgraded'][sSource]['sWorkerResult'] = JSON.stringify(oWorkerResult);
+				} // while store apps
+			} // if store apps to update
+			gs.warn('GlobalTools.updatePlugins result: ' + JSON.stringify(oResult));
+		} // if scheduled
+	}, // updatePlugins
+
 	type: 'GlobalTools',
-	version: '1.0.4',
+	version: '1.0.6',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -521,13 +533,24 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>179</sys_mod_count>
+        <sys_mod_count>191</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-07-10 12:18:10</sys_updated_on>
+        <sys_updated_on>2024-08-04 09:18:32</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>f31ccf7697816110b434f5f3a253afaa</id>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-08-03 08:57:16</sys_created_on>
+        <sys_id>5355e0e11b3b0a10e50ddc61ab4bcb90</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-08-04 09:14:52</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>false</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

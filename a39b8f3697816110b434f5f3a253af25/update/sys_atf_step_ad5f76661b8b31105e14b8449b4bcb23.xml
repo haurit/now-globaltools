@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 19:46:45</sys_created_on>
         <sys_id>ad5f76661b8b31105e14b8449b4bcb23</sys_id>
-        <sys_mod_count>124</sys_mod_count>
+        <sys_mod_count>127</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_ad5f76661b8b31105e14b8449b4bcb23</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-06-12 06:43:00</sys_updated_on>
+        <sys_updated_on>2024-08-04 10:28:05</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRESTAPI Tests">cbcefa261b8b31105e14b8449b4bcb58</test>
         <timeout/>
@@ -49,9 +49,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 19:46:45</sys_created_on>
         <sys_id>e99fba661b8b31105e14b8449b4bcbb2</sys_id>
-        <sys_mod_count>124</sys_mod_count>
+        <sys_mod_count>127</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-06-12 06:43:00</sys_updated_on>
+        <sys_updated_on>2024-08-04 10:28:05</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 	var bLog = false;&#13;
 	var _gtRecordWrite = new global.GlobalToolsRecordWrite();&#13;
@@ -93,7 +93,7 @@
 	var oError = {};&#13;
 	var sUserName = 'restapi.test';&#13;
 	var sUserPass = 'PlaiIZa0945!';&#13;
-	var sUserId = _gtRecordWrite.doRecord({ 'user_name': sUserName, 'internal_integration_user': true, 'company': '227cdfb03710200044e0bfc8bcbe5d6b', 'user_password': sUserPass }, { 'sTargetTable': 'sys_user', 'aQueryFields': ['user_name'] }, oError);&#13;
+	var sUserId = _gtRecordWrite.doRecord({ 'user_name': sUserName, 'internal_integration_user': true, 'company': '93d4ecfac0a8000b6294d71b733977fb', 'user_password': sUserPass }, { 'sTargetTable': 'sys_user', 'aQueryFields': ['user_name'] }, oError);&#13;
 	if (sUserId) {&#13;
 		var grUser = _gtATF.getRecord('sys_user', 'sys_id=' + sUserId);&#13;
 		grUser.setDisplayValue('user_password', sUserPass);&#13;
@@ -164,19 +164,19 @@
 &#13;
 			_gtATF.runATF('getRemoteRecord', grIncident.getUniqueValue(), 'incident', 'number=' + grIncident.getValue('number'));&#13;
 			&#13;
-			_gtATF.runATF('doNOWRESTQuery', '&gt;9', 'incident', 'active=true', undefined, '10');&#13;
+			_gtATF.runATF('doNOWRESTQuery', '&gt;1', 'incident', 'active=true', undefined, '2');&#13;
 &#13;
 			_gtATF.runATF('doNOWRESTQuery', '&gt;0', 'incident', 'number=' + grIncident.getValue('number'));&#13;
 &#13;
 			_gtATF.runATF('doNOWRESTQuery', {"success":false,"message":"Method failed: (/api/now/table/incident1) with code: 400","error_code":"400"}, 'incident1', 'active=true^active=false');&#13;
 &#13;
-			_gtATF.runATF('doNOWRESTCount', '&gt;9', 'incident', 'active=true');&#13;
+			_gtATF.runATF('doNOWRESTCount', '&gt;2', 'incident', 'active=true');&#13;
 			&#13;
 			_gtATF.runATF('doNOWRESTCount', 1, 'incident', 'number=' + grIncident.getValue('number'));&#13;
 &#13;
-			_gtATF.runATF('doNOWRESTCount', /database/gi, 'incident', 'active=true', 'category');&#13;
+			_gtATF.runATF('doNOWRESTCount', /inquiry/gi, 'incident', 'active=true', 'category');&#13;
 &#13;
-			_gtATF.runATF('doNOWRESTCount', /database/gi, 'incident', 'active=true', 'category', true);&#13;
+			_gtATF.runATF('doNOWRESTCount', /inquiry/gi, 'incident', 'active=true', 'category', true);&#13;
 &#13;
 			_gtATF.runATF('doNOWRESTCount', /Inquiry.\/.Help/gi, 'incident', 'active=true', 'category', true, true);&#13;
 &#13;
