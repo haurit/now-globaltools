@@ -83,7 +83,7 @@
 			<li>Create a&#160;<a href="https://github.com/settings/tokens" target="_blank">personal access
 					token</a>&#160;for your GitHub account.</li>
 			<li>Add&#160;<a href="/discovery_credentials_list.do" target="_blank">credentials</a>&#160;to access GitHub
-				- use "Basic Auth".</li>
+				- use "Basic Auth" (personal access token as password).</li>
 			<li>Fork the repository&#160;<a href="https://github.com/haurit/now-globaltools"
 					target="_blank">https://github.com/haurit/now-globaltools</a>.</li>
 			<li>Go to&#160;<a href="/$studio.do" target="_blank">Studio</a>&#160;and import the Global Tools application
@@ -108,13 +108,24 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-26 18:38:45</sys_created_on>
         <sys_id>7d253f0d1be97110d5be777d8b4bcbfe</sys_id>
-        <sys_mod_count>157</sys_mod_count>
+        <sys_mod_count>158</sys_mod_count>
         <sys_name>global_tools_manual</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_ui_page_7d253f0d1be97110d5be777d8b4bcbfe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-12 05:47:33</sys_updated_on>
+        <sys_updated_on>2024-08-14 08:38:47</sys_updated_on>
     </sys_ui_page>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>7d253f0d1be97110d5be777d8b4bcbfe</id>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-08-14 08:38:47</sys_created_on>
+        <sys_id>fb9a090d1b009610e50ddc61ab4bcbcb</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-08-14 08:38:47</sys_updated_on>
+        <table>sys_ui_page</table>
+        <use_es_latest>false</use_es_latest>
+    </sys_es_latest_script>
 </record_update>
