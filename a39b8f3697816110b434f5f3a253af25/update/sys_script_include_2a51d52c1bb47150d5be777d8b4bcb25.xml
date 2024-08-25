@@ -7,6 +7,7 @@
         <client_callable>false</client_callable>
         <description>Tools to support (scoped) app development&#13;
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
+        <mobile_callable>false</mobile_callable>
         <name>GlobalToolsRecordRead</name>
         <script><![CDATA[var GlobalToolsRecordRead = Class.create();
 GlobalToolsRecordRead.prototype = {
@@ -26,6 +27,22 @@ GlobalToolsRecordRead.prototype = {
 			return true;
 		} // if scope is allowed
 	}, // function checkAccess
+
+	// Convenience function to check if the query is valid (if you have already a GlideRecord, use isValidEncodedQuery directly)
+	isValidQuery: function (sTable, sQuery) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
+			gs.warn('GlobalToolsRecordRead.isValidQuery called with invalid table: ' + sTable);
+			return false;
+		} // if no table return
+		var grRecord = new GlideRecord(sTable);
+		if (sQuery) {
+			if (grRecord.isValidEncodedQuery(sQuery)) {
+				return true;
+			} // if valid query
+		} // if query
+		return false;
+	}, // function isValidQuery
 
 	// Convenience function to get count of records, returns number or Array in Array with value, displayvalue (optional) and count per field
 	countRecords: function (sTable, sQuery, sField, bDisplayValue, bDisplayValueOnly, bQueryNoDomain) {
@@ -412,6 +429,9 @@ GlobalToolsRecordRead.prototype = {
 					sKeyField = this._getValue('sInputField', '', oKey);
 					sTargetField = this._getValue('sTargetField', '', oKey);
 					sAddlQuery = this._getValue('sAddlQuery', '', oKey);
+					if (sAddlQuery) {
+						sAddlQuery = String('^' + sAddlQuery).replace('^^', '^');
+					} // if addl query
 					bQueryEmptyFields = this._getValue('bQueryEmptyFields', bQueryEmptyFields, oKey);
 				} else {
 					sKeyField = oKey;
@@ -564,13 +584,24 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>110</sys_mod_count>
+        <sys_mod_count>113</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-04-24 07:20:46</sys_updated_on>
+        <sys_updated_on>2024-08-17 10:58:22</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>2a51d52c1bb47150d5be777d8b4bcb25</id>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-08-07 08:50:13</sys_created_on>
+        <sys_id>be1a05fe1bfbc250e50ddc61ab4bcb2c</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-08-07 08:50:13</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>false</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

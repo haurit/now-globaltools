@@ -8,10 +8,15 @@
         <description>Tools to support (scoped) app development&#13;
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
 Probably obsolete with ECMA 21</description>
+        <mobile_callable>false</mobile_callable>
         <name>GlobalToolsArray</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var GlobalToolsArray = Class.create();
 GlobalToolsArray.prototype = {
-	initialize: function () { },
+	initialize: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		this._gt = new global.GlobalTools();
+	}, // function initialize
 
 	checkAccess: function (sCallerScope) {
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
@@ -120,8 +125,26 @@ GlobalToolsArray.prototype = {
 		return aResult;
 	}, // function convertCommaSepStringToArray
 
+	getCommonTypeFromArray: function (aArray, bDoNotConvertCase) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var sType;
+		if (this.isValidArray(aArray)) {
+			var sTmpType = '';
+			aArray.some(function (oElement) {
+				sTmpType = this._gt.getType(oElement, bDoNotConvertCase);
+				if ((!sType) && (sTmpType)) {
+					sType = sTmpType;
+				} else if (sTmpType != sType) {
+					sType = undefined;
+					return true;
+				} // if type is empty or diff
+			}, this); // each element
+		} // if valid array
+		return sType;
+	}, // function getCommonTypeFromArray
+
 	type: 'GlobalToolsArray',
-	version: '1.0.2',
+	version: '1.0.6',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -130,13 +153,24 @@ GlobalToolsArray.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 09:59:35</sys_created_on>
         <sys_id>ca9dcd641bb47150d5be777d8b4bcbd6</sys_id>
-        <sys_mod_count>24</sys_mod_count>
+        <sys_mod_count>28</sys_mod_count>
         <sys_name>GlobalToolsArray</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_ca9dcd641bb47150d5be777d8b4bcbd6</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-07-10 05:26:15</sys_updated_on>
+        <sys_updated_on>2024-08-04 09:03:56</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>ca9dcd641bb47150d5be777d8b4bcbd6</id>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-08-04 08:51:44</sys_created_on>
+        <sys_id>0cbde5311bb78a10e50ddc61ab4bcbc6</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-08-04 08:51:44</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>false</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

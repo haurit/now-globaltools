@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 05:37:15</sys_created_on>
         <sys_id>ff826c861be17510c1ecdc61ab4bcbbe</sys_id>
-        <sys_mod_count>77</sys_mod_count>
+        <sys_mod_count>80</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_ff826c861be17510c1ecdc61ab4bcbbe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-07-10 09:54:27</sys_updated_on>
+        <sys_updated_on>2024-08-16 06:13:36</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsTable Tests">ccd68ce11b6db110d5be777d8b4bcbe6</test>
         <timeout/>
@@ -49,9 +49,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 05:37:15</sys_created_on>
         <sys_id>7c54a8c61be17510c1ecdc61ab4bcb31</sys_id>
-        <sys_mod_count>77</sys_mod_count>
+        <sys_mod_count>80</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-07-10 09:54:27</sys_updated_on>
+        <sys_updated_on>2024-08-16 06:13:36</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -60,6 +60,25 @@
 	var _gtATF = new global.GlobalToolsATF('GlobalToolsTable', _gtTable, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
 	var grRecord;&#13;
 &#13;
+	var sTableIdInc = _gtTable.getTableId('incident');&#13;
+	var sTableIdProb = _gtTable.getTableId('problem');&#13;
+&#13;
+	_gtATF.runATF('getTableId', undefined);&#13;
+	_gtATF.runATF('getTableId', undefined, 'invalidtable');&#13;
+	_gtATF.runATF('getTableId', undefined, []);&#13;
+	_gtATF.runATF('getTableId', undefined, ['invalidtable']);&#13;
+	_gtATF.runATF('getTableId', sTableIdInc, 'incident');&#13;
+	_gtATF.runATF('getTableId', sTableIdProb, 'problem');&#13;
+	_gtATF.runATF('getTableId', [sTableIdInc, sTableIdProb], ['incident', 'problem']);&#13;
+&#13;
+	_gtATF.runATF('getTableName', undefined);&#13;
+	_gtATF.runATF('getTableName', undefined, 'invalidtable');&#13;
+	_gtATF.runATF('getTableName', undefined, []);&#13;
+	_gtATF.runATF('getTableName', undefined, ['invalidtable']);&#13;
+	_gtATF.runATF('getTableName', 'incident', sTableIdInc);&#13;
+	_gtATF.runATF('getTableName', 'problem', sTableIdProb);&#13;
+	_gtATF.runATF('getTableName', ['incident', 'problem'], [sTableIdInc, sTableIdProb]);&#13;
+	&#13;
 	_gtATF.runATF('isValidTable', undefined);&#13;
 	_gtATF.runATF('isValidTable', undefined, 'invalidtable');&#13;
 	_gtATF.runATF('isValidTable', true, 'task');&#13;
@@ -189,7 +208,7 @@
 	_gtATF.runATF('getFieldChoices', [[], [], []]);&#13;
 	_gtATF.runATF('getFieldChoices', [[], [], []], 'invalidtable');&#13;
 	_gtATF.runATF('getFieldChoices', [[], [], []], 'incident', 'invalidfield');&#13;
-	_gtATF.runATF('getFieldChoices', [['inquiry', 'software', 'hardware', 'network', 'database'], [, , , , ,], ['inquiry (Inquiry / Help)', 'software (Software)', 'hardware (Hardware)', 'network (Network)', 'database (Database)']], 'incident', 'category');&#13;
+	_gtATF.runATF('getFieldChoices', [['inquiry', 'software', 'hardware', 'network', 'database', 'password_reset'], [, , , , , ,], ['inquiry (Inquiry / Help)', 'software (Software)', 'hardware (Hardware)', 'network (Network)', 'database (Database)', 'password_reset (Password Reset)']], 'incident', 'category'); // added pw reset in Xanadu&#13;
 	_gtATF.runATF('getFieldChoices', '&gt;2', 'incident', 'subcategory');&#13;
 &#13;
 	_gtATF.runATF('getFieldChoices', [['antivirus', 'email', 'internal application'], ['inquiry', 'inquiry', 'inquiry'], ['antivirus (Antivirus)', 'email (Email)', 'internal application (Internal Application)']], 'incident', 'subcategory', 'inquiry');&#13;

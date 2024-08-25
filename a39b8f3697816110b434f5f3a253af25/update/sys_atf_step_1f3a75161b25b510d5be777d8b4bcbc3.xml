@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:31:57</sys_created_on>
         <sys_id>1f3a75161b25b510d5be777d8b4bcbc3</sys_id>
-        <sys_mod_count>89</sys_mod_count>
+        <sys_mod_count>93</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_1f3a75161b25b510d5be777d8b4bcbc3</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-01-07 11:19:02</sys_updated_on>
+        <sys_updated_on>2024-08-17 11:02:08</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRecordRead Tests">a7e640251b6db110d5be777d8b4bcbef</test>
         <timeout/>
@@ -35,9 +35,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:31:57</sys_created_on>
         <sys_id>736a79161b25b510d5be777d8b4bcb58</sys_id>
-        <sys_mod_count>89</sys_mod_count>
+        <sys_mod_count>93</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-01-07 11:19:02</sys_updated_on>
+        <sys_updated_on>2024-08-17 11:02:08</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -46,6 +46,14 @@
 	var _gtTable = new global.GlobalToolsTable();&#13;
 	var _gtATF = new global.GlobalToolsATF('GlobalToolsRecordRead', _gtRead, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
 	var grRecord;&#13;
+&#13;
+	_gtATF.runATF('isValidQuery', false);&#13;
+	_gtATF.runATF('isValidQuery', false, 'invalidtable');&#13;
+	_gtATF.runATF('isValidQuery', false, '', 'invalidquery');&#13;
+	_gtATF.runATF('isValidQuery', false, 'invalidtable', 'invalidquery');&#13;
+	_gtATF.runATF('isValidQuery', false, 'incident');&#13;
+	_gtATF.runATF('isValidQuery', false, 'incident', 'invalidquery');&#13;
+	_gtATF.runATF('isValidQuery', true, 'incident', 'active=true');&#13;
 &#13;
 	_gtATF.runATF('countRecords', undefined);&#13;
 	_gtATF.runATF('countRecords', undefined, 'invalidtable');&#13;
@@ -80,7 +88,7 @@
 &#13;
 	grRecord = _gtRead.getRecord('cmdb_ci', grRecord.getUniqueValue());&#13;
 	if ((!grRecord) || (_gtTable.getRecordClass(grRecord) == 'cmdb_ci')) {&#13;
-		_gtATF.addError('getRelatedRgetRecordecordByKeys', 'Record return invalid or in the base class.');&#13;
+		_gtATF.addError('getRecord', 'Record return invalid or in the base class.');&#13;
 	} // if ci base class&#13;
 &#13;
 	_gtATF.runATF('getRecords', '&gt;1', 'task', 'active=true');&#13;
@@ -112,7 +120,11 @@
 	oRecordValues['active'] = 'true';&#13;
 	_gtATF.runATF('getRecordByKeys', sSysId, oRecordConfig, oRecordValues);&#13;
 	oRecordValues['caller_email'] = String(grRecord.caller_id.email);&#13;
-	oRecordConfig['aKeys'] = [['number', 'active', { 'sInputField': 'caller_email', 'sTargetField': 'caller_id.email' }]];&#13;
+	oRecordConfig['aKeys'] = [['number', 'active', { sInputField: 'caller_email', sTargetField: 'caller_id.email' }]];&#13;
+	_gtATF.runATF('getRecordByKeys', sSysId, oRecordConfig, oRecordValues);&#13;
+	oRecordConfig['aKeys'] = [['number', 'active', { sInputField: 'caller_email', sTargetField: 'caller_id.email', sAddlQuery: 'caller_idISNOTEMPTY'}]];&#13;
+	_gtATF.runATF('getRecordByKeys', sSysId, oRecordConfig, oRecordValues);&#13;
+	oRecordConfig['aKeys'] = [['number', 'active', { sInputField: 'caller_email', sTargetField: 'caller_id.email', sAddlQuery: '^caller_idISNOTEMPTY' }]];&#13;
 	_gtATF.runATF('getRecordByKeys', sSysId, oRecordConfig, oRecordValues);&#13;
 &#13;
 	grRecord = _gtATF.getRecord('incident', 'active=true^caller_idISNOTEMPTY^caller_id.emailISNOTEMPTY');&#13;
