@@ -9,6 +9,7 @@
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsRecordWriteValidate</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var GlobalToolsRecordWriteValidate = Class.create();
 GlobalToolsRecordWriteValidate.prototype = {
 	initialize: function () {
@@ -134,6 +135,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this.oFieldsObjects = {}; // fields from aFields with type object with valid key sField as object
 		this.aFieldsComplex = []; // fields from aFields with type object with valid key sField as string
 		this.aFieldsIgnore = []; // fields to be completly ignored with sFieldAction = ignore
+		this.aFieldsIgnoreOnInsert = []; // fields to be ignored on insert with sFieldAction = ignore_insert
+		this.aFieldsIgnoreOnUpdate = []; // fields to be ignored on update with sFieldAction = ignore_update
 		this.aFieldsSource = []; // fields used in sSourceValue parameter
 		this.aFieldsKeyFields = []; // fields used in reference fields keys
 		this.aRecordKeyFields = []; // fields used in main record keys
@@ -166,6 +169,11 @@ GlobalToolsRecordWriteValidate.prototype = {
 						if (oField.hasOwnProperty('sSourceField')) {
 							this.aFieldsSource.push(oField['sSourceField']);
 						} // if source field
+						if ((oField.hasOwnProperty('sFieldAction')) && (oField['sFieldAction'] == 'ignore_insert')) {
+							this.aFieldsIgnoreOnInsert.push(oField['sField']);
+						} else if ((oField.hasOwnProperty('sFieldAction')) && (oField['sFieldAction'] == 'ignore_update')) {
+							this.aFieldsIgnoreOnUpdate.push(oField['sField']);
+						} // if ignore on insert or update
 					} // if field action ignore
 				} else {
 					this._errorHandler('config', '400_031', 'Invalid field configuration in config object (missing field property)', '', [JSON.stringify(oField)], true, false);
@@ -324,6 +332,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 			edElementDescriptor,
 			sDependentField,
 			sDependentFieldValue,
+			bDependentFieldValueValid,
 			sFirstTable,
 			grDict,
 			aChoicesRetVal,
@@ -349,7 +358,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 				bNoActionError = true;
 				sErrorHandling = sErrorHandlingDefault;
 				bFieldDone = false;
-				if (this.grRecord.isValidField(sField)) {
+				bDependentFieldValueValid = false;
+				if ((this.grRecord.isValidField(sField)) && (((this.bIsValidRecord === false) && (this.aFieldsIgnoreOnInsert.indexOf(sField) == -1)) || ((this.bIsValidRecord === true) && (this.aFieldsIgnoreOnUpdate.indexOf(sField) == -1)))) {
 					geElement = this.grRecord.getElement(sField);
 					edElementDescriptor = geElement.getED();
 					sInternalType = String(edElementDescriptor.getInternalType());
@@ -425,25 +435,26 @@ GlobalToolsRecordWriteValidate.prototype = {
 											sDependentFieldValue = '';
 											if (sDependentField) {
 												sDependentFieldValue = this._getValue(sDependentField, this.grRecord.getValue(sDependentField), this.oRecordValues);
+												if (sDependentFieldValue) {
+													aChoicesRetVal = this._gtTable.getFieldChoices(this.sTargetTable, sDependentField);
+													aChoices = aChoicesRetVal[0];
+													if ((this._isValidArray(aChoices)) && (aChoices.indexOf(sDependentFieldValue) != -1)) {
+														bDependentFieldValueValid = true;
+													} // if valid dependent value
+												} // if dependent value
 											} // if dependent field
-											grDict = this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, '', true);
-											sChoiceTable = grDict.getValue('choice_table');
-											sChoiceField = grDict.getValue('choice_field');
-											if ((sChoiceTable) && (sChoiceField)) {
-												aChoicesRetVal = this._gtTable.getFieldChoices(sChoiceTable, sChoiceField, sDependentFieldValue);
-											} else {
-												aChoicesRetVal = this._gtTable.getFieldChoices(this.sTargetTable, sField, sDependentFieldValue);
-											} // if choice table/field
+											aChoicesRetVal = this._gtTable.getFieldChoices(this.sTargetTable, sField, sDependentFieldValue);
 											aChoices = aChoicesRetVal[0];
 											aDependentValues = aChoicesRetVal[1];
 											aChoiceDisplayValues = aChoicesRetVal[2];
 											bMatch = false;
-											if (this._isValidArray(aChoices)) {
+											if ((this._isValidArray(aChoices)) || (sDependentField)) {
 												bMatch = aChoices.some(function (sChoiceValue, iIndex) {
 													if ((String(sValue)) == String(sChoiceValue)) {
 														if ((sDependentField) && (!sDependentFieldValue) && (this._isValidArray(aDependentValues)) && (aDependentValues.length >= iIndex)) {
 															this.grRecord.setValue(sDependentField, aDependentValues[iIndex]); // set dependent field if empty for first choice match dependent value
 															this._setValue(sDependentField, aDependentValues[iIndex], this.oRecordValues);
+															bDependentFieldValueValid = true;
 														} // if dependent field but no value
 														return true;
 													} // if same choice
@@ -453,19 +464,23 @@ GlobalToolsRecordWriteValidate.prototype = {
 														sValue = this._getValue('sDefaultValue', this._getValue('oErrorHandling/oFieldType/choice/sChoiceName', 'DataQualityIssue', this.oRecordConfig), oField);
 														this._setValue(sField, sValue, this.oRecordValues);
 														this.grRecord.setValue(sField, sValue);
-														this._errorHandler('value', '400_019', 'Invalid value in choice list field (default value)', '', [sField, sValue, aChoiceDisplayValues.join(', ')], false, false);
+														if (bDependentFieldValueValid) {
+															this._errorHandler('value', '400_019', 'Invalid value in choice list field (default value)', '', [sField, sValue, aChoiceDisplayValues.join(', ')], false, false);
+														} else {
+															this._errorHandler('value', '400_019', 'Invalid value in choice list field dependent value (default value)', '', [sField, sValue, aChoiceDisplayValues.join(', ')], false, false);
+														} // if dependent valid
 													} else if (sErrorHandling == 'leaveempty') {
 														this._setValue(sField, '', this.oRecordValues);
 														this.grRecord.setValue(sField, '');
-														this._errorHandler('value', '400_019', 'Invalid value in choice list field (leave empty)', '', [sField, sValue, aChoiceDisplayValues.join(', ')], false, false);
+														if (bDependentFieldValueValid) {
+															this._errorHandler('value', '400_019', 'Invalid value in choice list field (leave empty)', '', [sField, sValue, aChoiceDisplayValues.join(', ')], false, false);
+														} else {
+															this._errorHandler('value', '400_019', 'Invalid value in choice list field dependent value (leave empty)', '', [sField, sValue, aChoiceDisplayValues.join(', ')], false, false);
+														} // if dependent valid
 													} else if ((sErrorHandling == 'mapping') && (this._mappingCfgMgr)) {
 														sFirstTable = (edElementDescriptor) ? edElementDescriptor.getFirstTableName() : '';
 														sFirstTable = (sFirstTable) ? sFirstTable : this.sTargetTable;
-														if ((sChoiceTable) && (sChoiceField)) {
-															sValue = this._mappingCfgMgr.doMappingValue(sFirstTable, sValue, '', sChoiceTable, sChoiceField);
-														} else {
-															sValue = this._mappingCfgMgr.doMappingValue(sFirstTable, sValue, '', sFirstTable, sField);
-														} // if choice table
+														sValue = this._mappingCfgMgr.doMappingValue(sFirstTable, sValue, '', sFirstTable, sField, sDependentField, sDependentFieldValue);
 														if (sValue) {
 															this._setValue(sField, sValue, this.oRecordValues);
 															this.grRecord.setValue(sField, sValue);
@@ -475,12 +490,16 @@ GlobalToolsRecordWriteValidate.prototype = {
 															this._setValue(sField, sValue, this.oRecordValues);
 															this.grRecord.setValue(sField, sValue);
 														} // if warn set value
-														this._errorHandler('value', '400_019', 'Invalid value in choice list field', '', [sField, sValue, aChoiceDisplayValues.join(', ')], bNoActionError, false);
+														if (bDependentFieldValueValid) {
+															this._errorHandler('value', '400_019', 'Invalid value in choice list field', '', [sField, sValue, aChoiceDisplayValues.join(', ')], bNoActionError, false);
+														} else {
+															this._errorHandler('value', '400_019', 'Invalid value in choice list field dependent value', '', [sField, sValue, aChoiceDisplayValues.join(', ')], bNoActionError, false);
+														} // if dependent valid
 													} // if replace
 													bFieldDone = true;
 												} // if invalid choice
 											} else {
-												this._errorHandler('system', '400_018', 'Invalid choice list configuration', '', [this.sTargetTable, sField], true, false);
+												this._errorHandler('system', '400_018', 'Invalid choice list configuration', '', [sField, '-', '-'], true, false);
 												bFieldDone = true;
 											} // if choice
 										} // if ignore do nothing
@@ -566,7 +585,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 											var reIPAddress = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 											if ((!reIPAddress.test(sValue)) || (sValue.length < 3)) {
 												this._errorHandler('value', '400_030', 'Invalid ip address value', '', [sField, sValue], bNoActionError, false);
-												bFieldDone = true;
+												var sIPDataControl = geElement.getAttribute('ip_data_control');
+												if ((sInternalType == 'ip_addr') && ((sIPDataControl == 'canonical') || (sIPDataControl == 'expanded'))) {
+													bFieldDone = true;
+												} // if attr does not accept wrong entries
 											} // if not valid ip address
 										} // if type is ip address
 										if (sInternalType == 'table_name') {
@@ -1135,6 +1157,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var oParams = {};
 		var aValues = [];
+		var bSingleValue = (sValueType == 'array') ? false : true;
 		var aValuesInput = (sValueType == 'array') ? oValue : [oValue];
 		var sRefTable = this._getValue('sRefTable', '', oField);
 		sRefTable = (sRefTable) ? sRefTable : this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'reference');
@@ -1151,9 +1174,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 			sErrorHandling = sByReferenceTable;
 		} // if ref table or ref base table
 		sErrorHandling = this._getValue('sErrorHandling', sErrorHandling, oField);
-		var sRefLookupScript = '', sDefaultValue = '', sFirstTable = '';
+		var aRecordByKeysError = [], sRefLookupScript = '', sDefaultValue = '', sFirstTable = '', aTargetFields2 = [];
 		aValuesInput.forEach(function (sRefInput, iIndex) {
-			var aRecordByKeysError = [];
+			aRecordByKeysError = [];
+			aTargetFields2 = [];
 			iIndex = (sValueType == 'array') ? iIndex : null;
 			sRefLookupScript = (oField.hasOwnProperty('sRefLookupScript')) ? oField['sRefLookupScript'] : this._getValue('oTransformConfig/oTypeMap/reference/' + sRefTable + '/sRefLookupScript', '', this.oRecordConfig);
 			if (sRefLookupScript) {
@@ -1198,7 +1222,16 @@ GlobalToolsRecordWriteValidate.prototype = {
 					sFirstTable = (edElementDescriptor) ? edElementDescriptor.getFirstTableName() : '';
 					sFirstTable = (sFirstTable) ? sFirstTable : this.sTargetTable;
 					sRefValue = this._mappingCfgMgr.doMappingValue(sFirstTable, sRefInput, '', sRefTable);
-					if (sRefValue) {
+					if ((sRefValue) && (sRefValue.hasOwnProperty('sTargetValue'))) {
+						aValues.push(sRefValue['sTargetValue']);
+						if ((bSingleValue) && (sRefValue.hasOwnProperty('sTargetValue2')) && (sRefValue.hasOwnProperty('aTargetFields2'))) {
+							aTargetFields2 = sRefValue['aTargetFields2'];
+							aTargetFields2.forEach(function (sTargetField2) {
+								this.grRecord.setValue(sTargetField2, sRefValue['sTargetValue2']);
+								this.oRecordValues[sTargetField2] = sRefValue['sTargetValue2'];
+							}, this); // each target field
+						} // if target value 2
+					} else if (sRefValue) {
 						aValues.push(sRefValue);
 					} // if ref value
 				} else if (sErrorHandling == 'create') {
@@ -1496,7 +1529,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _parseRecordError
 
 	type: 'GlobalToolsRecordWriteValidate',
-	version: '1.0.6',
+	version: '1.0.7',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -1505,14 +1538,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>694</sys_mod_count>
+        <sys_mod_count>718</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-08-25 16:40:13</sys_updated_on>
+        <sys_updated_on>2024-10-18 07:08:27</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>
