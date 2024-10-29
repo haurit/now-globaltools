@@ -343,6 +343,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 			aChoiceDisplayValues,
 			bMatch;
 		var sErrorHandlingDefault = this._getValue('oErrorHandling/oFieldType/all/sErrorHandling', 'reject', this.oRecordConfig);
+		var bNoTrim = this._getValue('bNoTrim', false, this.oRecordConfig);
 		this.aAllRecordFields.forEach(function (sField) {
 			oField = this._getValue(sField, {}, this.oFieldsObjects);
 			sValue = this._getValue(sField, '', this.oRecordValues);
@@ -350,6 +351,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 			if ((sSourceField) && (sSourceField != sField)) {
 				sValue = this._getValue(sSourceField, sValue, this.oRecordValues);
 			} // if source field and diff from field (and has value) replace value
+			bNoTrim = this._getValue('bNoTrim', bNoTrim, oField);
+			if ((bNoTrim === false) && (typeof sValue == 'string')) {
+				sValue = sValue.trim();
+			} // if trim
 			sFixedValue = this._getValue('sFixedValue', '', oField);
 			try {
 				aValues = [];
@@ -1538,14 +1543,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>718</sys_mod_count>
+        <sys_mod_count>722</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-10-18 07:08:27</sys_updated_on>
+        <sys_updated_on>2024-10-28 14:35:46</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>
