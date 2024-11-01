@@ -643,11 +643,14 @@ GlobalToolsRecordWriteValidate.prototype = {
 			'lookup': [],
 			'values': {},
 		}; // item
+		var sValue = '';
 		this.aAllRecordFields.forEach(function (sField) {
+			sValue = this.grRecord.getValue(sField);
 			if (sField != 'sys_class_name') {
-				sItem['values'][sField] = this.grRecord.getValue(sField);
+				sValue = (sValue === null) ? '' : sValue;
+				sItem['values'][sField] = sValue;
 			} // if not class
-		}, this);
+		}, this); // each field
 		this.oIREPayload['items'].push(sItem);
 	}, // function _createIREPayload
 
@@ -1166,7 +1169,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		var aValuesInput = (sValueType == 'array') ? oValue : [oValue];
 		var sRefTable = this._getValue('sRefTable', '', oField);
 		sRefTable = (sRefTable) ? sRefTable : this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'reference');
-		var sRefTableBase = this._gtTable.getAbsoluteBase(sRefTable)
+		var sRefTableBase = this._gtTable.getAbsoluteBase(sRefTable);
 		var sErrorHandling = this._getValue('oErrorHandling/oFieldType/all/sErrorHandling', 'reject', this.oRecordConfig);
 		sErrorHandling = this._getValue('oErrorHandling/oFieldType/reference/sErrorHandling', sErrorHandling, this.oRecordConfig);
 		var sByReferenceTable = this._getValue('oErrorHandling/oFieldType/reference/oByReferenceTable/' + sRefTable, '', this.oRecordConfig);
@@ -1543,14 +1546,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>722</sys_mod_count>
+        <sys_mod_count>736</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-10-28 14:35:46</sys_updated_on>
+        <sys_updated_on>2024-11-01 08:00:09</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>
