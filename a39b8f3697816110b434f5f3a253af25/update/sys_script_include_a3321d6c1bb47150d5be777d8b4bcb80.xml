@@ -280,15 +280,31 @@ GlobalToolsRecordWriteValidate.prototype = {
 			this.bIsValidRecord = false;
 		} else {
 			var aRecordByKeysError = [];
-			var grRecord = this._gtRead.getRecordByKeys(this.oRecordConfig, this.oRecordValues, aRecordByKeysError);
+			var bAllowClassChange = this._getValue('bAllowClassChange', false, this.oRecordConfig);
+			var grRecord = this._gtRead.getRecordByKeys(this.oRecordConfig, this.oRecordValues, aRecordByKeysError, bAllowClassChange);
 			if (aRecordByKeysError.length > 0) {
 				this._errorHandler('config', '400_033', 'Invalid key configuration in config object', '', [aRecordByKeysError.join(', ')], false, true);
 				return;
 			} // if error
 			this.bIsValidRecord = ((grRecord) && (this._gt.getType(grRecord).indexOf('gliderecord') != -1) && (grRecord.isValidRecord()) && (grRecord.getValue('sys_id') != -1)) ? true : false;
 			if (this.bIsValidRecord) {
-				this.sRecordId = grRecord.getUniqueValue();
-				this.grRecord = grRecord;
+				if ((bAllowClassChange) && (this._gtTable.getRecordClass(grRecord) != this.sTargetTable) && (grRecord.isValidField('sys_class_name')) && (this._getValue('bUseIRE', false, this.oRecordConfig)) && (this._getValue('bKeepSysId', false, this.oRecordConfig)) && (this._getValue('sys_id', '', this.oRecordValues))) {
+					grRecord.setValue('sys_class_name', this.sTargetTable);
+					if (grRecord.update()) {
+						var grRecordNewClass = new GlideRecord(this.sTargetTable);
+						if (grRecordNewClass.get('sys_id', grRecord.getUniqueValue())) {
+							this.sRecordId = grRecordNewClass.getUniqueValue();
+							this.grRecord = grRecordNewClass;
+						} else {
+							this._errorHandler('record', '500_012', 'Error selecting record during class switch', '', [grRecordNewClass.getLastErrorMessage()], false, true);
+						} // if new class record found
+					} else {
+						this._errorHandler('record', '500_011', 'Error updating record during class switch', '', [grRecord.getLastErrorMessage()], false, true);
+					} // if class update successful
+				} else {
+					this.sRecordId = grRecord.getUniqueValue();
+					this.grRecord = grRecord;
+				} // if class has changed and keep sysid change the record because IRE will not work with SysId
 				this.grRecordOld = new GlideRecord(this.sTargetTable);
 				this.grRecordOld.get(this.sRecordId);
 			} // if is valid record
@@ -1537,7 +1553,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _parseRecordError
 
 	type: 'GlobalToolsRecordWriteValidate',
-	version: '1.0.7',
+	version: '1.0.8',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -1546,14 +1562,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>736</sys_mod_count>
+        <sys_mod_count>745</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-11-01 08:00:09</sys_updated_on>
+        <sys_updated_on>2024-11-13 15:47:10</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>
