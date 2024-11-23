@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step">
+    <sys_atf_step action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <copied_from/>
+        <description>Run Server Side Validation Script</description>
+        <display_name>Run Server Side Script</display_name>
+        <inputs/>
+        <mugshots_cache_json/>
+        <notes/>
+        <order>1</order>
+        <step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config>
+        <sys_class_name>sys_atf_step</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-11-23 14:50:32</sys_created_on>
+        <sys_id>89d7ee65c38252109ebe8d8dc0013198</sys_id>
+        <sys_mod_count>9</sys_mod_count>
+        <sys_name>Run Server Side Script</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_atf_step_89d7ee65c38252109ebe8d8dc0013198</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-11-23 15:22:57</sys_updated_on>
+        <table/>
+        <test display_value="GlobalToolsCache Tests">7cb7ea65c38252109ebe8d8dc001310f</test>
+        <timeout/>
+        <warning_message/>
+    </sys_atf_step>
+    <sys_variable_value action="delete_multiple" query="document_key=89d7ee65c38252109ebe8d8dc0013198"/>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>89d7ee65c38252109ebe8d8dc0013198</document_key>
+        <order>100</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-11-23 14:50:32</sys_created_on>
+        <sys_id>4a48aea5c38252109ebe8d8dc0013145</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-11-23 14:50:32</sys_updated_on>
+        <value>3.1</value>
+        <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
+    </sys_variable_value>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>89d7ee65c38252109ebe8d8dc0013198</document_key>
+        <order>200</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-11-23 14:50:32</sys_created_on>
+        <sys_id>c248aea5c38252109ebe8d8dc0013146</sys_id>
+        <sys_mod_count>9</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-11-23 15:22:57</sys_updated_on>
+        <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
+&#13;
+	var bLog = false;&#13;
+	var _gtCache = new global.GlobalToolsCache();&#13;
+&#13;
+	var _gtATF = new global.GlobalToolsATF('GlobalToolsCache', _gtCache, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
+&#13;
+	_gtATF.runATF('setValue', null, 'atf_test/transaction/test', 'transaction_test_value1');&#13;
+	_gtATF.runATF('getValue', 'transaction_test_value1', 'atf_test/transaction/test');&#13;
+	_gtATF.runATF('checkValue', true, 'atf_test/transaction/test');&#13;
+	_gtATF.runATF('clearValue', null, 'atf_test/transaction/test');&#13;
+	_gtATF.runATF('checkValue', false, 'atf_test/transaction/test');&#13;
+	_gtATF.runATF('resetCache', null);&#13;
+	_gtATF.runATF('checkValue', false, 'atf_test');&#13;
+&#13;
+	_gtATF.runATF('setValue', null, 'atf_test/transaction/test', 'transaction_test_value1', 'glidecontroller');&#13;
+	_gtATF.runATF('getValue', 'transaction_test_value1', 'atf_test/transaction/test', 'glidecontroller');&#13;
+	_gtATF.runATF('checkValue', true, 'atf_test/transaction/test', 'glidecontroller');&#13;
+	_gtATF.runATF('clearValue', null, 'atf_test/transaction/test', 'glidecontroller');&#13;
+	_gtATF.runATF('checkValue', false, 'atf_test/transaction/test', 'glidecontroller');&#13;
+&#13;
+	_gtATF.runATF('setValue', null, 'atf_test/transaction/test', 'transaction_test_value1', 'session');&#13;
+	_gtATF.runATF('getValue', 'transaction_test_value1', 'atf_test/transaction/test', 'session');&#13;
+	_gtATF.runATF('checkValue', true, 'atf_test/transaction/test', 'session');&#13;
+	_gtATF.runATF('clearValue', null, 'atf_test/transaction/test', 'session');&#13;
+	_gtATF.runATF('checkValue', false, 'atf_test/transaction/test', 'session');&#13;
+&#13;
+	return _gtATF.endATF();&#13;
+&#13;
+})(outputs, steps, params, stepResult, assertEqual);&#13;
+</value>
+        <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
+    </sys_variable_value>
+</record_update>
