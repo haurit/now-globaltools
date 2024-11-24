@@ -7,7 +7,9 @@
         <client_callable>false</client_callable>
         <description>Tools to support (scoped) app development&#13;
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
+        <mobile_callable>false</mobile_callable>
         <name>GlobalToolsRESTAPI</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var GlobalToolsRESTAPI = Class.create();
 GlobalToolsRESTAPI.prototype = {
 	initialize: function (oConnectionAlias, bLog, bQueryNoDomain, sLogLevel) {
@@ -303,7 +305,7 @@ GlobalToolsRESTAPI.prototype = {
 		var oResponse = oRequest.execute();
 		if (oResponse) {
 			var sStatus = String(oResponse.getStatusCode());
-			var sErrorCode = JSON.parse(oResponse.getErrorCode());
+			var sErrorCode = this._gtObject.parseJSON(oResponse.getErrorCode());
 			var sErrorMsg = oResponse.getErrorMessage();
 			if (sStatus.startsWith('20')) {
 				if (bSaveResponseBodyAsAttachment) {
@@ -320,8 +322,8 @@ GlobalToolsRESTAPI.prototype = {
 						} else {
 							return oResponseBody['result'];
 						} // if test connection
-					} catch (ex) {
-						gs.error('global.GlobalToolsRESTAPI.doRESTRequest error parsing response for sUrl: ' + this.sRemoteUrl + sUrl + ' sError: "' + String(ex) + '" sResponseBody: ' + sResponseBody);
+					} catch (oEx) {
+						gs.error('global.GlobalToolsRESTAPI.doRESTRequest error parsing response for sUrl: ' + this.sRemoteUrl + sUrl + ' sError: "' + String(oEx) + '" sResponseBody: ' + sResponseBody);
 						return { 'success': false, 'message': String(ex), 'error_code': '-99' };
 					} // if response cannot be parsed
 				} // if get response as attachment
@@ -333,7 +335,7 @@ GlobalToolsRESTAPI.prototype = {
 	}, // function doRESTRequest
 
 	type: 'GlobalToolsRESTAPI',
-	version: '1.0.5',
+	version: '1.0.8',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -341,13 +343,24 @@ GlobalToolsRESTAPI.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 11:42:21</sys_created_on>
         <sys_id>a95f09e21b0731105e14b8449b4bcb29</sys_id>
-        <sys_mod_count>99</sys_mod_count>
+        <sys_mod_count>101</sys_mod_count>
         <sys_name>GlobalToolsRESTAPI</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a95f09e21b0731105e14b8449b4bcb29</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-06-12 06:44:15</sys_updated_on>
+        <sys_updated_on>2024-11-24 07:30:35</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>a95f09e21b0731105e14b8449b4bcb29</id>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-11-24 07:09:28</sys_created_on>
+        <sys_id>b15802bdc34292109ebe8d8dc00131bf</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-11-24 07:09:28</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>false</use_es_latest>
+    </sys_es_latest_script>
 </record_update>
