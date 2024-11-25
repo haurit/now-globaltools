@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.GlobalToolsCache</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description>Tools to support (scoped) app development&#13;
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
+&#13;
+Please note that GlideController is not an offically supported API and thus use should be restricted.</description>
+        <mobile_callable>false</mobile_callable>
+        <name>GlobalToolsCache</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[var GlobalToolsCache = Class.create();
+var gtCache = {};
+GlobalToolsCache.prototype = {
+	initialize: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		this._gtObject = new GlobalToolsObject();
+	}, // function initialize
+
+	checkAccess: function (sCallerScope) {
+		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
+		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
+		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
+			return true;
+		} // if scope is allowed
+	}, // function checkAccess
+
+	setValue: function (sCachePath, sCacheValue, sCacheType) {
+		sCacheType = (sCacheType) ? sCacheType : 'transaction';
+		if ((sCachePath) && (sCacheValue)) {
+			if (sCacheType == 'transaction') {
+				this._gtObject.setValue(sCachePath, sCacheValue, gtCache);
+			} else if (sCacheType == 'glidecontroller') {
+				GlideController.putGlobal(sCachePath, sCacheValue);
+			} else if (sCacheType == 'session') {
+				gs.getSession().putClientData(sCachePath, sCacheValue);
+			} // if cache type
+		} // if path and value
+	}, // function setValue
+
+	getValue: function (sCachePath, sCacheType) {
+		sCacheType = (sCacheType) ? sCacheType : 'transaction';
+		if (sCachePath) {
+			if (sCacheType == 'transaction') {
+				return this._gtObject.getValue(sCachePath, null, gtCache);
+			} else if (sCacheType == 'glidecontroller') {
+				return GlideController.getGlobal(sCachePath);
+			} else if (sCacheType == 'session') {
+				return gs.getSession().getClientData(sCachePath);
+			} // if cache type
+		} // if path
+	}, // function getValue
+
+	checkValue: function (sCachePath, sCacheType) {
+		sCacheType = (sCacheType) ? sCacheType : 'transaction';
+		var oData;
+		if (sCachePath) {
+			if (sCacheType == 'transaction') {
+				return this._gtObject.hasValue(sCachePath, null, gtCache);
+			} else if (sCacheType == 'glidecontroller') {
+				return j2js(GlideController.exists(sCachePath));
+			} else if (sCacheType == 'session') {
+				oData = gs.getSession().getClientData(sCachePath); // GlideController.exists would also work
+				if (oData !== null) {
+					return true;
+				} // if not null
+			} // if cache type
+		} // if path
+	}, // function checkValue
+
+	clearValue: function (sCachePath, sCacheType) {
+		sCacheType = (sCacheType) ? sCacheType : 'transaction';
+		if (sCachePath) {
+			if (sCacheType == 'transaction') {
+				this._gtObject.deleteValue(sCachePath, gtCache);
+			} else if (sCacheType == 'glidecontroller') {
+				GlideController.removeGlobal(sCachePath);
+			} else if (sCacheType == 'session') {
+				gs.getSession().clearClientData(sCachePath);
+			} // if cache type
+		} // if path
+	}, // function clearValue
+
+	resetCache: function () {
+		gtCache = {};
+	}, // function resetCache
+
+	type: 'GlobalToolsCache',
+	version: '1.0.8',
+	author: 'Tom Hauri',
+	email: 'tom@hauri.biz'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-11-23 14:24:40</sys_created_on>
+        <sys_id>bc02e6adc34252109ebe8d8dc0013152</sys_id>
+        <sys_mod_count>14</sys_mod_count>
+        <sys_name>GlobalToolsCache</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_script_include_bc02e6adc34252109ebe8d8dc0013152</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-11-23 15:21:39</sys_updated_on>
+    </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>bc02e6adc34252109ebe8d8dc0013152</id>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-11-23 14:24:39</sys_created_on>
+        <sys_id>c75222edc34252109ebe8d8dc0013177</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-11-23 14:24:39</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>false</use_es_latest>
+    </sys_es_latest_script>
+</record_update>

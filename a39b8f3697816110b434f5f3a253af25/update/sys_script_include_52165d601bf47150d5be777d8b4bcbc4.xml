@@ -11,7 +11,9 @@ From Vancouver release onwards you can use GlideJsonPathAPI instead of getValue 
 https://docs.servicenow.com/en-US/bundle/vancouver-api-reference/page/app-store/dev_portal/API_reference/GlideJsonPath/concept/GlideJsonPathAPI.html&#13;
 &#13;
 If your script is in ECMA 6 mode use Object.assign instead of ObjectAssign function.</description>
+        <mobile_callable>false</mobile_callable>
         <name>GlobalToolsObject</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var GlobalToolsObject = Class.create();
 GlobalToolsObject.prototype = {
 	initialize: function () {
@@ -208,6 +210,65 @@ GlobalToolsObject.prototype = {
 		return false;
 	}, // function hasValue
 
+	// Function to retrieve up to 8 levels of config
+	// For recursive configs pass sub object
+	deleteValue: function (sConfigPath, oConfig) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!oConfig) {
+			oConfig = this.oConfig;
+		} // if no object
+		sConfigPath = sConfigPath.replace(/^\//, '').replace(/\/$/, ''); // remove leading and trailing /
+		var aConfigPath = sConfigPath.split('/');
+		var iMaxLength = (Array.isArray(aConfigPath)) ? aConfigPath.length : 0;
+		if ((iMaxLength > 0) && (oConfig) && (oConfig.hasOwnProperty(aConfigPath[0]))) {
+			if (iMaxLength == 1) {
+				delete oConfig[aConfigPath[0]];
+			} else {
+				if ((iMaxLength > 1) && (oConfig[aConfigPath[0]].hasOwnProperty(aConfigPath[1]))) {
+					if (iMaxLength == 2) {
+						delete oConfig[aConfigPath[0]][aConfigPath[1]];
+					} else {
+						if ((iMaxLength > 2) && (oConfig[aConfigPath[0]][aConfigPath[1]].hasOwnProperty(aConfigPath[2]))) {
+							if (iMaxLength == 3) {
+								delete oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]];
+							} else {
+								if ((iMaxLength > 3) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]].hasOwnProperty(aConfigPath[3]))) {
+									if (iMaxLength == 4) {
+										delete oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]];
+									} else {
+										if ((iMaxLength > 4) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]].hasOwnProperty(aConfigPath[4]))) {
+											if (iMaxLength == 5) {
+												delete oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]];
+											} else {
+												if ((iMaxLength > 5) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]].hasOwnProperty(aConfigPath[5]))) {
+													if (iMaxLength == 6) {
+														delete oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]];
+													} else {
+														if ((iMaxLength > 6) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]].hasOwnProperty(aConfigPath[6]))) {
+															if (iMaxLength == 7) {
+																delete oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]];
+															} else {
+																if ((iMaxLength > 8) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]].hasOwnProperty(aConfigPath[7]))) {
+																	if (iMaxLength == 9) {
+																		delete oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]][aConfigPath[7]];
+																	} // if found 8 level
+																} // if 8 level
+															} // if found 7 level
+														} // if 7 level
+													} // if found 6 level
+												} // if 6 level
+											} // if found 5 level
+										} // if 5 level
+									} // if found 4 level
+								} // if 4 level
+							} // if found 3 level
+						} // if 3 level
+					} // if found 2 level
+				} // if 2 level
+			} // if found 1 level
+		} // if 1 level
+	}, // function deleteValue
+
 	// Simple deep merge without recursion protection etc, using ECMA 5 because running in global
 	deepMerge: function (oSource, oMerge, bMergeArrays) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
@@ -268,7 +329,7 @@ GlobalToolsObject.prototype = {
 	}, // function parseJSON
 
 	type: 'GlobalToolsObject',
-	version: '1.0.2',
+	version: '1.0.8',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -276,13 +337,24 @@ GlobalToolsObject.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:36:44</sys_created_on>
         <sys_id>52165d601bf47150d5be777d8b4bcbc4</sys_id>
-        <sys_mod_count>51</sys_mod_count>
+        <sys_mod_count>53</sys_mod_count>
         <sys_name>GlobalToolsObject</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_52165d601bf47150d5be777d8b4bcbc4</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-07-09 13:13:00</sys_updated_on>
+        <sys_updated_on>2024-11-25 05:49:56</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>52165d601bf47150d5be777d8b4bcbc4</id>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-11-23 15:07:34</sys_created_on>
+        <sys_id>6f2c6221c3c252109ebe8d8dc001311c</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-11-23 15:07:34</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>false</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

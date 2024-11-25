@@ -9,6 +9,7 @@
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsRecordRead</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var GlobalToolsRecordRead = Class.create();
 GlobalToolsRecordRead.prototype = {
 	initialize: function () {
@@ -379,9 +380,12 @@ GlobalToolsRecordRead.prototype = {
 				'bQueryEmptyFields': 'true/false', --> if input_field is empty will add a query: input_fieldISEMPTY'
 		3. oRecordConfig['bQueryEmptyFields'] // generic setting to query empty fields with ISEMPTY instead of returning an error for all empty fields
 	*/
-	getRecordByKeys: function (oRecordConfig, oRecordValues, aError) {
+	getRecordByKeys: function (oRecordConfig, oRecordValues, aError, bRecordLookupUseBaseTable, sTableOverride) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
-		var sTable = this._getValue('sTargetTable', '', oRecordConfig);
+		var sTable = (sTableOverride) ? sTableOverride : this._getValue('sTargetTable', '', oRecordConfig);
+		var bNoWorkflow = (this._getValue('bNoWorkflow', false, oRecordConfig) == true);
+		var bNoAutoSysFields = (this._getValue('bNoAutoSysFields', false, oRecordConfig) == true);
+		var bNoDomain = (this._getValue('bNoDomain', false, oRecordConfig) == true);
 		var bLog = this._getValue('bLog', false, oRecordConfig);
 		var sLogLevel = (bLog) ? this._getValue('sLogLevel', 'error', oRecordConfig) : '';
 		var sLogPrefix = (bLog) ? this._getValue('sLogPrefix', 'GlobalToolsRecordRead.getRecordByKeys ', oRecordConfig) : '';
@@ -403,10 +407,10 @@ GlobalToolsRecordRead.prototype = {
 			sAddlQuery = '',
 			bQueryEmptyFields = false;
 		var grRecord = (this._getValue('bUseGlideRecordSecure', false, oRecordConfig) == true) ? new GlideRecordSecure(sTable) : new GlideRecord(sTable);
-		if (this._getValue('bNoWorkflow', false, oRecordConfig) == true) {
+		if (bNoWorkflow) {
 			grRecord.setWorkflow(false);
 		} // if no workflow
-		if (this._getValue('bNoAutoSysFields', false, oRecordConfig) == true) {
+		if (bNoAutoSysFields) {
 			grRecord.autoSysFields(false);
 		} // if no autosysfields
 		//grRecord.initialize();
@@ -460,7 +464,7 @@ GlobalToolsRecordRead.prototype = {
 			} // if log
 			if (aQuery.length == aKeys.length) { // only if all values are present
 				grRecord.addEncodedQuery(aQuery.join('^'));
-				if ((this._getValue('bNoDomain', false, oRecordConfig) == true)) {
+				if (bNoDomain) {
 					grRecord.queryNoDomain();
 				} else {
 					grRecord._query();
@@ -472,6 +476,21 @@ GlobalToolsRecordRead.prototype = {
 		}, this); // for each key object
 		if ((grRecord.isValidRecord()) && (grRecord.sys_id != 'undefined')) {
 			return grRecord;
+		} else {
+			if ((bRecordLookupUseBaseTable) && (!sTableOverride)) {
+				var sBaseTable = this._gtTable.getAbsoluteBase(sTable);
+				if ((sBaseTable) && (sBaseTable != sTable)) {
+					grRecord = this.getRecordByKeys(oRecordConfig, oRecordValues, aError, false, sBaseTable);
+					if (grRecord) {
+						var sRealClass = this._gtTable.getRecordClass(grRecord);
+						if (sRealClass == sBaseTable) {
+							return grRecord;
+						} else {
+							return this.getRecord(sRealClass, grRecord.getUniqueValue(), (!bNoWorkflow), (!bNoAutoSysFields), bNoDomain);
+						} // if real class
+					} // if record
+				} // if different base table
+			} // if record lookup based on base table
 		} // if valid record
 	}, // function getRecordByKeys
 
@@ -576,7 +595,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function combineQueries	
 
 	type: 'GlobalToolsRecordRead',
-	version: '1.0.4',
+	version: '1.0.8',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -584,14 +603,14 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>113</sys_mod_count>
+        <sys_mod_count>120</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-08-17 10:58:22</sys_updated_on>
+        <sys_updated_on>2024-11-13 15:46:44</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>2a51d52c1bb47150d5be777d8b4bcb25</id>

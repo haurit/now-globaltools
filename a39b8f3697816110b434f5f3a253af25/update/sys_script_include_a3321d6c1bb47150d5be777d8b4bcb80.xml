@@ -25,8 +25,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this._gtRead = new global.GlobalToolsRecordRead();
 		this._gtWrite = new global.GlobalToolsRecordWrite();
 		this._gtTable = new global.GlobalToolsTable();
+		this._gtCache = new global.GlobalToolsCache();
 		this._mappingCfgMgr = '';
-		if (gs.isValidScriptFromScope('MappingConfigManager', 'x_snc_mapping_cm')) {
+		var grScriptInclude = new GlideRecord('sys_script_include'); // gs.isValidScriptFromScope did not work
+		if (grScriptInclude.get('api_name', 'x_snc_mapping_cm.MappingConfigManager')) {
 			this._mappingCfgMgr = new x_snc_mapping_cm.MappingConfigManager();
 		} // if valid mapping config mgr
 	}, // function initialize
@@ -280,15 +282,31 @@ GlobalToolsRecordWriteValidate.prototype = {
 			this.bIsValidRecord = false;
 		} else {
 			var aRecordByKeysError = [];
-			var grRecord = this._gtRead.getRecordByKeys(this.oRecordConfig, this.oRecordValues, aRecordByKeysError);
+			var bAllowClassChange = this._getValue('bAllowClassChange', false, this.oRecordConfig);
+			var grRecord = this._gtRead.getRecordByKeys(this.oRecordConfig, this.oRecordValues, aRecordByKeysError, bAllowClassChange);
 			if (aRecordByKeysError.length > 0) {
 				this._errorHandler('config', '400_033', 'Invalid key configuration in config object', '', [aRecordByKeysError.join(', ')], false, true);
 				return;
 			} // if error
 			this.bIsValidRecord = ((grRecord) && (this._gt.getType(grRecord).indexOf('gliderecord') != -1) && (grRecord.isValidRecord()) && (grRecord.getValue('sys_id') != -1)) ? true : false;
 			if (this.bIsValidRecord) {
-				this.sRecordId = grRecord.getUniqueValue();
-				this.grRecord = grRecord;
+				if ((bAllowClassChange) && (this._gtTable.getRecordClass(grRecord) != this.sTargetTable) && (grRecord.isValidField('sys_class_name')) && (this._getValue('bUseIRE', false, this.oRecordConfig)) && (this._getValue('bKeepSysId', false, this.oRecordConfig)) && (this._getValue('sys_id', '', this.oRecordValues))) {
+					grRecord.setValue('sys_class_name', this.sTargetTable);
+					if (grRecord.update()) {
+						var grRecordNewClass = new GlideRecord(this.sTargetTable);
+						if (grRecordNewClass.get('sys_id', grRecord.getUniqueValue())) {
+							this.sRecordId = grRecordNewClass.getUniqueValue();
+							this.grRecord = grRecordNewClass;
+						} else {
+							this._errorHandler('record', '500_012', 'Error selecting record during class switch', '', [grRecordNewClass.getLastErrorMessage()], false, true);
+						} // if new class record found
+					} else {
+						this._errorHandler('record', '500_011', 'Error updating record during class switch', '', [grRecord.getLastErrorMessage()], false, true);
+					} // if class update successful
+				} else {
+					this.sRecordId = grRecord.getUniqueValue();
+					this.grRecord = grRecord;
+				} // if class has changed and keep sysid change the record because IRE will not work with SysId
 				this.grRecordOld = new GlideRecord(this.sTargetTable);
 				this.grRecordOld.get(this.sRecordId);
 			} // if is valid record
@@ -343,6 +361,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 			aChoiceDisplayValues,
 			bMatch;
 		var sErrorHandlingDefault = this._getValue('oErrorHandling/oFieldType/all/sErrorHandling', 'reject', this.oRecordConfig);
+		var bNoTrim = this._getValue('bNoTrim', false, this.oRecordConfig);
 		this.aAllRecordFields.forEach(function (sField) {
 			oField = this._getValue(sField, {}, this.oFieldsObjects);
 			sValue = this._getValue(sField, '', this.oRecordValues);
@@ -350,6 +369,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 			if ((sSourceField) && (sSourceField != sField)) {
 				sValue = this._getValue(sSourceField, sValue, this.oRecordValues);
 			} // if source field and diff from field (and has value) replace value
+			bNoTrim = this._getValue('bNoTrim', bNoTrim, oField);
+			if ((bNoTrim === false) && (typeof sValue == 'string')) {
+				sValue = sValue.trim();
+			} // if trim
 			sFixedValue = this._getValue('sFixedValue', '', oField);
 			try {
 				aValues = [];
@@ -638,11 +661,14 @@ GlobalToolsRecordWriteValidate.prototype = {
 			'lookup': [],
 			'values': {},
 		}; // item
+		var sValue = '';
 		this.aAllRecordFields.forEach(function (sField) {
+			sValue = this.grRecord.getValue(sField);
 			if (sField != 'sys_class_name') {
-				sItem['values'][sField] = this.grRecord.getValue(sField);
+				sValue = (sValue === null) ? '' : sValue;
+				sItem['values'][sField] = sValue;
 			} // if not class
-		}, this);
+		}, this); // each field
 		this.oIREPayload['items'].push(sItem);
 	}, // function _createIREPayload
 
@@ -1161,7 +1187,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		var aValuesInput = (sValueType == 'array') ? oValue : [oValue];
 		var sRefTable = this._getValue('sRefTable', '', oField);
 		sRefTable = (sRefTable) ? sRefTable : this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'reference');
-		var sRefTableBase = this._gtTable.getAbsoluteBase(sRefTable)
+		var sRefTableBase = this._gtTable.getAbsoluteBase(sRefTable);
 		var sErrorHandling = this._getValue('oErrorHandling/oFieldType/all/sErrorHandling', 'reject', this.oRecordConfig);
 		sErrorHandling = this._getValue('oErrorHandling/oFieldType/reference/sErrorHandling', sErrorHandling, this.oRecordConfig);
 		var sByReferenceTable = this._getValue('oErrorHandling/oFieldType/reference/oByReferenceTable/' + sRefTable, '', this.oRecordConfig);
@@ -1512,6 +1538,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 
 	_parseRecordError: function () {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var bParsedError = false;
 		var aGSErrorMessages = j2js(gs.getErrorMessages());
 		if (aGSErrorMessages.length > 0) {
 			var reTranslate = /&(nbsp|amp|quot|lt|gt);/g;
@@ -1524,12 +1551,27 @@ GlobalToolsRecordWriteValidate.prototype = {
 			}); // replace
 			this._errorHandler('runtime', '500_008', 'Error processing business rules and engine', '', [String(sErrorMessage)], false, true);
 			gs.flushMessages(); // flush messages after transaction
-			return true;
+			bParsedError = true;
 		} // if gs error messages
+		var sErrorHandlingCacheName = this._getValue('oErrorHandling/sErrorHandlingCacheName', 'GlobalTools/oErrorMessages', this.oRecordConfig);
+		if (this._gtCache.checkValue(sErrorHandlingCacheName)) {
+			var oErrorMessages = this._gtCache.getValue(sErrorHandlingCacheName);
+			var sErrorType = this._gt.getType(oErrorMessages);
+			if ((sErrorType == 'string') && (oErrorMessages)) {
+				this._errorHandler('runtime', '500_008', 'Error processing business rules and engine', '', [oErrorMessages], false, true);
+			} else if ((sErrorType == 'array') && (oErrorMessages)) {
+				this._errorHandler('runtime', '500_008', 'Error processing business rules and engine', '', [oErrorMessages.join('\n')], false, true);
+			} else if ((sErrorType == 'object') && (oErrorMessages)) {
+				this._errorHandler('runtime', '500_008', 'Error processing business rules and engine', '', [JSON.stringify(oErrorMessages)], false, true);
+			} // if error type		
+			this._gtCache.clearValue(sErrorHandlingCacheName);
+			bParsedError = true;
+		} // if cached error messages
+		return bParsedError;
 	}, // function _parseRecordError
 
 	type: 'GlobalToolsRecordWriteValidate',
-	version: '1.0.7',
+	version: '1.0.8',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -1538,14 +1580,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>718</sys_mod_count>
+        <sys_mod_count>750</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-10-18 07:08:27</sys_updated_on>
+        <sys_updated_on>2024-11-24 06:49:22</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>
