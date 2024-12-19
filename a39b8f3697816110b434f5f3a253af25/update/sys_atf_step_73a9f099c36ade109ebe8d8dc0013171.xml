@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step">
+    <sys_atf_step action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <copied_from/>
+        <description>Run Server Side Validation Script</description>
+        <display_name>Run Server Side Script</display_name>
+        <inputs/>
+        <mugshots_cache_json/>
+        <notes/>
+        <order>1</order>
+        <step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config>
+        <sys_class_name>sys_atf_step</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-12-17 08:42:11</sys_created_on>
+        <sys_id>73a9f099c36ade109ebe8d8dc0013171</sys_id>
+        <sys_mod_count>23</sys_mod_count>
+        <sys_name>Run Server Side Script</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_atf_step_73a9f099c36ade109ebe8d8dc0013171</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-12-19 15:51:51</sys_updated_on>
+        <table/>
+        <test display_value="GlobalToolsDateTime Tests">f7597459c36ade109ebe8d8dc0013189</test>
+        <timeout/>
+        <warning_message/>
+    </sys_atf_step>
+    <sys_variable_value action="delete_multiple" query="document_key=73a9f099c36ade109ebe8d8dc0013171"/>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>73a9f099c36ade109ebe8d8dc0013171</document_key>
+        <order>100</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-12-17 08:42:12</sys_created_on>
+        <sys_id>282af0d9c36ade109ebe8d8dc001318f</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-12-17 08:42:12</sys_updated_on>
+        <value>3.1</value>
+        <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
+    </sys_variable_value>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>73a9f099c36ade109ebe8d8dc0013171</document_key>
+        <order>200</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-12-17 08:42:12</sys_created_on>
+        <sys_id>602af0d9c36ade109ebe8d8dc0013190</sys_id>
+        <sys_mod_count>23</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-12-19 15:51:51</sys_updated_on>
+        <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
+&#13;
+	var bLog = false;&#13;
+	var _gtDateTime = new global.GlobalToolsDateTime('gtatf');&#13;
+	var _gtATF = new global.GlobalToolsATF('GlobalToolsDateTime', _gtDateTime, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
+	var grRecord;&#13;
+&#13;
+	_gtATF.runATF('formatMS', '10 ms', 10);&#13;
+	_gtATF.runATF('formatMS', '999 ms', 999);&#13;
+	_gtATF.runATF('formatMS', '01.000 s', 1000);&#13;
+	_gtATF.runATF('formatMS', '01.010 s', 1010);&#13;
+	_gtATF.runATF('formatMS', '05.999 s', 5999);&#13;
+	_gtATF.runATF('formatMS', '59.999 s', 59999);&#13;
+	_gtATF.runATF('formatMS', '1:00.000 min', 60000);&#13;
+	_gtATF.runATF('formatMS', '1:00.001 min', 60001);&#13;
+	_gtATF.runATF('formatMS', '1:05.001 min', 65001);&#13;
+&#13;
+	_gtATF.runATF('startTimer', undefined);&#13;
+	_gtATF.runATF('startTimer', undefined, '');&#13;
+	_gtATF.runATF('startTimer', true, 'timer1');&#13;
+	gs.sleep(15);&#13;
+	_gtATF.runATF('startTimer', true, 'timer2');&#13;
+	gs.sleep(10);&#13;
+	_gtATF.runATF('startTimer', true, 'timer2/subtimer1');&#13;
+	gs.sleep(10);&#13;
+	_gtATF.runATF('stopTimer', true, 'timer2/subtimer1');&#13;
+	gs.sleep(10);&#13;
+	_gtATF.runATF('stopTimer', true, 'timer2');&#13;
+	_gtATF.runATF('startTimer', true, 'timer2');&#13;
+	gs.sleep(10);&#13;
+	_gtATF.runATF('startTimer', true, 'timer2/subtimer1');&#13;
+	gs.sleep(10);&#13;
+	_gtATF.runATF('stopTimer', true, 'timer2/subtimer1');&#13;
+	gs.sleep(10);&#13;
+	_gtATF.runATF('stopTimer', true, 'timer2');&#13;
+	gs.sleep(15);&#13;
+	_gtATF.runATF('stopTimer', true, 'timer1');&#13;
+	_gtATF.runATF('getTimer', /"_stk_":\[\]/i, 'debug'); // stack is empty&#13;
+	_gtATF.runATF('getTimer', /"timer1":\{"_w_":null,"_e_":1,"/i, 'debug'); // timer one executed once&#13;
+	_gtATF.runATF('getTimer', /"total":/i);&#13;
+&#13;
+	return _gtATF.endATF();&#13;
+&#13;
+})(outputs, steps, params, stepResult, assertEqual);&#13;
+</value>
+        <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
+    </sys_variable_value>
+</record_update>

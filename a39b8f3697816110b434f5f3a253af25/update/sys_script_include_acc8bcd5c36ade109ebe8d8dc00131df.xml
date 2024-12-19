@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.GlobalToolsDateTime</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description>Tools to support (scoped) app development&#13;
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
+        <mobile_callable>false</mobile_callable>
+        <name>GlobalToolsDateTime</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[var GlobalToolsDateTime = Class.create();
+GlobalToolsDateTime.prototype = {
+	initialize: function (sClass, gtCache) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		this.sClass = (sClass) ? sClass : 'default';
+		if (gtCache instanceof GlobalToolsCache) {
+			this._gtCache = gtCache;
+		} else {
+			this._gtCache = new global.GlobalToolsCache();
+		} // if cache
+		this.aRestricedWords = ['_w_', '_s_', '_i_', '_m_', '_e_', '_stk_', '_stkmaxdepth_'];
+	}, // function initialize
+
+	checkAccess: function (sCallerScope) {
+		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
+		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
+		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
+			return true;
+		} // if scope is allowed
+	}, // function checkAccess
+
+	formatMS: function (iMilliseconds) {
+		var sResult = '';
+		var sPostfix = ' ms';
+		if (iMilliseconds > 999) {
+			var iMinutes = Math.floor(iMilliseconds / 60000);
+			var iSeconds = Math.floor((iMilliseconds % 60000) / 1000);
+			if (iMinutes > 0) {
+				iMilliseconds = iMilliseconds - (iMinutes * 60000);
+				sResult = String(iMinutes);
+				sPostfix = ' min';
+			} // if minutes
+			if (iSeconds > 0) {
+				iMilliseconds = iMilliseconds - (iSeconds * 1000);
+				var sSeconds = (iSeconds < 10 ? '0' : '') + String(iSeconds);
+				sResult = (sResult) ? sResult + ':' + sSeconds : sSeconds;
+				sPostfix = (sPostfix == ' min') ? sPostfix : ' s';
+			} else if  (iMinutes > 0) {
+				sResult = sResult  + ':00';
+			} // if seconds
+			if (iMilliseconds > 0) {
+				var sMilliseconds = '000' + String(iMilliseconds);
+				sResult = sResult + '.' + sMilliseconds.slice(-3) + sPostfix;
+			} else {
+				sResult = sResult + '.000' + sPostfix;
+			} // if milliseconds
+		} else {
+			sResult = iMilliseconds + sPostfix;
+		} // if seconds
+		return sResult;
+	}, // function formatMS
+
+	startTimer: function (sName, bInternal) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!sName) || (this.aRestricedWords.indexOf(sName) != -1)) { return; } // if no or invalid name return
+		var sCurrent = '';
+		var oTimer = this._gtCache.getValue(this.sClass + '/' + sName);
+		if (oTimer) {
+			var gswTimer = '';
+			if (oTimer.hasOwnProperty('_w_')) {
+				gswTimer = oTimer['_w_'];
+			} // if timer
+			if (gswTimer) {
+				if (bInternal) {
+					gswTimer.resume();
+				} else {
+					gs.warn('global.GlobalToolsDateTime.startTimer ' + this.sClass + '/' + sName + ' timer is already running!');
+					return;
+				} //if timer running
+			} else {
+				oTimer['_w_'] = new GlideStopWatch();
+			} // if running
+		} else {
+			oTimer = {
+				_w_: new GlideStopWatch(),
+				_e_: 0,
+				_n_: 0,
+				_m_: 0,
+				_s_: 0,
+			}; // if new timer
+			this._gtCache.setValue(this.sClass + '/' + sName, oTimer);
+		} // if new timer
+		if (!bInternal) {
+			var aStack = this._gtCache.getValue(this.sClass + '/_stk_');
+			if (aStack) {
+				sCurrent = aStack[aStack.length - 1];
+				if (sCurrent == sName) {
+					gs.warn('global.GlobalToolsDateTime.startTimer ' + this.sClass + '/' + sName + ' timer is already top of stack!');
+					return;
+				} else {
+					this.stopTimer(sCurrent, true);
+				} // if same
+			} else {
+				aStack = [];
+			} // if stack
+			aStack.push(sName);
+			this._gtCache.setValue(this.sClass + '/_stk_', aStack);
+			var iStackMaxDepth = this._gtCache.getValue(this.sClass + '/_stkmaxdepth_');
+			if ((!iStackMaxDepth) || (aStack.length > iStackMaxDepth)) {
+				this._gtCache.setValue(this.sClass + '/_stkmaxdepth_', aStack.length);
+			} // if max stack depth
+			if (oTimer) {
+				oTimer['_e_'] = oTimer['_e_'] + 1;
+			} // if timer
+		} // if internal
+		return true;
+	}, // function startTimer
+
+	stopTimer: function (sName, bInternal) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!sName) || (this.aRestricedWords.indexOf(sName) != -1)) { return; } // if no or invalid name return
+		var sCurrent = '';
+		var oTimer = this._gtCache.getValue(this.sClass + '/' + sName);
+		if ((oTimer) && (oTimer.hasOwnProperty('_w_'))) {
+			var gswTimer = oTimer['_w_'];
+			if (gswTimer) {
+				if (!bInternal) {
+					gswTimer.stop();
+					var iElapsed = gswTimer.getTime();
+					oTimer['_w_'] = null;
+					oTimer['_s_'] = oTimer['_s_'] + iElapsed;
+					if ((oTimer['_n_'] == 0) || (iElapsed < oTimer['_n_'])) {
+						oTimer['_n_'] = iElapsed;
+					} // if new min
+					if (iElapsed > oTimer['_m_']) {
+						oTimer['_m_'] = iElapsed;
+					} // if new max
+				} else {
+					gswTimer.suspend();
+				} // if not internal
+			} else {
+				gs.warn('global.GlobalToolsDateTime.stopTimer ' + this.sClass + '/' + sName + ' timer is not running!');
+				return;
+			} // if running
+		} else {
+			gs.warn('global.GlobalToolsDateTime.stopTimer ' + this.sClass + '/' + sName + ' timer not found!');
+			return;
+		} // if timer
+		if (!bInternal) {
+			var aStack = this._gtCache.getValue(this.sClass + '/_stk_');
+			if (aStack) {
+				sCurrent = aStack[aStack.length - 1];
+				if (sCurrent != sName) {
+					gs.warn('global.GlobalToolsDateTime.stopTimer ' + this.sClass + '/' + sName + ' timer is not top of stack!');
+					return;
+				} else {
+					aStack.pop();
+					this.startTimer(aStack[aStack.length - 1], true);
+				} // if same
+			} else {
+				gs.warn('global.GlobalToolsDateTime.stopTimer ' + this.sClass + '/' + sName + ' stack is empty!');
+				return;
+			} // if stack
+		} // if internal
+		return true;
+	}, // function stopTimer
+
+	getTimer: function (sType) {
+		var sInput = JSON.stringify(this._gtCache.getValue(this.sClass));
+		if (sType == 'debug') {
+			return JSON.stringify(this._gtCache.getValue(this.sClass));
+		} // if debug
+		if (sType == 'cache') {
+			return this._gtCache.getValue(this.sClass);
+		} // if raw
+		sType = (sType) ? sType : 'default';
+		var oResult = {};
+		var oCache = this._gtCache.getValue(this.sClass);
+		if (oCache) {
+			var iTotal = 0;
+			Object.keys(oCache).forEach(function (sName) {
+				if (sName == '_stk_') {
+					if ((oCache['_stk_']) && (Array.isArray(oCache['_stk_'])) && (oCache['_stk_'].length != 0)) {
+						gs.warn('global.GlobalToolsDateTime.getTimer ' + this.sClass + '/' + sName + ' stack is not empty!');
+					} // if array and not null
+				} else if (sName != '_stkmaxdepth_') {
+					iTotal = this._evaluateTimer(sType, oCache[sName], oResult, sName, iTotal);
+				} // if stack
+			}, this); // each timer
+			if (['default', 'object'].indexOf(sType) != -1) {
+				oResult['max_depth'] = (oCache.hasOwnProperty('_stkmaxdepth_')) ? oCache['_stkmaxdepth_'] : -1;
+			} // if type
+			oResult['total'] = this.formatMS(iTotal);
+		} else {
+			gs.warn('global.GlobalToolsDateTime.getTimer ' + this.sClass + ' cache is empty!');
+		} // if cache
+		this._gtCache.clearValue(this.sClass);
+		if (sType == 'object') {
+			return oResult;
+		} else {
+			return JSON.stringify(oResult);
+		} // if obj
+	}, // function getTimer
+
+	_evaluateTimer: function (sType, oCacheNode, oResult, sName, iTotal) {
+		var iAvg = 0, iExec = 0, iSum = 0, iMin = 0, iMax = 0, oSubNode = {}, oResultNode = {};
+		oResult[sName] = {};
+		Object.keys(oCacheNode).forEach(function (sProp) {
+			if (sProp == '_s_') {
+				iSum = oCacheNode[sProp];
+				iTotal = iTotal + iSum;
+			} else if (sProp == '_e_') {
+				iExec = oCacheNode[sProp];
+			} else if (sProp == '_n_') {
+				iMin = oCacheNode[sProp];
+			} else if (sProp == '_m_') {
+				iMax = oCacheNode[sProp];
+			} else if (sProp != '_w_') {
+				oSubNode = oCacheNode[sProp];
+				if (oSubNode.hasOwnProperty('_s_')) {
+					oResultNode = {};
+					iTotal = this._evaluateTimer(sType, oSubNode, oResultNode, sProp, iTotal);
+					oResult[sName][sProp] = oResultNode[sProp];
+				} // if subnode
+			} // if property
+		}, this); // each property
+		iAvg = ((iSum > 0) && (iExec > 0)) ? iSum / iExec : 0;
+		if ((['default', 'object'].indexOf(sType) != -1) && (iExec > 0)) {
+			oResult[sName]['exec'] = iExec;
+			oResult[sName]['sum'] = this.formatMS(iSum);
+			oResult[sName]['min'] = this.formatMS(iMin);
+			oResult[sName]['max'] = this.formatMS(iMax);
+			oResult[sName]['avg'] = this.formatMS(Math.round(iAvg));
+		} // if verbose
+		return iTotal;
+	}, // function _evaluateTimer
+
+	type: 'GlobalToolsDateTime',
+	version: '1.0.9',
+	author: 'Tom Hauri',
+	email: 'tom@hauri.biz'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-12-17 08:37:47</sys_created_on>
+        <sys_id>acc8bcd5c36ade109ebe8d8dc00131df</sys_id>
+        <sys_mod_count>58</sys_mod_count>
+        <sys_name>GlobalToolsDateTime</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_script_include_acc8bcd5c36ade109ebe8d8dc00131df</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-12-19 15:52:38</sys_updated_on>
+    </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>acc8bcd5c36ade109ebe8d8dc00131df</id>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2024-12-17 08:37:47</sys_created_on>
+        <sys_id>8429f819c36ade109ebe8d8dc00131c0</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2024-12-17 08:37:47</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
+</record_update>
