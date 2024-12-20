@@ -32,9 +32,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:01:05</sys_created_on>
         <sys_id>a39b8f3697816110b434f5f3a253af25</sys_id>
-        <sys_mod_count>12</sys_mod_count>
+        <sys_mod_count>14</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-11-13 15:48:16</sys_updated_on>
+        <sys_updated_on>2024-12-20 08:51:06</sys_updated_on>
         <template/>
         <trackable>true</trackable>
         <uninstall_blocked>false</uninstall_blocked>
@@ -49,6 +49,7 @@
         <chunk_size_bytes>700000</chunk_size_bytes>
         <compressed>true</compressed>
         <content_type>image/png</content_type>
+        <encryption_context/>
         <file_name>global_tools_icon.png</file_name>
         <hash>c16f49351c599fc198e07e4af1cb124d60bf7dd3f089e0ed8b16e7a3c8ba4cd0</hash>
         <image_height/>

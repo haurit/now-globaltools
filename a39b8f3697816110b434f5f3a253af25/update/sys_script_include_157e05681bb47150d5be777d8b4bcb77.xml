@@ -12,8 +12,23 @@ Functions are only available for global scope and specific scopes defined in the
         <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var GlobalToolsTable = Class.create();
 GlobalToolsTable.prototype = {
-	initialize: function () {
+	initialize: function (gtCache, oTimer) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (gtCache instanceof GlobalToolsCache) {
+			this._gtCache = gtCache;
+		} else {
+			this._gtCache = new global.GlobalToolsCache();
+		} // if cache
+		this.bTimer = ((oTimer) && ((oTimer === true) || (oTimer instanceof GlobalToolsDateTime))) ? true : false;
+		if (this.bTimer) {
+			if (oTimer === true) {
+				this._gtDateTime = new global.GlobalToolsDateTime('gtt');
+				this._sTimerPrefix = '';
+			} else {
+				this._gtDateTime = oTimer;
+				this._sTimerPrefix = 'gtt/';
+			} // if true
+		} // initialize timer
 		gs.include('j2js');
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
@@ -228,6 +243,7 @@ GlobalToolsTable.prototype = {
 	}, // function getFieldLabel
 
 	getFields: function (oTableOrRecord, bOmitSysId, bReturnDictId) {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getFields'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sType = this._gt.getType(oTableOrRecord);
 		var aResultFields = [];
@@ -238,6 +254,7 @@ GlobalToolsTable.prototype = {
 		} else if (sType.indexOf('gliderecord') != -1) {
 			grTable = oTableOrRecord;
 		} else {
+			if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getFields'); }
 			return [];
 		} // if string or gliderecord
 		var aFields = grTable.getFields();
@@ -271,10 +288,12 @@ GlobalToolsTable.prototype = {
 				} // if sys id
 			} // if return id
 		} // if return sys_id
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getFields'); }
 		return aResultFields.sort();
 	}, // function getFields
 
 	getFieldParentTable: function (oTableOrRecord, sField) {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getFieldParentTable'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sTable = '';
 		var sType = this._gt.getType(oTableOrRecord);
@@ -284,6 +303,7 @@ GlobalToolsTable.prototype = {
 			sTable = this.getRecordClass(oTableOrRecord);
 		} else {
 			gs.warn('global.GlobalToolsTable.getFieldParentTable invalid oTableOrRecord parameter: ' + oTableOrRecord);
+			if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getFieldParentTable'); }
 			return;
 		} // if valid table
 		var grTable = new GlideRecord(sTable);
@@ -293,8 +313,10 @@ GlobalToolsTable.prototype = {
 			if (edField) {
 				var sFirstTableName = String(edField.getFirstTableName());
 				if (sFirstTableName) {
+					if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getFieldParentTable'); }
 					return sFirstTableName;
 				} else {
+					if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getFieldParentTable'); }
 					return sTable;
 				} // if first table name
 			} else {
@@ -303,12 +325,14 @@ GlobalToolsTable.prototype = {
 		} else {
 			gs.warn('global.GlobalToolsTable.getFieldParentTable invalid sField parameter: ' + sField);
 		} // if valid field
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getFieldParentTable'); }
 	}, // function getFieldParentTable
 
 	/***********************************************************************************************************
 	*	Reference Field Functions
 	************************************************************************************************************/
 	getRefTable: function (sTable, sField) {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getRefTable'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sTable) && (this.isValidTable(sTable)) && (sField)) {
 			var aTables = this.getTableHierarchy(sTable);
@@ -317,14 +341,17 @@ GlobalToolsTable.prototype = {
 			grDict.setLimit(1);
 			grDict.query();
 			if (grDict.next()) {
+				if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getRefTable'); }
 				return grDict.getValue('reference');
 			} // if dict
 		} else {
 			gs.warn('global.GlobalToolsTable.getRefTable no table or field provided!');
 		} // if table and field
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getRefTable'); }
 	}, // function getRefTable
 
 	getRefFieldName: function (grRecord, sRefTable, bCheckRefTableHierarchy, sReturnType) {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getRefFieldName'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sReturnField = '';
 		var aReturnFields = [];
@@ -348,8 +375,10 @@ GlobalToolsTable.prototype = {
 					} // if return array
 				} // while dict
 				if (sReturnType == 'array') {
+					if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getRefFieldName'); }
 					return aReturnFields;
 				} else {
+					if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getRefFieldName'); }
 					return sReturnField;
 				} // if return array
 			} // if table and reftable
@@ -361,86 +390,150 @@ GlobalToolsTable.prototype = {
 	************************************************************************************************************/
 
 	getDictOrOverrideValue: function (sTable, sField, sAttributeName, bReturnRecord, sAddlDictQuery) {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getDictOrOverrideValue'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
-		var oReturnValue;
-		if ((sTable) && (this.isValidTable(sTable)) && ((sField) || (sAttributeName == 'display_override'))) {
-			var grDictionary = new GlideRecord('sys_dictionary');
-			sAddlDictQuery = ((sAddlDictQuery) && (grDictionary.isValidEncodedQuery(sAddlDictQuery))) ? sAddlDictQuery : '';
-			var sAttributeBooleanQuery = (sAttributeName != 'display_override') ? '^' + sAttributeName + '_override=true' : '^' + sAttributeName + '=true';
-			var aOverrideFields = ['attributes', 'calculation', 'default_value', 'dependent', 'mandatory', 'read_only', 'reference_qual', 'display_override'];
-			var grDictOverride = new GlideRecord('sys_dictionary_override');
-			var aTableHierarchy = this.getTableHierarchy(sTable);
-			aTableHierarchy.some(function (sTable) {
-				grDictionary = new GlideRecord('sys_dictionary');
-				if (sAttributeName == 'display_override') {
-					grDictionary.addEncodedQuery('name=' + sTable + '^' + sAddlDictQuery);
-				} else {
-					grDictionary.addEncodedQuery('name=' + sTable + '^element=' + sField + '^' + sAddlDictQuery);
-				} // if display
-				grDictionary.query();
-				if (grDictionary.next()) {
-					if (!grDictionary[sAttributeName].nil()) {
-						if (bReturnRecord) {
-							oReturnValue = grDictionary;
-						} else {
-							oReturnValue = grDictionary.getValue(sAttributeName);
-						} // if return record
-						return true;
-					} // if attribute not nil
-				} else if (aOverrideFields.indexOf(sAttributeName) != -1) {
-					grDictOverride = new GlideRecord('sys_dictionary_override');
+		var oReturnValue, sPath;
+		if ((sTable) && ((sField) || (sAttributeName))) {
+			if (sAttributeName) {
+				sPath = (sAttributeName == 'display_override') ? 'display_override' : sField + '/' + sAttributeName;
+			} else {
+				sPath = sField;
+			} // if attribute name
+			sPath = (sAddlDictQuery) ? sPath + '/' + sAddlDictQuery : sPath;
+			var oDictOrOverrideValue = this._gtCache.getValue('gtt_doov/' + sTable + '/' + sPath);
+			if (oDictOrOverrideValue) {
+				if (bReturnRecord) {
+					if ((oDictOrOverrideValue.hasOwnProperty('_t_')) && (oDictOrOverrideValue.hasOwnProperty('_s_'))) {
+						var sDictOrOverrideTable = (oDictOrOverrideValue['_t_'] == 'd') ? 'sys_dictionary' : 'sys_dictionary_override';
+						var sDictOrOverrideId = oDictOrOverrideValue['_s_'];
+						if ((sDictOrOverrideTable) && (sDictOrOverrideId)) {
+							var grDictOrOverride = new GlideRecord(sDictOrOverrideTable);
+							if (grDictOrOverride.get(sDictOrOverrideId)) {
+								if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getDictOrOverrideValue'); }
+								//gs.info('tomtom grDictOrOverride: ' + grDictOrOverride.getUniqueValue() + ' get path: gtt_doov/' + sTable + '/' + sPath + ' cache: ' + JSON.stringify(oDictOrOverrideValue));
+								return grDictOrOverride;
+							} // if record
+						} // if table and id
+					} // if obj has table and id
+				} else if (oDictOrOverrideValue.hasOwnProperty('_v_')) {
+					if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getDictOrOverrideValue'); }
+					//gs.info('tomtom oDictOrOverrideValue: ' + oDictOrOverrideValue['_v_'] + ' get path: gtt_doov/' + sTable + '/' + sPath + ' cache: ' + JSON.stringify(oDictOrOverrideValue));
+					return oDictOrOverrideValue['_v_'];
+				} // if return record
+				if (oDictOrOverrideValue === true) {
+					if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getDictOrOverrideValue'); }
+					//gs.info('tomtom empty value get path: gtt_doov/' + sTable + '/' + sPath + ' cache: ' + JSON.stringify(oDictOrOverrideValue));
+					return oReturnValue;
+				} // if empty
+				//gs.error('tomtom should never come here');
+			} // if cache value
+			oDictOrOverrideValue = {};
+			if ((this.isValidTable(sTable)) && ((sField) || (sAttributeName == 'display_override'))) {
+				var grDictionary = new GlideRecord('sys_dictionary');
+				sAddlDictQuery = ((sAddlDictQuery) && (grDictionary.isValidEncodedQuery(sAddlDictQuery))) ? sAddlDictQuery : '';
+				var sAttributeBooleanQuery = (sAttributeName != 'display_override') ? '^' + sAttributeName + '_override=true' : '^' + sAttributeName + '=true';
+				var aOverrideFields = ['attributes', 'calculation', 'default_value', 'dependent', 'mandatory', 'read_only', 'reference_qual', 'display_override'];
+				var grDictOverride = new GlideRecord('sys_dictionary_override');
+				var aTableHierarchy = this.getTableHierarchy(sTable);
+				aTableHierarchy.some(function (sTable) {
+					grDictionary = new GlideRecord('sys_dictionary');
 					if (sAttributeName == 'display_override') {
-						grDictOverride.addEncodedQuery('name=' + sTable + sAttributeBooleanQuery);
+						grDictionary.addEncodedQuery('name=' + sTable + '^' + sAddlDictQuery);
 					} else {
-						grDictOverride.addEncodedQuery('name=' + sTable + '^element=' + sField + sAttributeBooleanQuery);
+						grDictionary.addEncodedQuery('name=' + sTable + '^element=' + sField + '^' + sAddlDictQuery);
 					} // if display
-					grDictOverride.query();
-					if (grDictOverride.next()) {
-						if (bReturnRecord) {
-							oReturnValue = grDictOverride;
+					grDictionary.query();
+					if (grDictionary.next()) {
+						if (!grDictionary[sAttributeName].nil()) {
+							if (bReturnRecord) {
+								oReturnValue = grDictionary;
+							} else {
+								oReturnValue = grDictionary.getValue(sAttributeName);
+								oDictOrOverrideValue['_v_'] = oReturnValue;
+							} // if return record
+							oDictOrOverrideValue['_t_'] = 'd';
+							oDictOrOverrideValue['_s_'] = grDictionary.getUniqueValue();
+							return true;
+						} // if attribute not nil
+					} else if (aOverrideFields.indexOf(sAttributeName) != -1) {
+						grDictOverride = new GlideRecord('sys_dictionary_override');
+						if (sAttributeName == 'display_override') {
+							grDictOverride.addEncodedQuery('name=' + sTable + sAttributeBooleanQuery);
 						} else {
-							oReturnValue = grDictOverride.getValue(sAttributeName);
-						} // if return record
-						return true;
-					} // if dict override
-				} // if dict
-			}, this); // each table
-		} // if tablename and fieldname
+							grDictOverride.addEncodedQuery('name=' + sTable + '^element=' + sField + sAttributeBooleanQuery);
+						} // if display
+						grDictOverride.query();
+						if (grDictOverride.next()) {
+							if (bReturnRecord) {
+								oReturnValue = grDictOverride;
+							} else {
+								oReturnValue = grDictOverride.getValue(sAttributeName);
+								oDictOrOverrideValue['_v_'] = oReturnValue;
+							} // if return record
+							oDictOrOverrideValue['_t_'] = 'o';
+							oDictOrOverrideValue['_s_'] = grDictOverride.getUniqueValue();
+							return true;
+						} // if dict override
+					} // if dict
+				}, this); // some table
+			} // if tablename and fieldname
+			if (!oReturnValue) {
+				oDictOrOverrideValue = true;
+			} // if no return value
+			this._gtCache.setValue('gtt_doov/' + sTable + '/' + sPath, oDictOrOverrideValue);
+			//gs.info('tomtom oReturnValue: ' + oReturnValue + ' set path: gtt_doov/' + sTable + '/' + sPath + ' cache: ' + JSON.stringify(oDictOrOverrideValue));
+		} // if table and attribute
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getDictOrOverrideValue'); }
 		return oReturnValue;
 	}, // function getDictOrOverrideValue
 
 	getFieldChoices: function (sTable, sField, sDependentFieldValue) {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getFieldChoices'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var aChoices = [],
 			aDependentValues = [],
 			aChoiceDisplayValues = [],
 			bFound = false;
-		if ((sTable) && (this.isValidTable(sTable)) && (sField)) {
-			var grDict = this.getDictOrOverrideValue(sTable, sField, '', true);
-			var sChoiceTable = grDict.getValue('choice_table');
-			var sChoiceField = grDict.getValue('choice_field');
-			if ((sChoiceTable) && (this.isValidTable(sChoiceTable)) && (sChoiceField)) {
-				sTable = sChoiceTable;
-				sField = sChoiceField;
-			} else {
-				sChoiceTable = '';
-			} // if valid choice table				
-			var aTableHierarchy = (sChoiceTable) ? [sChoiceTable] : this.getTableHierarchy(sTable);
-			var sDependentFieldValueQuery = (sDependentFieldValue) ? '^dependent_value=' + sDependentFieldValue : '';
-			var grChoice = new GlideRecord('sys_choice');
-			aTableHierarchy.some(function (sTable) {
-				grChoice = new GlideRecord('sys_choice');
-				grChoice.addEncodedQuery('name=' + sTable + '^element=' + sField + '^inactive=false^language=en' + sDependentFieldValueQuery);
-				grChoice.query();
-				while (grChoice.next()) {
-					aChoices.push(grChoice.getValue('value'));
-					aDependentValues.push(grChoice.getValue('dependent_value'));
-					aChoiceDisplayValues.push(grChoice.getValue('value') + ' (' + grChoice.getValue('label') + ')');
-					bFound = true;
-				} // while choices
-				return bFound;
-			}, this); // some tables
-		} // if tablename and fieldname
+		var sPath = (sDependentFieldValue) ? sTable + '/' + sField : sTable + '/' + sField + '/' + sDependentFieldValue;
+		var oChoiceValues = this._gtCache.getValue('gtt_gfc/' + sPath);
+		if ((oChoiceValues) && (oChoiceValues.hasOwnProperty('_c_'))) {
+			aChoices = oChoiceValues['_c_'];
+			aDependentValues = (oChoiceValues.hasOwnProperty('_d_')) ? oChoiceValues['_d_'] : [];
+			aChoiceDisplayValues = (oChoiceValues.hasOwnProperty('_v_')) ? oChoiceValues['_v_'] : [];
+		} else {
+			if ((sTable) && (this.isValidTable(sTable)) && (sField)) {
+				var grDict = this.getDictOrOverrideValue(sTable, sField, '', true);
+				var sChoiceTable = grDict.getValue('choice_table');
+				var sChoiceField = grDict.getValue('choice_field');
+				if ((sChoiceTable) && (this.isValidTable(sChoiceTable)) && (sChoiceField)) {
+					sTable = sChoiceTable;
+					sField = sChoiceField;
+				} else {
+					sChoiceTable = '';
+				} // if valid choice table				
+				var aTableHierarchy = (sChoiceTable) ? [sChoiceTable] : this.getTableHierarchy(sTable);
+				var sDependentFieldValueQuery = (sDependentFieldValue) ? '^dependent_value=' + sDependentFieldValue : '';
+				var grChoice = new GlideRecord('sys_choice');
+				aTableHierarchy.some(function (sTable) {
+					grChoice = new GlideRecord('sys_choice');
+					grChoice.addEncodedQuery('name=' + sTable + '^element=' + sField + '^inactive=false^language=en' + sDependentFieldValueQuery);
+					grChoice.query();
+					while (grChoice.next()) {
+						aChoices.push(grChoice.getValue('value'));
+						aDependentValues.push(grChoice.getValue('dependent_value'));
+						aChoiceDisplayValues.push(grChoice.getValue('value') + ' (' + grChoice.getValue('label') + ')');
+						bFound = true;
+					} // while choices
+					return bFound;
+				}, this); // some tables
+				oChoiceValues = {};
+				oChoiceValues['_c_'] = aChoices;
+				oChoiceValues['_d_'] = aDependentValues;
+				oChoiceValues['_v_'] = aChoiceDisplayValues;
+				this._gtCache.setValue('gtt_gfc/' + sPath, oChoiceValues);
+			} // if tablename and fieldname
+		} // if cached value
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'getFieldChoices'); }
 		return [aChoices, aDependentValues, aChoiceDisplayValues];
 	}, // function getFieldChoices
 
@@ -464,7 +557,7 @@ GlobalToolsTable.prototype = {
 	}, // function getMandatoryFields
 
 	type: 'GlobalToolsTable',
-	version: '1.0.7',
+	version: '1.0.8',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -473,14 +566,14 @@ GlobalToolsTable.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:03:21</sys_created_on>
         <sys_id>157e05681bb47150d5be777d8b4bcb77</sys_id>
-        <sys_mod_count>105</sys_mod_count>
+        <sys_mod_count>126</sys_mod_count>
         <sys_name>GlobalToolsTable</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_157e05681bb47150d5be777d8b4bcb77</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-10-18 08:12:57</sys_updated_on>
+        <sys_updated_on>2024-12-20 08:50:55</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>157e05681bb47150d5be777d8b4bcb77</id>
