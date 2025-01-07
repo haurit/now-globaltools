@@ -40,6 +40,7 @@ GlobalToolsRESTAPI.prototype = {
 	_setConnectionFromAlias: function (oConnectionAlias) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this.sRemoteUrl = '';
+		this.sHostName = '';
 		var sConnectionAliasId = '';
 		var sConnectionAliasType = this._gt.getType(oConnectionAlias);
 		if (sConnectionAliasType.indexOf('gliderecord') != -1) {
@@ -59,6 +60,11 @@ GlobalToolsRESTAPI.prototype = {
 			var ccConnectionInfo = _ConnectionInfoProvider.getConnectionInfo(sConnectionAliasId);
 			if (ccConnectionInfo) {
 				this.sRemoteUrl = ccConnectionInfo.getAttribute('connection_url').replace(/\/$/gi, '');
+				var aRemoteUrlMatch = (this.sRemoteUrl) ? String(this.sRemoteUrl).split('://') : '';
+				if ((this._gtArray.isValidArray(aRemoteUrlMatch)) && (aRemoteUrlMatch.length > 0)) {
+					aRemoteUrlMatch = String(aRemoteUrlMatch[1]).split('.');
+					this.sHostName = this._gtArray.isValidArray(aRemoteUrlMatch) ? aRemoteUrlMatch[0] : '';
+				} // if remote url match
 				if ((ccConnectionInfo.getAttribute('protocol') == 'https') && (this.sRemoteUrl)) {
 					this.bValidConnectionConfig = true;
 					var iHttpTimeout = parseInt(ccConnectionInfo.getAttribute('connection_timeout'));
@@ -348,14 +354,14 @@ GlobalToolsRESTAPI.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 11:42:21</sys_created_on>
         <sys_id>a95f09e21b0731105e14b8449b4bcb29</sys_id>
-        <sys_mod_count>104</sys_mod_count>
+        <sys_mod_count>115</sys_mod_count>
         <sys_name>GlobalToolsRESTAPI</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a95f09e21b0731105e14b8449b4bcb29</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-12-20 09:03:13</sys_updated_on>
+        <sys_updated_on>2025-01-05 11:35:16</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a95f09e21b0731105e14b8449b4bcb29</id>
