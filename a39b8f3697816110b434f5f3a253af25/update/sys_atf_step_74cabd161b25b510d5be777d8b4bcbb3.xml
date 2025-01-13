@@ -13,14 +13,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>74cabd161b25b510d5be777d8b4bcbb3</sys_id>
-        <sys_mod_count>371</sys_mod_count>
+        <sys_mod_count>375</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_74cabd161b25b510d5be777d8b4bcbb3</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-12-17 16:36:07</sys_updated_on>
+        <sys_updated_on>2025-01-13 13:21:07</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRecordWriteValidate Tests">a44784251b6db110d5be777d8b4bcb92</test>
         <timeout/>
@@ -35,9 +35,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>56dabd161b25b510d5be777d8b4bcb3a</sys_id>
-        <sys_mod_count>371</sys_mod_count>
+        <sys_mod_count>375</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-12-17 16:36:07</sys_updated_on>
+        <sys_updated_on>2025-01-13 13:21:07</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -455,7 +455,7 @@
 			'origin_table': 'sugus1',&#13;
 			'calendar_duration': 'sugus2',&#13;
 			'assignment_group': 'Hardware',&#13;
-			'assigned_to': 'beth.anglin'&#13;
+			'assigned_to': 'luke.wilson'&#13;
 		}; // values&#13;
 &#13;
 		oError = {};&#13;
@@ -591,7 +591,7 @@
 		oRecordValues = {&#13;
 			'sys_id': '-1',&#13;
 			'number': grRecord.getDisplayValue(),&#13;
-			'company': 'ServiceNow',&#13;
+			'company': 'ACME North America',&#13;
 			'test_template': 'sugus0',&#13;
 			'test_imp_user': 'sugus1',&#13;
 			'test_action': 'sugus2',&#13;
