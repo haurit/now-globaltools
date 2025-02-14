@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step">
     <sys_atf_step action="INSERT_OR_UPDATE">
         <active>true</active>
+        <callable_outputs/>
         <copied_from/>
         <description>Run Server Side Validation Script</description>
         <display_name>Run Server Side Script</display_name>
@@ -13,14 +14,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 05:37:15</sys_created_on>
         <sys_id>ff826c861be17510c1ecdc61ab4bcbbe</sys_id>
-        <sys_mod_count>80</sys_mod_count>
+        <sys_mod_count>118</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_ff826c861be17510c1ecdc61ab4bcbbe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-08-16 06:13:36</sys_updated_on>
+        <sys_updated_on>2025-02-14 14:18:58</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsTable Tests">ccd68ce11b6db110d5be777d8b4bcbe6</test>
         <timeout/>
@@ -49,9 +50,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 05:37:15</sys_created_on>
         <sys_id>7c54a8c61be17510c1ecdc61ab4bcb31</sys_id>
-        <sys_mod_count>80</sys_mod_count>
+        <sys_mod_count>118</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-08-16 06:13:36</sys_updated_on>
+        <sys_updated_on>2025-02-14 14:18:58</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -216,6 +217,22 @@
 	_gtATF.runATF('getMandatoryFields', ['name', 'type'], 'sys_sg_parameter_screen'); // icon should not be shown, dict override to remove it&#13;
 	_gtATF.runATF('getMandatoryFields', ['short_description'], 'problem');&#13;
 	_gtATF.runATF('getMandatoryFields', undefined, 'invalidtable');&#13;
+&#13;
+	_gtATF.runATF('generateLucidChartERDInput', '');&#13;
+	_gtATF.runATF('generateLucidChartERDInput', '', 'invalidconfig');&#13;
+	_gtATF.runATF('generateLucidChartERDInput', '', {});&#13;
+	_gtATF.runATF('generateLucidChartERDInput', '', {a: 'b'});&#13;
+	_gtATF.runATF('generateLucidChartERDInput', [], {sTables: 'invalidtable'});&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /incident \| cmdb/g, {sTables: 'incident,sys_user'});&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /incident \| caller_id/g, {sTables: 'incident,sys_user', bOnlyTableWithoutHierarchy: true});&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /mysql/g, {aTables: ['incident', 'sys_user', 'sys_user']});&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /incident \| number/g, {aTables: ['incident'], bOnlyReferenceFields: false});&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /incident \| company/g, {aTables: ['incident'], bOnlyReferenceFields: true});&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /incident_task \| sys_id/g, {aPackages: ['com.snc.incident']});&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /sn_admin_center_solution \| objective/g, {aApps: ['sn_admin']});&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /com.snc.incident \| incident/g, {aPackages: ['com.snc.incident', 'apps/system_user'], sSchemaType: 'package'});&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /cmn_department \| dept_head/g, {sTables: 'incident', bFollowReferences: true});&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /cmn_department \| dept_head/g, {sTables: 'incident', bFollowReferences: true, iMaxNumberOfReferencesToFollow: 1});&#13;
 &#13;
 	return _gtATF.endATF();&#13;
 &#13;

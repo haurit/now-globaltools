@@ -32,6 +32,7 @@ GlobalToolsTable.prototype = {
 		gs.include('j2js');
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
+		this._gtObject = new global.GlobalToolsObject();
 	}, // function initialize
 
 	checkAccess: function (sCallerScope) {
@@ -551,8 +552,125 @@ GlobalToolsTable.prototype = {
 		return this._gtArray.unique(aMandatoryFields, true).sort();
 	}, // function getMandatoryFields
 
+	/***********************************************************************************************************
+	*	Generate Lucid Chart ERD Input
+	************************************************************************************************************/
+
+	generateLucidChartERDInput: function (oConfig) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!oConfig) || (!this._gtObject.isObject(oConfig))) {
+			return '';
+		} // check input
+		var sTablesInput = this._gtObject.getValue('sTables', '', oConfig); // string of tables
+		var aTablesInput = this._gtObject.getValue('aTables', [], oConfig); // array of tables
+		var aPackagesInput = this._gtObject.getValue('aPackages', [], oConfig); // array of packages (sys_id, short_name)
+		var aAppsInput = this._gtObject.getValue('aApps', [], oConfig); // array of scoped apps (sys_id, short_name)
+		var bOnlyTableWithoutHierarchy = this._gtObject.getValue('bOnlyTableWithoutHierarchy', false, oConfig); // if true will only show reference fields
+		var bOnlyReferenceFields = this._gtObject.getValue('bOnlyReferenceFields', true, oConfig); // if true will only show reference fields
+		var bFollowReferences = this._gtObject.getValue('bFollowReferences', false, oConfig); // if true will follow references
+		var iMaxNumberOfReferencesToFollow = this._gtObject.getValue('iMaxNumberOfReferencesToFollow', 1, oConfig); // will follow references this deep
+		var aExcludeTables = this._gtObject.getValue('aExcludeTables', ['sys_metadata'], oConfig); // tables to exclude
+		var sTableSchema = this._gtObject.getValue('sTableSchema', 'now', oConfig); // name of table schema
+		var sSchemaType = this._gtObject.getValue('sSchemaType', '', oConfig); // use sTableSchema for all (default) or take sys_scope (app) or sys_package (package)
+		var aTables = [];
+		if (sTablesInput) {
+			var aTmpTables = sTablesInput.split(',');
+			if (this._gtArray.isValidArray(aTmpTables)) {
+				aTables = this._gtArray.mergeArray(aTables, aTmpTables, true);
+			} // if valid array
+		} // if table input string
+		if (this._gtArray.isValidArray(aTablesInput)) {
+			aTables = this._gtArray.mergeArray(aTables, aTablesInput, true);
+		} // if table input array
+		if (this._gtArray.isValidArray(aPackagesInput)) {
+			aPackagesInput.forEach(function (sPackageNameOrId) {
+				var grTable = new GlideRecord('sys_db_object');
+				grTable.addEncodedQuery('sys_package=' + sPackageNameOrId + '^ORsys_package.sourceSTARTSWITH' + sPackageNameOrId);
+				grTable.query();
+				while (grTable.next()) {
+					if (aTables.indexOf(grTable.getValue('name') == -1)) {
+						aTables.push(grTable.getValue('name'));
+					} // if not exist
+				} // while apps table
+			}, this); // while apps input
+		} // if table input package
+		if (this._gtArray.isValidArray(aAppsInput)) {
+			aAppsInput.forEach(function (sAppNameOrId) {
+				var grTable = new GlideRecord('sys_db_object');
+				grTable.addEncodedQuery('sys_scope=' + sAppNameOrId + '^ORsys_scope.scopeSTARTSWITH' + sAppNameOrId);
+				grTable.query();
+				while (grTable.next()) {
+					if (aTables.indexOf(grTable.getValue('name') == -1)) {
+						aTables.push(grTable.getValue('name'));
+					} // if not exist
+				} // while apps table
+			}, this); // while apps input
+		} // if table input app
+		this.aLucidChartERDResults = [];
+		this.iLucidChartERDOrdinalPosition = 0;
+		this.aLucidChartERDTableCache = [];
+		if (this._gtArray.isValidArray(aTables)) {
+			aTables.forEach(function (sTable) {
+				this._generateLucidChartERDDictData(sTable, bOnlyTableWithoutHierarchy, bOnlyReferenceFields, aExcludeTables, sTableSchema, sSchemaType, bFollowReferences, iMaxNumberOfReferencesToFollow, 0);
+			}, this); // each table
+		} else {
+			return '';
+		} // if no table
+		return this.aLucidChartERDResults.join('\n');
+	}, // function generateLucidChartERDInput
+
+	_generateLucidChartERDDictData: function (sTable, bOnlyTableWithoutHierarchy, bOnlyReferenceFields, aExcludeTables, sTableSchema, sSchemaType, bFollowReferences, iMaxNumberOfReferencesToFollow, iCurrentNumberOfReferences, bFollowReferenceCall) {
+		if (this.aLucidChartERDTableCache.indexOf(sTable) == -1) {
+			this.aLucidChartERDTableCache.push(sTable);
+			if (bFollowReferenceCall) {
+				iCurrentNumberOfReferences++;
+			} // if reference followed
+			var _getTableInfo = function (sTable, sType) {
+				var grTable = new GlideRecord('sys_db_object');
+				grTable.addEncodedQuery('name=' + sTable);
+				grTable.setLimit(1);
+				grTable.query();
+				if (grTable.next()) {
+					if (sType == 'package') {
+						return String(grTable.sys_package.source);
+					} else {
+						return String(grTable.sys_scope.scope);
+					} // if table
+				} // if table
+			}; // function _getTableInfo
+			var aAllTablesFiltered = [];
+			if (bOnlyTableWithoutHierarchy) {
+				aAllTablesFiltered.push(sTable);
+			} else {
+				aAllTablesFiltered = this.getTableHierarchy(sTable);
+			} // if without hierarchy
+			var sQuery = (bOnlyReferenceFields) ? 'internal_typeINreference,glide_list,GUID' : 'internal_type!=collection';
+			var grDict = new GlideRecord('sys_dictionary');
+			grDict.addEncodedQuery(sQuery + '^internal_typeISNOTEMPTY^element!=NULL^nameIN' + aAllTablesFiltered.join(',') + '^nameNOT IN' + aExcludeTables.join(','));
+			grDict.query();
+			while (grDict.next()) {
+				this.iLucidChartERDOrdinalPosition++;
+				var sRealTable = grDict.getValue('name');
+				var sElement = grDict.getValue('element');
+				var sDataType = grDict.getValue('internal_type');
+				var sConstraintType = 'PRIMARY KEY';
+				sTableSchemaLocal = (sSchemaType) ? _getTableInfo(sTable, sSchemaType) : sTableSchema;
+				if (sElement == 'sys_id') {
+					sTableSchemaForeign = (sSchemaType) ? _getTableInfo(sTable, sSchemaType) : sTableSchema;
+				} else {
+					sTableSchemaForeign = (sSchemaType) ? _getTableInfo(grDict.getValue('reference'), sSchemaType) : sTableSchema;
+					sConstraintType = ((sDataType == 'reference') || (sDataType == 'glide_list')) ? 'FOREIGN KEY' : sConstraintType;
+				} // if id
+				this.aLucidChartERDResults.push('| mysql | ' + sTableSchemaLocal + ' | ' + sTable + ' | ' + sElement + ' | ' + this.iLucidChartERDOrdinalPosition + ' | ' + sDataType + ' | ' + grDict.getValue('max_length') + ' | ' + sConstraintType + ' | ' + sTableSchemaForeign + ' | ' + grDict.getValue('reference') + ' | sys_id |');
+				if ((bFollowReferences) && (['reference', 'glide_list'].indexOf(sDataType) != -1) && (iMaxNumberOfReferencesToFollow >= iCurrentNumberOfReferences)) {
+					this._generateLucidChartERDDictData(grDict.getValue('reference'), bOnlyTableWithoutHierarchy, bOnlyReferenceFields, aExcludeTables, sTableSchema, sSchemaType, bFollowReferences, iMaxNumberOfReferencesToFollow, iCurrentNumberOfReferences, true);
+				} // if follow reference
+			} // while dict
+		} // if new table
+	}, // function _generateLucidChartERDDictData
+
 	type: 'GlobalToolsTable',
-	version: '1.0.9',
+	version: '1.0.10',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -561,14 +679,14 @@ GlobalToolsTable.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:03:21</sys_created_on>
         <sys_id>157e05681bb47150d5be777d8b4bcb77</sys_id>
-        <sys_mod_count>127</sys_mod_count>
+        <sys_mod_count>178</sys_mod_count>
         <sys_name>GlobalToolsTable</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_157e05681bb47150d5be777d8b4bcb77</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-01-04 11:13:53</sys_updated_on>
+        <sys_updated_on>2025-02-14 14:20:07</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>157e05681bb47150d5be777d8b4bcb77</id>
