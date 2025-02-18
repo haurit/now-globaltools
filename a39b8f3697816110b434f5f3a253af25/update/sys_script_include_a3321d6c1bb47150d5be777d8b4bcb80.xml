@@ -44,9 +44,13 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this._gtRead = new global.GlobalToolsRecordRead();
 		this._gtWrite = new global.GlobalToolsRecordWrite();
 		this._mappingCfgMgr = '';
-		var grScriptInclude = new GlideRecord('sys_script_include'); // gs.isValidScriptFromScope did not work
-		if (grScriptInclude.get('api_name', 'x_snc_mapping_cm.MappingConfigManager')) {
-			this._mappingCfgMgr = new x_snc_mapping_cm.MappingConfigManager();
+		var grApp = new GlideRecord('sys_app'); // gs.isValidScriptFromScope did not work
+		if (grApp.get('scope', 'x_snc_mapping_cm')) {
+			if (this.bTimer) {
+				this._mappingCfgMgr = new x_snc_mapping_cm.MappingConfigManager(this._gtCache, this._gtDateTime);
+			} else {
+				this._mappingCfgMgr = new x_snc_mapping_cm.MappingConfigManager(this._gtCache);
+			} // if timer
 		} // if valid mapping config mgr
 		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'initialize'); }
 	}, // function initialize
@@ -1717,14 +1721,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>784</sys_mod_count>
+        <sys_mod_count>785</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-12-20 09:03:03</sys_updated_on>
+        <sys_updated_on>2025-01-10 06:49:11</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>
