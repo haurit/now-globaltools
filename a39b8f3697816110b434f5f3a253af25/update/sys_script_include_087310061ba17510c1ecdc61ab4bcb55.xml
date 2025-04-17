@@ -9,7 +9,9 @@
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
 &#13;
 For some check JASMINE would be a good option too!</description>
+        <mobile_callable>false</mobile_callable>
         <name>GlobalToolsATF</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var GlobalToolsATF = Class.create();
 GlobalToolsATF.prototype = {
 	initialize: function (sScriptIncludeName, _ScriptIncludeRef, bLog, outputs, steps, params, stepResult, assertEqual) {
@@ -18,6 +20,7 @@ GlobalToolsATF.prototype = {
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
 		this._gtRead = new global.GlobalToolsRecordRead();
+		this._gtWrite = new global.GlobalToolsRecordWrite();
 		this._getType = this._gt.getType;
 		this._sScriptIncludeName = sScriptIncludeName;
 		this._ScriptIncludeRef = _ScriptIncludeRef;
@@ -128,6 +131,31 @@ GlobalToolsATF.prototype = {
 		} // if next
 	}, // function getRecord
 
+	generateTestData: function (oTestDataConfig, bError) {
+		if ((oTestDataConfig) && (this._getType(oTestDataConfig) == 'object')) {
+			Object.keys(oTestDataConfig).forEach(function (sTable) {
+				var aTestDataTableConfigs = oTestDataConfig[sTable];
+				if (this._gtArray.isValidArray(aTestDataTableConfigs)) {
+					aTestDataTableConfigs.forEach(function (oTestDataConfig) {
+						var oError = {};
+						var oConfig = {
+							sTargetTable: sTable,
+							bInsert: true,
+							bKeepSysId: true,
+							aQueryFields: ['sys_id', 'name', 'user_name', 'short_description', 'number', 'asset_tag'],
+						}; // config
+						var sSysId = this._gtWrite.doRecord(oTestDataConfig, oConfig, oError);
+						if (sSysId) {
+							oTestDataConfig['sys_id'] = sSysId;
+						} else if (bError) {
+							gs.error('GlobalToolsATF.generateTestData error creating test data: ' + JSON.stringify(oError));
+						} // if sys id
+					}, this); // each record
+				} // if valid data cfg
+			}, this); // each table
+		} // if cfg
+	}, // function generateTestData
+
 	addError: function (sFunction, sError) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' ' + sError);
@@ -152,13 +180,13 @@ GlobalToolsATF.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 04:35:34</sys_created_on>
         <sys_id>087310061ba17510c1ecdc61ab4bcb55</sys_id>
-        <sys_mod_count>66</sys_mod_count>
+        <sys_mod_count>69</sys_mod_count>
         <sys_name>GlobalToolsATF</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_087310061ba17510c1ecdc61ab4bcb55</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-07-09 14:57:25</sys_updated_on>
+        <sys_updated_on>2025-04-16 11:19:17</sys_updated_on>
     </sys_script_include>
 </record_update>
