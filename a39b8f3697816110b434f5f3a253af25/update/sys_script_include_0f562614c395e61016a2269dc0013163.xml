@@ -1,0 +1,742 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.GlobalToolsSecurity</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description>Tools to support (scoped) app development&#13;
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
+        <mobile_callable>false</mobile_callable>
+        <name>GlobalToolsSecurity</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[var GlobalToolsSecurity = Class.create();
+GlobalToolsSecurity.prototype = {
+	initialize: function (bCompareGlideRecordSecureCanCRUD, sDebugAccessAnalyzerOutputForTable) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		this._gt = new global.GlobalTools();
+		this._gtArray = new global.GlobalToolsArray();
+		this._gtObject = new global.GlobalToolsObject();
+		this._gtTable = new global.GlobalToolsTable();
+		this._gtRecordRead = new global.GlobalToolsRecordRead();
+		this._gtRecordWrite = new global.GlobalToolsRecordWrite();
+		var grScriptInclude = new GlideRecord('sys_script_include'); // gs.isValidScriptFromScope did not work
+		if (grScriptInclude.get('api_name', 'sn_access_analyzer.GlobalToolsAccessAnalyzerBridge')) {
+			this._gtAccessAnalyzerBridge = new sn_access_analyzer.GlobalToolsAccessAnalyzerBridge();
+		} // if gt aa bridge
+		this._gSecurityManager = GlideSecurityManager.get();
+		this.bCompareGlideRecordSecureCanCRUD = (bCompareGlideRecordSecureCanCRUD === true) ? true : false; // default false
+		this.sDebugAccessAnalyzerOutputForTable = (this._gtTable.isValidTable(sDebugAccessAnalyzerOutputForTable)) ? sDebugAccessAnalyzerOutputForTable : '';
+		this.sUserId = '';
+		this.sCreatedUserId = '';
+		this.oWarnings = {};
+		this.oOperationMap = {
+			C: 'create',
+			R: 'read',
+			U: 'write',
+			D: 'delete',
+			create: 'C',
+			read: 'R',
+			write: 'U',
+			'delete': 'D'
+		}; // operation map
+	}, // function initialize
+
+	checkAccess: function (sCallerScope) {
+		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
+		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
+		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
+			return true;
+		} // if scope is allowed
+	}, // function checkAccess
+
+	getUsersRoles: function (oUserOrId, sReturnType, bDirectAssignment, bExcludeSNCInternal) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var aRoles = [];
+		sReturnType = ((sReturnType == 'id') || (sReturnType == 'boolean')) ? sReturnType : 'name';
+		bDirectAssignment = (bDirectAssignment === true) ? true : false;
+		var sType = this._gt.getType(oUserOrId);
+		var sUserId = '';
+		if (sType.indexOf('gliderecord') != -1) {
+			sUserId = oUserOrId.getUniqueValue();
+		} else if ((sType == 'string') && (oUserOrId.length == 32)) {
+			sUserId = oUserOrId;
+		} // if record or user id
+		if (sUserId) {
+			var aQuery = ['user=' + sUserId];
+			if (bDirectAssignment) {
+				aQuery.push('inherited=false');
+			} // if only direct assignment
+			if (bExcludeSNCInternal) {
+				var sUserRoleInternalId = this.getRoleIdFromName('snc_internal');
+				aQuery.push('role!=' + sUserRoleInternalId);
+			} // exclude snc internal
+			var aExtraDotWalkFields = [];
+			var iLimit = '';
+			if (sReturnType == 'name') {
+				aExtraDotWalkFields.push('role.name');
+			} else if (sReturnType == 'boolean') {
+				iLimit = 1;
+			} // if return name
+			var sResult = '';
+			var grUserHasRole = this._gtRecordRead.getRecords('sys_user_has_role', aQuery.join('^'), '', '', iLimit, '', '', '', '', aExtraDotWalkFields);
+			if (sReturnType == 'boolean') {
+				if (grUserHasRole.hasNext()) {
+					return true;
+				} else {
+					return false;
+				} // if found
+			} else {
+				while (grUserHasRole.next()) {
+					if (sReturnType == 'id') {
+						sResult = grUserHasRole.getValue('role');
+					} else {
+						sResult = String(grUserHasRole.role.name);
+					} // if return id
+					if ((sResult) && (aRoles.indexOf(sResult))) {
+						aRoles.push(sResult);
+					} // if not in result
+				} // while roles
+				return aRoles;
+			} // if bool
+		} // if user id
+	}, // function getUsersRoles
+
+	getRoleIdFromName: function (sRole) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (sRole) {
+			var grUserRole = new GlideRecord('sys_user_role');
+			if (grUserRole.get('name', sRole)) {
+				return grUserRole.getUniqueValue();
+			} // if role
+		} // if role
+		return false;
+	}, // function isValidRole
+
+	isValidRole: function (sRoleOrId) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (sRoleOrId) {
+			if (this._gtRecordRead.checkRecordByQuery('sys_user_role', 'sys_id=' + sRoleOrId + '^ORname=' + sRoleOrId)) {
+				return true;
+			} // if role exists
+		} // if role
+		return false;
+	}, // function isValidRole
+
+	generateAccessReport: function (sRole, sTableQuery, bExtendTables, sOutputType, bValidateWithAccessAnalyzer) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var oResult = {}, sError = '';
+		bExtendTables = (bExtendTables === false) ? false : true; // default is true
+		sOutputType = ((sOutputType == 'csv') || (sOutputType == 'string') || (sOutputType == 'both')) ? sOutputType : 'json'; // default is json
+		var sRoleId = this.getRoleIdFromName(sRole);
+		if ((!sRole) || (!this.isValidRole(sRole))) {
+			sError = 'Role is invalid: ' + sRole;
+		} else if ((sTableQuery) && (!this._gtRecordRead.isValidQuery('sys_db_object', sTableQuery))) {
+			sError = 'Table Query is invalid: ' + sTableQuery;
+		} else {
+			sError = this._createUserIdWithRole(sRoleId);
+			this._gt.sleep(2000);
+			if ((!sError) && (this.sUserId)) {
+				var oRoleAccessResult = {};
+				try {
+					var aTableQuery = ['name!=sys_metadata', 'name!=sys_hop_token'];
+					if (sTableQuery) {
+						aTableQuery.push(sTableQuery);
+					} // if table query
+					var grTables = this._gtRecordRead.getRecords('sys_db_object', 'sys_update_nameISNOTEMPTY^super_classISEMPTY^' + aTableQuery.join('^'), ['name']); // , '', '', 10
+					var aTables = [], sTmpTable = '';
+					while (grTables.next()) {
+						sTmpTable = grTables.getValue('name');
+						if ((!sTmpTable.startsWith('sys_analytics_data_points')) && (!sTmpTable.startsWith('v_')) && (!sTmpTable.startsWith('syslog00')) && (!sTmpTable.startsWith('ar_')) && (!this._gtTable.isValidDBView(sTmpTable))) {
+							aTables.push(grTables.getValue('name'));
+						} // if not archive table
+					} // while table
+					var sUserInitialId = gs.getUserID();
+					gs.getSession().impersonate(this.sUserId);
+					if (new GlideImpersonate().isImpersonating()) {
+						aTables.forEach(function (sTmpTable) {
+							this._getAccessByRoleByTable(sRoleId, sRole, sTmpTable, bExtendTables, true, true, oRoleAccessResult);
+						}, this); // each table
+						if (gs.isInteractive()) {
+							gs.getSession().impersonate(sUserInitialId);
+							if (new GlideImpersonate().isImpersonating()) {
+								sError = 'Impersonate failed to end: ' + this.sUserId;
+							} // if still impersonating
+						} // if interactive
+					} else {
+						sError = 'Impersonate failed for user: ' + this.sUserId;
+					} // if impersonate
+					oResult['tables'] = oRoleAccessResult;
+				} catch (oEx) {
+					sError = 'Exception occurred: ' + String(oEx);
+				} // try
+			} // if userid
+		} // if role
+		if (Object.keys(this.oWarnings).length > 0) {
+			oResult['warnings'] = this.oWarnings;
+		} // if warnings
+		if (sError) {
+			gs.warn('GlobalToolsSecurity.generateAccessReport error: ' + sError);
+			if (sOutputType == 'json') {
+				return { sError: sError };
+			} // if output json
+			return 'Error: ' + sError;
+		} // if error
+		this._analyzeACL(oRoleAccessResult);
+		if ((bValidateWithAccessAnalyzer) && (this._gtAccessAnalyzerBridge)) {
+			this._deleteCreatedRoleMap();
+			if (oResult.hasOwnProperty('tables')) {
+				Object.keys(oResult['tables']).forEach(function (sTable) {
+					var sResult = this._simulateAccessAnalyzerRoleByTable(sRoleId, sRole, sTable);
+					if (sResult.length > 4) {
+						gs.warn('GlobalToolsSecurity.generateAccessReport error comparing with access analyzer for sTable: ' + sTable + ' sRole: ' + sRole + ' sError: ' + sResult);
+					} else if (oResult['tables'][sTable]['CRUD'] != sResult) {
+						oResult['tables'][sTable]['AA_CRUD'] = sResult;
+					} // if error
+				}, this);
+			} // if tables
+		} // if validate with and access analyzer available
+		if (this.sCreatedUserId) {
+			//gs.warn('GlobalToolsSecurity.generateAccessReport would delete user: ' + this.sCreatedUserId + ' current user: ' + gs.getUserID());
+			this._deleteCreatedUser();
+		} // if created user
+		if ((sOutputType == 'csv') || (sOutputType == 'both')) {
+			var sCSV = this._parseAccessAnalyzerToCSV(oResult, bValidateWithAccessAnalyzer);
+			if (sOutputType == 'both') {
+				return { csv: sCSV, json: oResult };
+			} // if both
+			return sCSV;
+		} else if (sOutputType == 'string') {
+			return JSON.stringify(oResult);
+		} // if output type
+		return oResult;
+	}, // generateAccessReport
+
+	_getAccessByRoleByTable: function (sRoleId, sRole, sTable, bExtendTables, bOmitEmpty, bOmitSameExtendedClass, oRoleAccessResult) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var bCanRead = false, bCanWrite = false, bCanCreate = false, bCanDelete = false;
+		var grTable = new GlideRecordSecure(sTable);
+		grTable.initialize();
+		try {
+			bCanRead = (this._gSecurityManager.hasRightsTo('record/' + sTable + '/read', grTable)) ? true : false;
+			if ((this.bCompareGlideRecordSecureCanCRUD) && (grTable.canRead() != bCanRead)) {
+				gs.error('GlobalToolsSecurity._getAccessByRoleByTable bCanRead: ' + bCanRead + ' has different than GlideRecordSecure result for: ' + sTable);
+			} // if can read
+		} catch (oEx) {
+			fnAddWarning(sTable, 'read', oEx, this.oWarnings);
+		} // try read
+		try {
+			bCanWrite = (this._gSecurityManager.hasRightsTo('record/' + sTable + '/write', grTable)) ? true : false;
+			if ((this.bCompareGlideRecordSecureCanCRUD) && (grTable.canWrite() != bCanWrite)) {
+				gs.error('GlobalToolsSecurity._getAccessByRoleByTable bCanWrite: ' + bCanWrite + ' has different than GlideRecordSecure result for: ' + sTable);
+			} // if can write
+		} catch (oEx) {
+			fnAddWarning(sTable, 'write', oEx, this.oWarnings);
+		} // try read
+		try {
+			bCanCreate = (this._gSecurityManager.hasRightsTo('record/' + sTable + '/create', grTable)) ? true : false;
+			if ((this.bCompareGlideRecordSecureCanCRUD) && (grTable.canCreate() != bCanCreate)) {
+				gs.error('GlobalToolsSecurity._getAccessByRoleByTable bCanCreate: ' + bCanCreate + ' has different than GlideRecordSecure result for: ' + sTable);
+			} // if can create
+		} catch (oEx) {
+			fnAddWarning(sTable, 'create', oEx, this.oWarnings);
+		} // try read
+		try {
+			bCanDelete = (this._gSecurityManager.hasRightsTo('record/' + sTable + '/delete', grTable)) ? true : false;
+			if ((this.bCompareGlideRecordSecureCanCRUD) && (grTable.canDelete() != bCanDelete)) {
+				gs.error('GlobalToolsSecurity._getAccessByRoleByTable bCanDelete: ' + bCanDelete + ' has different than GlideRecordSecure result for: ' + sTable);
+			} // if can delete
+		} catch (oEx) {
+			fnAddWarning(sTable, 'delete', oEx, this.oWarnings);
+		} // try read
+		if ((!bOmitEmpty) || (bCanRead) || (bCanWrite) || (bCanCreate) || (bCanDelete)) {
+			var aAccessString = [];
+			if (bCanCreate) { aAccessString.push('C'); }
+			if (bCanRead) { aAccessString.push('R'); }
+			if (bCanWrite) { aAccessString.push('U'); }
+			if (bCanDelete) { aAccessString.push('D'); }
+			var sAccessString = aAccessString.join('');
+			if ((!bOmitSameExtendedClass) || (!this.checkParentAccessResult(sTable, sAccessString, oRoleAccessResult))) {
+				this._gtObject.setValue(sTable + '/CRUD', sAccessString, oRoleAccessResult);
+			} // if not omit extentended or not same and not delete only (omited because if you can't read, you can't delete)
+		} // if not omit empty or not empty
+		if (bExtendTables) {
+			var aExtendedTables = this._gtTable.getTableExtensions(sTable);
+			aExtendedTables.forEach(function (sExtendedTable) {
+				this._getAccessByRoleByTable(sRoleId, sRole, sExtendedTable, bExtendTables, bOmitEmpty, bOmitSameExtendedClass, oRoleAccessResult);
+			}, this); // each extended table
+		} // if run extended tables
+	}, // function _getAccessByRoleByTable
+
+	checkParentAccessResult: function (sTable, sAccessString, oRoleAccessResult) {
+		var bFound = false;
+		var aHierarchy = this._gtTable.getTableHierarchy(sTable);
+		aHierarchy.some(function (sTmpTable) {
+			var sParentAccessString = this._gtObject.getValue(sTmpTable + '/CRUD', '', oRoleAccessResult);
+			if (sParentAccessString) {
+				bFound = (sParentAccessString == sAccessString) ? true : false;
+				return true;
+			} // if found quit
+		}, this); // find parent access string
+		return bFound;
+	}, // function checkParentAccessResult
+
+	_analyzeACL: function (oRoleAccessResult, sParentTable, sChildTable, aOperation) {
+		var aUserRoles = this.getUsersRoles(this.sUserId, 'id');
+		aOperation = (aOperation) ? aOperation : ['read', 'write', 'create', 'delete'];
+		var bSNCInternal = this.isValidRole('snc_internal');
+		if (bSNCInternal) {
+			var sSNCInternalId = this.getRoleIdFromName('snc_internal');
+			if (aUserRoles.indexOf(sSNCInternalId) == -1) {
+				aUserRoles.push(sSNCInternalId);
+			} // if not exist add internal
+		} // if valid role
+		//var aAllTables = [], aExtension = [];
+		//aTables.forEach(function (sMainTable) {
+		//aAllTables = [sMainTable];
+		//aExtension = this._gtTable.getTableExtensions(sMainTable);
+		//aAllTables = aAllTables.concat(aExtension);
+		var aAllTables = (sParentTable) ? [sParentTable] : Object.keys(oRoleAccessResult);
+		aAllTables.forEach(function (sTable) {
+			if (this._gtObject.getValue(sTable + '/CRUD', '', oRoleAccessResult) != 'CRUD') {
+				var aACLs = [], sACLId = '';
+				var grACLRoles = new GlideRecord('sys_security_acl_role');
+				grACLRoles.addEncodedQuery('sys_user_roleIN' + aUserRoles.join(',') + '^sys_security_acl.type=record^sys_security_acl.name=' + sTable + '^sys_security_acl.active=true^sys_security_acl.operationIN' + aOperation.join(','));
+				grACLRoles.query();
+				while (grACLRoles.next()) {
+					sACLId = grACLRoles.getValue('sys_security_acl');
+					if (aACLs.indexOf(sACLId) == -1) {
+						aACLs.push(sACLId);
+					} // if acl
+				} // while acl with role
+				var grACLWithoutRoles = new GlideRecord('sys_security_acl');
+				grACLWithoutRoles.addEncodedQuery('name=' + sTable + '^active=true^operationIN' + aOperation.join(',') + '^type=record^RLQUERYsys_security_acl_role.sys_security_acl,=00,m2m^ENDRLQUERY');
+				grACLWithoutRoles.query();
+				while (grACLWithoutRoles.next()) {
+					sACLId = grACLWithoutRoles.getUniqueValue();
+					if (aACLs.indexOf(sACLId) == -1) {
+						aACLs.push(sACLId);
+					} // if acl
+				} // while acl without role
+				var grACLs = new GlideRecord('sys_security_acl');
+				grACLs.addEncodedQuery('sys_idIN' + aACLs.join(','));
+				grACLs.query();
+				var sStoredOperation = this._gtObject.getValue(sTable + '/CRUD', '', oRoleAccessResult);
+				var oOperations = JSON.parse(JSON.stringify({ C: '', R: '', U: '', D: '' })); // ensure fresh json is created
+				while (grACLs.next()) {
+					var sId = grACLs.getUniqueValue();
+					var sOperation = grACLs.getValue('operation');
+					var sOperationShort = this.oOperationMap[sOperation];
+					sOperation = (sOperation == 'write') ? 'update' : sOperation;
+					delete oOperations[sOperationShort];
+					if (((sStoredOperation) && (sStoredOperation.indexOf(sOperationShort) == -1)) || (sChildTable)) {
+						var sTmpTable = (sChildTable) ? sChildTable : sTable;
+						if (grACLs.getValue('condition')) {
+							this._gtObject.setValue(sTmpTable + '/' + sOperation + '/' + sId + '/condition', grACLs.getValue('condition'), oRoleAccessResult);
+						} // if condition
+						if (grACLs.getValue('script')) {
+							this._gtObject.setValue(sTmpTable + '/' + sOperation + '/' + sId + '/script', grACLs.getValue('script'), oRoleAccessResult);
+						} // script
+					} // if not same as operation
+				} // while acls
+				if (!sChildTable) {
+					var aMissingOperation = [];
+					Object.keys(oOperations).forEach(function (sTmpOperation) {
+						if (sStoredOperation.indexOf(sTmpOperation) == -1) {
+							aMissingOperation.push(this.oOperationMap[sTmpOperation]);
+						} // if parent only if not on child
+					}, this); // each key
+					var aParentTables = this._gtTable.getTableHierarchy(sTable);
+					if (aParentTables.length > 1) {
+						//gs.error('tomtom missing operation in table: ' + sTable + ' aParentTables: ' + aParentTables + ' ACL: ' + aMissingOperation);
+						this._analyzeACL(oRoleAccessResult, aParentTables[1], sTable, aMissingOperation);
+					} // if parent table
+				} // if child table
+			} // if found
+		}, this); // each table
+	}, // function _analyzeACL
+
+	generateAccessAnalyzerReport: function (sRole, sTableQuery, bExtendTables, sOutputType, bAllowCreateUser) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var oResult = {}, sError = '';
+		bExtendTables = (bExtendTables === false) ? false : true; // default is true
+		sOutputType = ((sOutputType == 'csv') || (sOutputType == 'string') || (sOutputType == 'both')) ? sOutputType : 'json'; // default is json
+		bAllowCreateUser = (bAllowCreateUser === true) ? true : false; // default is false
+		var sRoleId = this.getRoleIdFromName(sRole);
+		if ((!sRole) || (!this.isValidRole(sRole))) {
+			sError = 'Role is invalid: ' + sRole;
+		} else if ((sTableQuery) && (!this._gtRecordRead.isValidQuery('sys_db_object', sTableQuery))) {
+			sError = 'Table Query is invalid: ' + sTableQuery;
+		} else {
+			sTableQuery = (sTableQuery) ? '^' + sTableQuery : '';
+			this._findOrCreateUserIdWithNoRole(bAllowCreateUser);
+			if (this.sUserId) {
+				var oAccessSimulatorResult = {};
+				if (this._gtAccessAnalyzerBridge) {
+					sError = this._simulateAccessAnalyzerAssignRole(sRoleId, oAccessSimulatorResult);
+					oResult['roles'] = oAccessSimulatorResult;
+					//gs.error('tomtom oAccessSimulatorResult: ' + JSON.stringify(oAccessSimulatorResult));
+					if (!sError) {
+						var oRoleAccessResult = {};
+						var grTables = this._gtRecordRead.getRecords('sys_db_object', 'sys_update_nameISNOTEMPTY^super_classISEMPTY' + sTableQuery, ['name']); // , '', '', 10
+						while (grTables.next()) {
+							var sTmpTable = grTables.getValue('name');
+							sError = this._simulateAccessAnalyzerRoleByTable(sRoleId, sRole, sTmpTable, bExtendTables, true, true, oRoleAccessResult);
+						} // while table
+						//gs.error('tomtom oRoleAccessResult: ' + JSON.stringify(oRoleAccessResult));
+						oResult['tables'] = oRoleAccessResult;
+					} // if no error
+				} else {
+					sError = 'Script Include GlobalToolsAccessAnalyzerBridge missing, please download XML and load it in your instance.';
+				} // if bridge
+				if (this.sCreatedUserId) {
+					this._deleteCreatedUser();
+				} // if created user
+			} else {
+				sError = 'Test user not found and not created with bAllowCreateUser: ' + String(bAllowCreateUser);
+			} // if userid
+		} // if role
+		if (sError) {
+			gs.warn('GlobalToolsSecurity.generateAccessAnalyzerReport error: ' + sError);
+			if (sOutputType == 'json') {
+				return { sError: sError };
+			} // if output json
+			return 'Error: ' + sError;
+		} // if error
+		if ((sOutputType == 'csv') || (sOutputType == 'both')) {
+			var sCSV = this._parseAccessAnalyzerToCSV(oResult);
+			if (sOutputType == 'both') {
+				return { csv: sCSV, json: oResult };
+			} // if both
+			return sCSV;
+		} else if (sOutputType == 'string') {
+			return JSON.stringify(oResult);
+		} // if output type
+		return oResult;
+	}, // function generateAccessAnalyzerReport
+
+	_simulateAccessAnalyzerAssignRole: function (sRoleId, oAccessSimulatorResult) {
+		var oPayloadAccesSimulatorChanges = {
+			userSysId: this.sUserId,
+			rolesToAssign: [sRoleId],
+		}; // simulator payload
+		var aAccessSimulatorResult = this._gtAccessAnalyzerBridge.getAccessSimulatorChanges(oPayloadAccesSimulatorChanges);
+		if (this._gtArray.isValidArray(aAccessSimulatorResult)) {
+			this.aAccessSimulatorResult = aAccessSimulatorResult;
+			this._parseAccessAnalyzerRoleObject(this._getAccessAnalyzerRoleObjectById(sRoleId), oAccessSimulatorResult, '');
+		} else {
+			return 'Failed to get access simulator change results';
+		} // each result
+		return '';
+	}, // function _simulateAccessAnalyzerAssignRole
+
+	_getAccessAnalyzerRoleObjectById: function (sRoleId) {
+		var aRoles = this.aAccessSimulatorResult.filter(oRole => {
+			return oRole['accessEntity']['id'] === sRoleId;
+		}); // get initial role
+		return aRoles[0];
+	}, // function _getAccessAnalyzerRoleObjectById
+
+	_parseAccessAnalyzerRoleObject: function (oRole, oAccessSimulatorResult, sPath) {
+		var sId = this._gtObject.getValue('accessEntity/id', '', oRole);
+		var sName = this._gtObject.getValue('accessEntity/name', '', oRole);
+		var sNewPath = (sPath) ? sPath + '/' : '';
+		var aContainedId = this._gtObject.getValue('accessEntity/containedRoles', [], oRole);
+		var aAssignmentType = this._gtObject.getValue('accessEntity/assignmentTypes', '', oRole);
+		var sAssignmentType = ((this._gtArray.isValidArray(aAssignmentType)) && (aAssignmentType.indexOf('DIRECT') != -1)) ? 'DIRECT' : 'INHERITED';
+		this._gtObject.setValue(sNewPath + sName, {}, oAccessSimulatorResult);
+		//this._gtObject.setValue('flatbyid/' + sId, sName, oAccessSimulatorResult);
+		//this._gtObject.setValue('flatbyname/' + sName, sId, oAccessSimulatorResult);
+		//this._gtObject.setValue('flatbytype/' + sAssignmentType + '/' + sName, sId, oAccessSimulatorResult);
+		//this._gtObject.setValue('flattypebyname/' + sName, sAssignmentType, oAccessSimulatorResult);
+		aContainedId.forEach(function (sContainedId) {
+			this._parseAccessAnalyzerRoleObject(this._getAccessAnalyzerRoleObjectById(sContainedId), oAccessSimulatorResult, sPath + '/' + sName);
+		}, this);
+	}, // function _parseAccessAnalyzerRoleObject
+
+	_simulateAccessAnalyzerRoleByTable: function (sRoleId, sRole, sTable, bExtendTables, bOmitEmpty, bOmitSameExtendedClass, oRoleAccessResult) {
+		var oPayloadSimulatedResults = {
+			entitySysId: this.sUserId,
+			entityType: 'USER',
+			targetName: sTable,
+			targetResource: 'RECORD',
+			targetMethod: '',
+			targetOperations: ['read', 'write', 'create', 'delete'],
+			rolesToAssign: [sRoleId]
+		}; // paylaod
+		var oSimulatorResult = this._gtAccessAnalyzerBridge.getSimulatedResult(oPayloadSimulatedResults, true);
+		if (this.sDebugAccessAnalyzerOutputForTable == sTable) {
+			if (oRoleAccessResult) {
+				this._gtObject.setValue(sTable + '/debug', oSimulatorResult, oRoleAccessResult);
+			} else {
+				gs.error('GlobalToolsSecurity._simulateAccessAnalyzerRoleByTable debug for table: ' + sTable + ' result: ' + JSON.stringify(oSimulatorResult));
+			} // if object
+		} // if debug output
+		if ((oSimulatorResult) && (oSimulatorResult.hasOwnProperty('error') && (oSimulatorResult['error'] == 0))) {
+			var bCanRead = (this._gtObject.getValue('securityDebug/read/status', '', oSimulatorResult) == 'passed') ? true : false;
+			var bCanWrite = (this._gtObject.getValue('securityDebug/write/status', '', oSimulatorResult) == 'passed') ? true : false;
+			var bCanCreate = (this._gtObject.getValue('securityDebug/create/status', '', oSimulatorResult) == 'passed') ? true : false;
+			var bCanDelete = (this._gtObject.getValue('securityDebug/delete/status', '', oSimulatorResult) == 'passed') ? true : false;
+			var aAccessString = [];
+			if (bCanCreate) { aAccessString.push('C'); }
+			if (bCanRead) { aAccessString.push('R'); }
+			if (bCanWrite) { aAccessString.push('U'); }
+			if (bCanDelete) { aAccessString.push('D'); }
+			var sAccessString = aAccessString.join('');
+			if (!oRoleAccessResult) {
+				return sAccessString;
+			} // if no object
+			if ((!bOmitEmpty) || (bCanRead) || (bCanWrite) || (bCanCreate) || (bCanDelete)) {
+				var bFound = false;
+				if (bOmitSameExtendedClass) {
+					var aHierarchy = this._gtTable.getTableHierarchy(sTable);
+					aHierarchy.some(function (sTable) {
+						var sParentAccessString = this._gtObject.getValue(sTable + '/CRUD', '', oRoleAccessResult);
+						if (sParentAccessString) {
+							bFound = (sParentAccessString == sAccessString) ? true : false;
+							return true;
+						} // if found quit
+					}, this); // find parent access string
+				} // if omit same extended class
+				if ((!bFound) && (sAccessString != 'D')) {
+					this._gtObject.setValue(sTable + '/CRUD', sAccessString, oRoleAccessResult);
+				} // if not omit extentended or not same and not delete only (omited because if you can't read, you can't delete)
+			} // if not omit empty or not empty
+		} else {
+			var sError = ((oSimulatorResult) && (oSimulatorResult.hasOwnProperty('errorMessage'))) ? oSimulatorResult['errorMessage'] : 'no error message';
+			return 'Failed to get role access for table results sRole: ' + sRole + ' [' + sRoleId + '] sTable: ' + sTable + ' error: ' + sError;
+		} // each result
+		if (bExtendTables) {
+			var aExtendedTables = this._gtTable.getTableExtensions(sTable);
+			aExtendedTables.forEach(function (sExtendedTable) {
+				this._simulateAccessAnalyzerRoleByTable(sRoleId, sRole, sExtendedTable, bExtendTables, bOmitEmpty, bOmitSameExtendedClass, oRoleAccessResult);
+			}, this); // each extended table
+		} // if run extended tables
+	}, // function _simulateAccessAnalyzerRoleByTable
+
+	_findOrCreateUserIdWithNoRole: function (bAllowCreateUser) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var aQuery = ['user_nameISNOTEMPTY', 'active=true'];
+		var bSNCInternal = this.isValidRole('snc_internal');
+		if (bSNCInternal) {
+			aQuery.push('roles=snc_internal');
+		} // if valid role
+		['itil', 'cmdb_read', 'approver_user', 'pa_viewer'].forEach(function (sRole) {
+			if (this.isValidRole(sRole)) {
+				aQuery.push('roles!=' + sRole);
+			} // if valid role
+		}, this); // each common role
+		var grUser = this._gtRecordRead.getRecords('sys_user', aQuery.join('^'));
+		while ((!this.sUserId) && (grUser.next())) {
+			if (!this.getUsersRoles(grUser, 'boolean', false, bSNCInternal)) {
+				this.sUserId = grUser.getUniqueValue();
+			} // if user has no role
+		} // while user and continue
+		if ((!this.sUserId) && (bAllowCreateUser)) {
+			var oConfig = {
+				sTargetTable: 'sys_user',
+				bInsert: true,
+				bUpdate: false,
+				bNoWorkflow: true,
+			}; // config
+			var oValues = {
+				user_name: 'globaltoolssecurity_accesstestuser',
+				first_name: 'globaltoolssecurity',
+				last_name: 'accesstestuser',
+			}; // test user
+			this.sUserId = this._gtRecordWrite.doRecord(oValues, oConfig);
+			this.sCreatedUserId = sUserId;
+		} // if userid
+	}, // function _findOrCreateUserIdWithNoRole
+
+	_createUserIdWithRole: function (sRoleId) {
+		var oErrorUser = {};
+		var oConfig = {
+			sTargetTable: 'sys_user',
+			aQueryFields: ['user_name'],
+			bInsert: true,
+			bUpdate: false,
+			bNoWorkflow: true,
+		}; // config
+		var oValues = {
+			user_name: 'globaltoolssecurity_accesstestuser',
+			first_name: 'globaltoolssecurity',
+			last_name: 'accesstestuser',
+		}; // test user
+		this.sUserId = this._gtRecordWrite.doRecord(oValues, oConfig, oErrorUser);
+		if (oErrorUser.hasOwnProperty('message')) {
+			return 'User could not be created: ' + oErrorUser['message'];
+		} // if error
+		if (this.sUserId) {
+			var oErrorRoleMap = {};
+			var oRoleMapConfig = {
+				sTargetTable: 'sys_user_has_role',
+				aQueryFields: ['user', 'role'],
+				bInsert: true,
+				bUpdate: false,
+			}; // config
+			var oRoleMapValues = {
+				user: this.sUserId,
+				role: sRoleId,
+			}; // test user
+			this.sRoleMapId = this._gtRecordWrite.doRecord(oRoleMapValues, oRoleMapConfig, oErrorRoleMap);
+			if (oErrorRoleMap.hasOwnProperty('message')) {
+				return 'Role assignment could not be created: ' + oErrorRoleMap['message'];
+			} // if error
+		} // if user
+		this.sCreatedUserId = this.sUserId;
+	}, // function _createUserIdWithRole
+
+	_deleteCreatedUser: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var grUser = new GlideRecord('sys_user');
+		if ((this.sCreatedUserId) && (grUser.get('sys_id', this.sCreatedUserId))) {
+			if (grUser.deleteRecord()) {
+				this.sCreatedUserId = '';
+			} // if delete successful
+		} // if user
+		this._deleteCreatedRoleMap();
+	}, // function _deleteCreatedUser
+
+	_deleteCreatedRoleMap: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var grRoleMapUser = new GlideRecord('sys_user_has_role');
+		if ((this.sRoleMapId) && (grRoleMapUser.get('sys_id', this.sRoleMapId))) {
+			if (grRoleMapUser.deleteRecord()) {
+				this.sRoleMapId = '';
+			} // if delete sucessful
+		} // if user has role
+	}, // function _deleteCreatedRoleMap
+
+	_parseAccessAnalyzerToCSV: function (oResult, bValidateWithAccessAnalyzer) {
+		var aCSV = [], sAccessString = '', sRead = '', sUpdate = '', sCreate = '', sDelete = '', sCreateConditions = '', sReadConditions = '', sUpdateConditions = '', sDeleteConditions = '', sCreateScripts = '', sReadScripts = '', sUpdateScripts = '', sDeleteScripts = '', oComplexACL = {};
+		if (oResult.hasOwnProperty('tables')) {
+			var fnParseFinalValue = function (sValue) {
+				if (sValue.indexOf(';') != -1) {
+					sValue = '"' + sValue + '"';
+				} // if script
+				return (sValue) ? sValue : ' ';
+			}; // function fnParseFinalValue
+			var fnParseScript = function (sScript) {
+				sScript = sScript.replace(/\r\n|\n/gm, ' ');
+				sScript = sScript.replace(/\t/gm, '');
+				sScript = sScript.replace(/"/gm, "'");
+				if (sScript.length > 100) {
+					sScript = sScript.substring(0, 100) + '...';
+				} // if > 100
+				return sScript;
+			}; // function fnParseScript
+			var sAATitle = (bValidateWithAccessAnalyzer) ? ';Access Analyzer' : '';
+			var sCSVLine = 'Table;Access' + sAATitle + ';Create;Read;Update;Delete;Create condition;Read condition;Update condition;Delete condition;Create script;Read script;Update script;Delete script;Comment';
+			aCSV.push(sCSVLine);
+			Object.keys(oResult['tables']).forEach(function (sTable) {
+				sAccessString = oResult['tables'][sTable]['CRUD'];
+				if (bValidateWithAccessAnalyzer) {
+					sAccessAnalyzerString = (oResult['tables'][sTable].hasOwnProperty('AA_CRUD')) ? ';' + oResult['tables'][sTable]['AA_CRUD'] : ';';
+				} // if access analyzer
+				sRead = 'NO', sUpdate = 'NO', sCreate = 'NO', sDelete = 'NO', sCreateConditions = '', sReadConditions = '', sUpdateConditions = '', sDeleteConditions = '', sCreateScripts = '', sReadScripts = '', sUpdateScripts = '', sDeleteScripts = '';
+				if (sAccessString.indexOf('C') != -1) {
+					sCreate = 'YES';
+				} else if (oResult['tables'][sTable].hasOwnProperty('create')) {
+					sCreate = 'MAYBE';
+					oComplexACL = oResult['tables'][sTable]['create'];
+					Object.keys(oComplexACL).some(function (sACLId) {
+						if (oComplexACL[sACLId].hasOwnProperty('condition')) {
+							sCreateConditions = (sCreateConditions) ? sCreateConditions + '###' + oComplexACL[sACLId]['condition'] : oComplexACL[sACLId]['condition'];
+						} // if condition
+						if (oComplexACL[sACLId].hasOwnProperty('script')) {
+							sCreateScripts = (sCreateScripts) ? sCreateScripts + '###' + fnParseScript(oComplexACL[sACLId]['script']) : fnParseScript(oComplexACL[sACLId]['script']);
+						} // if script
+					}, this); // each complex
+					if ((!sCreateConditions) && (sCreateScripts) && ((sCreateScripts == 'false;') || (sCreateScripts == 'false'))) {
+						sCreate = 'NO';
+					} // if script is false
+				} // if create
+				if (sAccessString.indexOf('R') != -1) {
+					sRead = 'YES';
+				} else if (oResult['tables'][sTable].hasOwnProperty('read')) {
+					sRead = 'MAYBE';
+					oComplexACL = oResult['tables'][sTable]['read'];
+					Object.keys(oComplexACL).some(function (sACLId) {
+						if (oComplexACL[sACLId].hasOwnProperty('condition')) {
+							sReadConditions = (sReadConditions) ? sReadConditions + '###' + oComplexACL[sACLId]['condition'] : oComplexACL[sACLId]['condition'];
+						} // if condition
+						if (oComplexACL[sACLId].hasOwnProperty('script')) {
+							sReadScripts = (sReadScripts) ? sReadScripts + '###' + fnParseScript(oComplexACL[sACLId]['script']) : fnParseScript(oComplexACL[sACLId]['script']);
+						} // if script
+					}, this); // each complex
+					if ((!sReadConditions) && (sReadScripts) && ((sReadScripts == 'false;') || (sReadScripts == 'false'))) {
+						sRead = 'NO';
+					} // if script is false
+				} // if read
+				if (sAccessString.indexOf('U') != -1) {
+					sUpdate = 'YES';
+				} else if (oResult['tables'][sTable].hasOwnProperty('update')) {
+					sUpdate = 'MAYBE';
+					oComplexACL = oResult['tables'][sTable]['update'];
+					Object.keys(oComplexACL).some(function (sACLId) {
+						if (oComplexACL[sACLId].hasOwnProperty('condition')) {
+							sUpdateConditions = (sUpdateConditions) ? sUpdateConditions + '###' + oComplexACL[sACLId]['condition'] : oComplexACL[sACLId]['condition'];
+						} // if condition
+						if (oComplexACL[sACLId].hasOwnProperty('script')) {
+							sUpdateScripts = (sUpdateScripts) ? sUpdateScripts + '###' + fnParseScript(oComplexACL[sACLId]['script']) : fnParseScript(oComplexACL[sACLId]['script']);
+						} // if script
+					}, this); // each complex
+					if ((!sUpdateConditions) && (sUpdateScripts) && ((sUpdateScripts == 'false;') || (sUpdateScripts == 'false'))) {
+						sUpdate = 'NO';
+					} // if script is false
+				} // if update
+				if (sAccessString.indexOf('D') != -1) {
+					sDelete = 'YES';
+				} else if (oResult['tables'][sTable].hasOwnProperty('delete')) {
+					sDelete = 'MAYBE';
+					oComplexACL = oResult['tables'][sTable]['delete'];
+					Object.keys(oComplexACL).some(function (sACLId) {
+						if (oComplexACL[sACLId].hasOwnProperty('condition')) {
+							sDeleteConditions = (sDeleteConditions) ? sDeleteConditions + '###' + oComplexACL[sACLId]['condition'] : oComplexACL[sACLId]['condition'];
+						} // if condition
+						if (oComplexACL[sACLId].hasOwnProperty('script')) {
+							sDeleteScripts = (sDeleteScripts) ? sDeleteScripts + '###' + fnParseScript(oComplexACL[sACLId]['script']) : fnParseScript(oComplexACL[sACLId]['script']);
+						} // if script
+					}, this); // each complex
+					if ((!sDeleteConditions) && (sDeleteScripts) && ((sDeleteScripts == 'false;') || (sDeleteScripts == 'false'))) {
+						sDelete = 'NO';
+					} // if script is false
+				} // if delete
+				sCSVLine = sTable + ';' + sAccessString + sAccessAnalyzerString + ';' + sCreate + ';' + sRead + ';' + sUpdate + ';' + sDelete + ';' + fnParseFinalValue(sCreateConditions) + ';' + fnParseFinalValue(sReadConditions) + ';' + fnParseFinalValue(sUpdateConditions) + ';' + fnParseFinalValue(sDeleteConditions) + ';' + fnParseFinalValue(sCreateScripts) + ';' + fnParseFinalValue(sReadScripts) + ';' + fnParseFinalValue(sUpdateScripts) + ';' + fnParseFinalValue(sDeleteScripts) + '; ;';
+				aCSV.push(sCSVLine);
+			}, this);
+		} // if has tables
+		return aCSV.join('\n');
+	}, // function _parseAccessAnalyzerToCSV
+
+	type: 'GlobalToolsSecurity',
+	version: '1.0.11',
+	author: 'Tom Hauri',
+	email: 'tom@hauri.biz'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2025-04-30 06:56:22</sys_created_on>
+        <sys_id>0f562614c395e61016a2269dc0013163</sys_id>
+        <sys_mod_count>218</sys_mod_count>
+        <sys_name>GlobalToolsSecurity</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_script_include_0f562614c395e61016a2269dc0013163</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2025-05-07 11:30:00</sys_updated_on>
+    </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>0f562614c395e61016a2269dc0013163</id>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2025-04-30 06:56:22</sys_created_on>
+        <sys_id>b0f6e654c395e61016a2269dc001311a</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2025-04-30 06:56:22</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
+</record_update>
