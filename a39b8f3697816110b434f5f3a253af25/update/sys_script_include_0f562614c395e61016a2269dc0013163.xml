@@ -12,7 +12,7 @@ Functions are only available for global scope and specific scopes defined in the
         <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var GlobalToolsSecurity = Class.create();
 GlobalToolsSecurity.prototype = {
-	initialize: function () {
+	initialize: function (bCompareGlideRecordSecureCanCRUD, sDebugAccessAnalyzerOutputForTable) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
@@ -25,10 +25,21 @@ GlobalToolsSecurity.prototype = {
 			this._gtAccessAnalyzerBridge = new sn_access_analyzer.GlobalToolsAccessAnalyzerBridge();
 		} // if gt aa bridge
 		this._gSecurityManager = GlideSecurityManager.get();
-		this.bCompareGlideRecordSecureCanCRUD = false;
+		this.bCompareGlideRecordSecureCanCRUD = (bCompareGlideRecordSecureCanCRUD === true) ? true : false; // default false
+		this.sDebugAccessAnalyzerOutputForTable = (this._gtTable.isValidTable(sDebugAccessAnalyzerOutputForTable)) ? sDebugAccessAnalyzerOutputForTable : '';
 		this.sUserId = '';
 		this.sCreatedUserId = '';
 		this.oWarnings = {};
+		this.oOperationMap = {
+			C: 'create',
+			R: 'read',
+			U: 'write',
+			D: 'delete',
+			create: 'C',
+			read: 'R',
+			write: 'U',
+			'delete': 'D'
+		}; // operation map
 	}, // function initialize
 
 	checkAccess: function (sCallerScope) {
@@ -171,6 +182,7 @@ GlobalToolsSecurity.prototype = {
 			} // if output json
 			return 'Error: ' + sError;
 		} // if error
+		this._analyzeACL(oRoleAccessResult);
 		if ((bValidateWithAccessAnalyzer) && (this._gtAccessAnalyzerBridge)) {
 			this._deleteCreatedRoleMap();
 			if (oResult.hasOwnProperty('tables')) {
@@ -189,7 +201,7 @@ GlobalToolsSecurity.prototype = {
 			this._deleteCreatedUser();
 		} // if created user
 		if ((sOutputType == 'csv') || (sOutputType == 'both')) {
-			var sCSV = this._parseAccessAnalyzerToCSV(oResult);
+			var sCSV = this._parseAccessAnalyzerToCSV(oResult, bValidateWithAccessAnalyzer);
 			if (sOutputType == 'both') {
 				return { csv: sCSV, json: oResult };
 			} // if both
@@ -244,18 +256,7 @@ GlobalToolsSecurity.prototype = {
 			if (bCanWrite) { aAccessString.push('U'); }
 			if (bCanDelete) { aAccessString.push('D'); }
 			var sAccessString = aAccessString.join('');
-			var bFound = false;
-			if (bOmitSameExtendedClass) {
-				var aHierarchy = this._gtTable.getTableHierarchy(sTable);
-				aHierarchy.some(function (sTable) {
-					var sParentAccessString = this._gtObject.getValue(sTable + '/CRUD', '', oRoleAccessResult);
-					if (sParentAccessString) {
-						bFound = (sParentAccessString == sAccessString) ? true : false;
-						return true;
-					} // if found quit
-				}, this); // find parent access string
-			} // if omit same extended class
-			if (!bFound) {
+			if ((!bOmitSameExtendedClass) || (!this.checkParentAccessResult(sTable, sAccessString, oRoleAccessResult))) {
 				this._gtObject.setValue(sTable + '/CRUD', sAccessString, oRoleAccessResult);
 			} // if not omit extentended or not same and not delete only (omited because if you can't read, you can't delete)
 		} // if not omit empty or not empty
@@ -266,6 +267,94 @@ GlobalToolsSecurity.prototype = {
 			}, this); // each extended table
 		} // if run extended tables
 	}, // function _getAccessByRoleByTable
+
+	checkParentAccessResult: function (sTable, sAccessString, oRoleAccessResult) {
+		var bFound = false;
+		var aHierarchy = this._gtTable.getTableHierarchy(sTable);
+		aHierarchy.some(function (sTmpTable) {
+			var sParentAccessString = this._gtObject.getValue(sTmpTable + '/CRUD', '', oRoleAccessResult);
+			if (sParentAccessString) {
+				bFound = (sParentAccessString == sAccessString) ? true : false;
+				return true;
+			} // if found quit
+		}, this); // find parent access string
+		return bFound;
+	}, // function checkParentAccessResult
+
+	_analyzeACL: function (oRoleAccessResult, sParentTable, sChildTable, aOperation) {
+		var aUserRoles = this.getUsersRoles(this.sUserId, 'id');
+		aOperation = (aOperation) ? aOperation : ['read', 'write', 'create', 'delete'];
+		var bSNCInternal = this.isValidRole('snc_internal');
+		if (bSNCInternal) {
+			var sSNCInternalId = this.getRoleIdFromName('snc_internal');
+			if (aUserRoles.indexOf(sSNCInternalId) == -1) {
+				aUserRoles.push(sSNCInternalId);
+			} // if not exist add internal
+		} // if valid role
+		//var aAllTables = [], aExtension = [];
+		//aTables.forEach(function (sMainTable) {
+		//aAllTables = [sMainTable];
+		//aExtension = this._gtTable.getTableExtensions(sMainTable);
+		//aAllTables = aAllTables.concat(aExtension);
+		var aAllTables = (sParentTable) ? [sParentTable] : Object.keys(oRoleAccessResult);
+		aAllTables.forEach(function (sTable) {
+			if (this._gtObject.getValue(sTable + '/CRUD', '', oRoleAccessResult) != 'CRUD') {
+				var aACLs = [], sACLId = '';
+				var grACLRoles = new GlideRecord('sys_security_acl_role');
+				grACLRoles.addEncodedQuery('sys_user_roleIN' + aUserRoles.join(',') + '^sys_security_acl.type=record^sys_security_acl.name=' + sTable + '^sys_security_acl.active=true^sys_security_acl.operationIN' + aOperation.join(','));
+				grACLRoles.query();
+				while (grACLRoles.next()) {
+					sACLId = grACLRoles.getValue('sys_security_acl');
+					if (aACLs.indexOf(sACLId) == -1) {
+						aACLs.push(sACLId);
+					} // if acl
+				} // while acl with role
+				var grACLWithoutRoles = new GlideRecord('sys_security_acl');
+				grACLWithoutRoles.addEncodedQuery('name=' + sTable + '^active=true^operationIN' + aOperation.join(',') + '^type=record^RLQUERYsys_security_acl_role.sys_security_acl,=00,m2m^ENDRLQUERY');
+				grACLWithoutRoles.query();
+				while (grACLWithoutRoles.next()) {
+					sACLId = grACLWithoutRoles.getUniqueValue();
+					if (aACLs.indexOf(sACLId) == -1) {
+						aACLs.push(sACLId);
+					} // if acl
+				} // while acl without role
+				var grACLs = new GlideRecord('sys_security_acl');
+				grACLs.addEncodedQuery('sys_idIN' + aACLs.join(','));
+				grACLs.query();
+				var sStoredOperation = this._gtObject.getValue(sTable + '/CRUD', '', oRoleAccessResult);
+				var oOperations = JSON.parse(JSON.stringify({ C: '', R: '', U: '', D: '' })); // ensure fresh json is created
+				while (grACLs.next()) {
+					var sId = grACLs.getUniqueValue();
+					var sOperation = grACLs.getValue('operation');
+					var sOperationShort = this.oOperationMap[sOperation];
+					sOperation = (sOperation == 'write') ? 'update' : sOperation;
+					delete oOperations[sOperationShort];
+					if (((sStoredOperation) && (sStoredOperation.indexOf(sOperationShort) == -1)) || (sChildTable)) {
+						var sTmpTable = (sChildTable) ? sChildTable : sTable;
+						if (grACLs.getValue('condition')) {
+							this._gtObject.setValue(sTmpTable + '/' + sOperation + '/' + sId + '/condition', grACLs.getValue('condition'), oRoleAccessResult);
+						} // if condition
+						if (grACLs.getValue('script')) {
+							this._gtObject.setValue(sTmpTable + '/' + sOperation + '/' + sId + '/script', grACLs.getValue('script'), oRoleAccessResult);
+						} // script
+					} // if not same as operation
+				} // while acls
+				if (!sChildTable) {
+					var aMissingOperation = [];
+					Object.keys(oOperations).forEach(function (sTmpOperation) {
+						if (sStoredOperation.indexOf(sTmpOperation) == -1) {
+							aMissingOperation.push(this.oOperationMap[sTmpOperation]);
+						} // if parent only if not on child
+					}, this); // each key
+					var aParentTables = this._gtTable.getTableHierarchy(sTable);
+					if (aParentTables.length > 1) {
+						//gs.error('tomtom missing operation in table: ' + sTable + ' aParentTables: ' + aParentTables + ' ACL: ' + aMissingOperation);
+						this._analyzeACL(oRoleAccessResult, aParentTables[1], sTable, aMissingOperation);
+					} // if parent table
+				} // if child table
+			} // if found
+		}, this); // each table
+	}, // function _analyzeACL
 
 	generateAccessAnalyzerReport: function (sRole, sTableQuery, bExtendTables, sOutputType, bAllowCreateUser) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
@@ -376,7 +465,13 @@ GlobalToolsSecurity.prototype = {
 			rolesToAssign: [sRoleId]
 		}; // paylaod
 		var oSimulatorResult = this._gtAccessAnalyzerBridge.getSimulatedResult(oPayloadSimulatedResults, true);
-		//gs.error('tomtom oSimulatorResult: ' + JSON.stringify(oSimulatorResult));
+		if (this.sDebugAccessAnalyzerOutputForTable == sTable) {
+			if (oRoleAccessResult) {
+				this._gtObject.setValue(sTable + '/debug', oSimulatorResult, oRoleAccessResult);
+			} else {
+				gs.error('GlobalToolsSecurity._simulateAccessAnalyzerRoleByTable debug for table: ' + sTable + ' result: ' + JSON.stringify(oSimulatorResult));
+			} // if object
+		} // if debug output
 		if ((oSimulatorResult) && (oSimulatorResult.hasOwnProperty('error') && (oSimulatorResult['error'] == 0))) {
 			var bCanRead = (this._gtObject.getValue('securityDebug/read/status', '', oSimulatorResult) == 'passed') ? true : false;
 			var bCanWrite = (this._gtObject.getValue('securityDebug/write/status', '', oSimulatorResult) == 'passed') ? true : false;
@@ -513,18 +608,102 @@ GlobalToolsSecurity.prototype = {
 		} // if user has role
 	}, // function _deleteCreatedRoleMap
 
-	_parseAccessAnalyzerToCSV: function (oResult) {
-		var aCSV = [], sAccessString = '', sRead = '', sWrite = '', sCreate = '', sDelete = '';
+	_parseAccessAnalyzerToCSV: function (oResult, bValidateWithAccessAnalyzer) {
+		var aCSV = [], sAccessString = '', sRead = '', sUpdate = '', sCreate = '', sDelete = '', sCreateConditions = '', sReadConditions = '', sUpdateConditions = '', sDeleteConditions = '', sCreateScripts = '', sReadScripts = '', sUpdateScripts = '', sDeleteScripts = '', oComplexACL = {};
 		if (oResult.hasOwnProperty('tables')) {
-			var sCSVLine = 'table;crud;create;read;update;delete';
+			var fnParseFinalValue = function (sValue) {
+				if (sValue.indexOf(';') != -1) {
+					sValue = '"' + sValue + '"';
+				} // if script
+				return (sValue) ? sValue : ' ';
+			}; // function fnParseFinalValue
+			var fnParseScript = function (sScript) {
+				sScript = sScript.replace(/\r\n|\n/gm, ' ');
+				sScript = sScript.replace(/\t/gm, '');
+				sScript = sScript.replace(/"/gm, "'");
+				if (sScript.length > 100) {
+					sScript = sScript.substring(0, 100) + '...';
+				} // if > 100
+				return sScript;
+			}; // function fnParseScript
+			var sAATitle = (bValidateWithAccessAnalyzer) ? ';Access Analyzer' : '';
+			var sCSVLine = 'Table;Access' + sAATitle + ';Create;Read;Update;Delete;Create condition;Read condition;Update condition;Delete condition;Create script;Read script;Update script;Delete script;Comment';
 			aCSV.push(sCSVLine);
 			Object.keys(oResult['tables']).forEach(function (sTable) {
 				sAccessString = oResult['tables'][sTable]['CRUD'];
-				sRead = (sAccessString.indexOf('R') != -1) ? 'YES' : 'NO';
-				sWrite = (sAccessString.indexOf('U') != -1) ? 'YES' : 'NO';
-				sCreate = (sAccessString.indexOf('C') != -1) ? 'YES' : 'NO';
-				sDelete = (sAccessString.indexOf('D') != -1) ? 'YES' : 'NO';
-				sCSVLine = sTable + ';' + sAccessString + ';' + sCreate + ';' + sRead + ';' + sWrite + ';' + sDelete;
+				if (bValidateWithAccessAnalyzer) {
+					sAccessAnalyzerString = (oResult['tables'][sTable].hasOwnProperty('AA_CRUD')) ? ';' + oResult['tables'][sTable]['AA_CRUD'] : ';';
+				} // if access analyzer
+				sRead = 'NO', sUpdate = 'NO', sCreate = 'NO', sDelete = 'NO', sCreateConditions = '', sReadConditions = '', sUpdateConditions = '', sDeleteConditions = '', sCreateScripts = '', sReadScripts = '', sUpdateScripts = '', sDeleteScripts = '';
+				if (sAccessString.indexOf('C') != -1) {
+					sCreate = 'YES';
+				} else if (oResult['tables'][sTable].hasOwnProperty('create')) {
+					sCreate = 'MAYBE';
+					oComplexACL = oResult['tables'][sTable]['create'];
+					Object.keys(oComplexACL).some(function (sACLId) {
+						if (oComplexACL[sACLId].hasOwnProperty('condition')) {
+							sCreateConditions = (sCreateConditions) ? sCreateConditions + '###' + oComplexACL[sACLId]['condition'] : oComplexACL[sACLId]['condition'];
+						} // if condition
+						if (oComplexACL[sACLId].hasOwnProperty('script')) {
+							sCreateScripts = (sCreateScripts) ? sCreateScripts + '###' + fnParseScript(oComplexACL[sACLId]['script']) : fnParseScript(oComplexACL[sACLId]['script']);
+						} // if script
+					}, this); // each complex
+					if ((!sCreateConditions) && (sCreateScripts) && ((sCreateScripts == 'false;') || (sCreateScripts == 'false'))) {
+						sCreate = 'NO';
+					} // if script is false
+				} // if create
+				if (sAccessString.indexOf('R') != -1) {
+					sRead = 'YES';
+				} else if (oResult['tables'][sTable].hasOwnProperty('read')) {
+					sRead = 'MAYBE';
+					oComplexACL = oResult['tables'][sTable]['read'];
+					Object.keys(oComplexACL).some(function (sACLId) {
+						if (oComplexACL[sACLId].hasOwnProperty('condition')) {
+							sReadConditions = (sReadConditions) ? sReadConditions + '###' + oComplexACL[sACLId]['condition'] : oComplexACL[sACLId]['condition'];
+						} // if condition
+						if (oComplexACL[sACLId].hasOwnProperty('script')) {
+							sReadScripts = (sReadScripts) ? sReadScripts + '###' + fnParseScript(oComplexACL[sACLId]['script']) : fnParseScript(oComplexACL[sACLId]['script']);
+						} // if script
+					}, this); // each complex
+					if ((!sReadConditions) && (sReadScripts) && ((sReadScripts == 'false;') || (sReadScripts == 'false'))) {
+						sRead = 'NO';
+					} // if script is false
+				} // if read
+				if (sAccessString.indexOf('U') != -1) {
+					sUpdate = 'YES';
+				} else if (oResult['tables'][sTable].hasOwnProperty('update')) {
+					sUpdate = 'MAYBE';
+					oComplexACL = oResult['tables'][sTable]['update'];
+					Object.keys(oComplexACL).some(function (sACLId) {
+						if (oComplexACL[sACLId].hasOwnProperty('condition')) {
+							sUpdateConditions = (sUpdateConditions) ? sUpdateConditions + '###' + oComplexACL[sACLId]['condition'] : oComplexACL[sACLId]['condition'];
+						} // if condition
+						if (oComplexACL[sACLId].hasOwnProperty('script')) {
+							sUpdateScripts = (sUpdateScripts) ? sUpdateScripts + '###' + fnParseScript(oComplexACL[sACLId]['script']) : fnParseScript(oComplexACL[sACLId]['script']);
+						} // if script
+					}, this); // each complex
+					if ((!sUpdateConditions) && (sUpdateScripts) && ((sUpdateScripts == 'false;') || (sUpdateScripts == 'false'))) {
+						sUpdate = 'NO';
+					} // if script is false
+				} // if update
+				if (sAccessString.indexOf('D') != -1) {
+					sDelete = 'YES';
+				} else if (oResult['tables'][sTable].hasOwnProperty('delete')) {
+					sDelete = 'MAYBE';
+					oComplexACL = oResult['tables'][sTable]['delete'];
+					Object.keys(oComplexACL).some(function (sACLId) {
+						if (oComplexACL[sACLId].hasOwnProperty('condition')) {
+							sDeleteConditions = (sDeleteConditions) ? sDeleteConditions + '###' + oComplexACL[sACLId]['condition'] : oComplexACL[sACLId]['condition'];
+						} // if condition
+						if (oComplexACL[sACLId].hasOwnProperty('script')) {
+							sDeleteScripts = (sDeleteScripts) ? sDeleteScripts + '###' + fnParseScript(oComplexACL[sACLId]['script']) : fnParseScript(oComplexACL[sACLId]['script']);
+						} // if script
+					}, this); // each complex
+					if ((!sDeleteConditions) && (sDeleteScripts) && ((sDeleteScripts == 'false;') || (sDeleteScripts == 'false'))) {
+						sDelete = 'NO';
+					} // if script is false
+				} // if delete
+				sCSVLine = sTable + ';' + sAccessString + sAccessAnalyzerString + ';' + sCreate + ';' + sRead + ';' + sUpdate + ';' + sDelete + ';' + fnParseFinalValue(sCreateConditions) + ';' + fnParseFinalValue(sReadConditions) + ';' + fnParseFinalValue(sUpdateConditions) + ';' + fnParseFinalValue(sDeleteConditions) + ';' + fnParseFinalValue(sCreateScripts) + ';' + fnParseFinalValue(sReadScripts) + ';' + fnParseFinalValue(sUpdateScripts) + ';' + fnParseFinalValue(sDeleteScripts) + '; ;';
 				aCSV.push(sCSVLine);
 			}, this);
 		} // if has tables
@@ -540,14 +719,14 @@ GlobalToolsSecurity.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2025-04-30 06:56:22</sys_created_on>
         <sys_id>0f562614c395e61016a2269dc0013163</sys_id>
-        <sys_mod_count>151</sys_mod_count>
+        <sys_mod_count>218</sys_mod_count>
         <sys_name>GlobalToolsSecurity</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_0f562614c395e61016a2269dc0013163</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-05-05 19:03:59</sys_updated_on>
+        <sys_updated_on>2025-05-07 11:30:00</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>0f562614c395e61016a2269dc0013163</id>
