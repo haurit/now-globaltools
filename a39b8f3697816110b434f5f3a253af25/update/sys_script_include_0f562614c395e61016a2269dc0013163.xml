@@ -261,7 +261,7 @@ GlobalToolsSecurity.prototype = {
 			} // if not omit extentended or not same and not delete only (omited because if you can't read, you can't delete)
 		} // if not omit empty or not empty
 		if (bExtendTables) {
-			var aExtendedTables = this._gtTable.getTableExtensions(sTable);
+			var aExtendedTables = this._gtTable.getTableExtensions(sTable, false, true);
 			aExtendedTables.forEach(function (sExtendedTable) {
 				this._getAccessByRoleByTable(sRoleId, sRole, sExtendedTable, bExtendTables, bOmitEmpty, bOmitSameExtendedClass, oRoleAccessResult);
 			}, this); // each extended table
@@ -291,11 +291,6 @@ GlobalToolsSecurity.prototype = {
 				aUserRoles.push(sSNCInternalId);
 			} // if not exist add internal
 		} // if valid role
-		//var aAllTables = [], aExtension = [];
-		//aTables.forEach(function (sMainTable) {
-		//aAllTables = [sMainTable];
-		//aExtension = this._gtTable.getTableExtensions(sMainTable);
-		//aAllTables = aAllTables.concat(aExtension);
 		var aAllTables = (sParentTable) ? [sParentTable] : Object.keys(oRoleAccessResult);
 		aAllTables.forEach(function (sTable) {
 			if (this._gtObject.getValue(sTable + '/CRUD', '', oRoleAccessResult) != 'CRUD') {
@@ -507,7 +502,7 @@ GlobalToolsSecurity.prototype = {
 			return 'Failed to get role access for table results sRole: ' + sRole + ' [' + sRoleId + '] sTable: ' + sTable + ' error: ' + sError;
 		} // each result
 		if (bExtendTables) {
-			var aExtendedTables = this._gtTable.getTableExtensions(sTable);
+			var aExtendedTables = this._gtTable.getTableExtensions(sTable, false, true);
 			aExtendedTables.forEach(function (sExtendedTable) {
 				this._simulateAccessAnalyzerRoleByTable(sRoleId, sRole, sExtendedTable, bExtendTables, bOmitEmpty, bOmitSameExtendedClass, oRoleAccessResult);
 			}, this); // each extended table
@@ -621,6 +616,7 @@ GlobalToolsSecurity.prototype = {
 				sScript = sScript.replace(/\r\n|\n/gm, ' ');
 				sScript = sScript.replace(/\t/gm, '');
 				sScript = sScript.replace(/"/gm, "'");
+				sScript = sScript.replace(/  +/gm, ' ');
 				if (sScript.length > 100) {
 					sScript = sScript.substring(0, 100) + '...';
 				} // if > 100
@@ -642,7 +638,7 @@ GlobalToolsSecurity.prototype = {
 					oComplexACL = oResult['tables'][sTable]['create'];
 					Object.keys(oComplexACL).some(function (sACLId) {
 						if (oComplexACL[sACLId].hasOwnProperty('condition')) {
-							sCreateConditions = (sCreateConditions) ? sCreateConditions + '###' + oComplexACL[sACLId]['condition'] : oComplexACL[sACLId]['condition'];
+							sCreateConditions = (sCreateConditions) ? sCreateConditions + '###' + fnParseScript(oComplexACL[sACLId]['condition']) : fnParseScript(oComplexACL[sACLId]['condition']);
 						} // if condition
 						if (oComplexACL[sACLId].hasOwnProperty('script')) {
 							sCreateScripts = (sCreateScripts) ? sCreateScripts + '###' + fnParseScript(oComplexACL[sACLId]['script']) : fnParseScript(oComplexACL[sACLId]['script']);
@@ -659,7 +655,7 @@ GlobalToolsSecurity.prototype = {
 					oComplexACL = oResult['tables'][sTable]['read'];
 					Object.keys(oComplexACL).some(function (sACLId) {
 						if (oComplexACL[sACLId].hasOwnProperty('condition')) {
-							sReadConditions = (sReadConditions) ? sReadConditions + '###' + oComplexACL[sACLId]['condition'] : oComplexACL[sACLId]['condition'];
+							sReadConditions = (sReadConditions) ? sReadConditions + '###' + fnParseScript(oComplexACL[sACLId]['condition']) : fnParseScript(oComplexACL[sACLId]['condition']);
 						} // if condition
 						if (oComplexACL[sACLId].hasOwnProperty('script')) {
 							sReadScripts = (sReadScripts) ? sReadScripts + '###' + fnParseScript(oComplexACL[sACLId]['script']) : fnParseScript(oComplexACL[sACLId]['script']);
@@ -676,7 +672,7 @@ GlobalToolsSecurity.prototype = {
 					oComplexACL = oResult['tables'][sTable]['update'];
 					Object.keys(oComplexACL).some(function (sACLId) {
 						if (oComplexACL[sACLId].hasOwnProperty('condition')) {
-							sUpdateConditions = (sUpdateConditions) ? sUpdateConditions + '###' + oComplexACL[sACLId]['condition'] : oComplexACL[sACLId]['condition'];
+							sUpdateConditions = (sUpdateConditions) ? sUpdateConditions + '###' + fnParseScript(oComplexACL[sACLId]['condition']) : fnParseScript(oComplexACL[sACLId]['condition']);
 						} // if condition
 						if (oComplexACL[sACLId].hasOwnProperty('script')) {
 							sUpdateScripts = (sUpdateScripts) ? sUpdateScripts + '###' + fnParseScript(oComplexACL[sACLId]['script']) : fnParseScript(oComplexACL[sACLId]['script']);
@@ -693,7 +689,7 @@ GlobalToolsSecurity.prototype = {
 					oComplexACL = oResult['tables'][sTable]['delete'];
 					Object.keys(oComplexACL).some(function (sACLId) {
 						if (oComplexACL[sACLId].hasOwnProperty('condition')) {
-							sDeleteConditions = (sDeleteConditions) ? sDeleteConditions + '###' + oComplexACL[sACLId]['condition'] : oComplexACL[sACLId]['condition'];
+							sDeleteConditions = (sDeleteConditions) ? sDeleteConditions + '###' + fnParseScript(oComplexACL[sACLId]['condition']) : fnParseScript(oComplexACL[sACLId]['condition']);
 						} // if condition
 						if (oComplexACL[sACLId].hasOwnProperty('script')) {
 							sDeleteScripts = (sDeleteScripts) ? sDeleteScripts + '###' + fnParseScript(oComplexACL[sACLId]['script']) : fnParseScript(oComplexACL[sACLId]['script']);
@@ -719,14 +715,14 @@ GlobalToolsSecurity.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2025-04-30 06:56:22</sys_created_on>
         <sys_id>0f562614c395e61016a2269dc0013163</sys_id>
-        <sys_mod_count>218</sys_mod_count>
+        <sys_mod_count>220</sys_mod_count>
         <sys_name>GlobalToolsSecurity</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_0f562614c395e61016a2269dc0013163</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-05-07 11:30:00</sys_updated_on>
+        <sys_updated_on>2025-05-07 16:34:48</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>0f562614c395e61016a2269dc0013163</id>
