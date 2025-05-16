@@ -245,7 +245,7 @@ GlobalTools.prototype = {
 			var reReplace = new RegExp('placeholder');
 			var sFieldName = '', sReplaceValue = '', sReplace = '';
 			if ((aReResults) && (Array.isArray(aReResults))) {
-				aReResults = aReResults.filter(function (value, index, array) {return array.indexOf(value) === index;}); // do not use GlobalToolsArray, can be replaced once switch ES mode
+				aReResults = aReResults.filter(function (value, index, array) { return array.indexOf(value) === index; }); // do not use GlobalToolsArray, can be replaced once switch ES mode
 				aReResults.forEach(function (sReResult) {
 					sFieldName = sReResult.replace(/\[|\]/g, '');
 					if (sFieldName == 'sValue') {
@@ -492,7 +492,71 @@ GlobalTools.prototype = {
 		} else {
 			gs.warn('GlobalTools.runFunctionInScope is not allowed in a secured instances!');
 		} // if legacy scope script policy is true
-	}, // runFunctionInScope
+	}, // function runFunctionInScope
+
+	isPluginActive: function (sPluginId) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (sPluginId) {
+			var grPluginView = new GlideRecord('v_plugin');
+			grPluginView.addEncodedQuery('id=' + sPluginId + '^active=active');
+			grPluginView.query();
+			if (grPluginView.next()) {
+				return true;
+			} // if plugin is active
+		} // if plugin id
+		return false;
+	}, // function isPluginActive
+
+	installPlugins: function (aPlugin, bLoadDemoData, bLog, bScheduled) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		bLoadDemoData = (bLoadDemoData === false) ? false : true; // default true
+		bLog = (bLog === true) ? true : false; // default false
+		if ((gs.isInteractive()) || (bScheduled === true)) {
+			this.scheduleScript('GlobalTools', 'installPlugins', '0', [aPlugin, bLoadDemoData, bLog], [], 'GlobalToolsinstallPlugins');
+		} else {
+			if ((this.getType(aPlugin) == 'array') && (aPlugin[0])) {
+				aPlugin.forEach(function (sPluginId) {
+					if (bLog) { gs.info('GlobalTools.installPlugins start id: ' + sPluginId); }
+					if (!this.isPluginActive(sPluginId)) {
+						var gpmWorker = new GlidePluginManagerWorker();
+						//gpmWorker.setProgressName(progress_name);
+						gpmWorker.setPluginId(sPluginId);
+						gpmWorker.setBackground(true);
+						//gpmWorker.setCustomizationVersion(customization_version);
+						gpmWorker.setIncludeDemoData(bLoadDemoData);
+						gpmWorker.start();
+						var sProgressId = gpmWorker.getProgressID();
+						if (bLog) { gs.info('GlobalTools.installPlugins plugin id: ' + sPluginId + ' progress id: ' + sProgressId); }
+						var bDone = false, sState = '', sStateDisplayValue = '';
+						var iLoop = 0, iMaxLoop = 5; // 2 hours
+						while ((bDone === false) && (iLoop < iMaxLoop)) {
+							iLoop++;
+							var grExecution = new GlideRecord('sys_execution_tracker');
+							if (grExecution.get(sProgressId)) {
+								sState = grExecution.getValue('state');
+								sStateDisplayValue = grExecution.getDisplayValue('state');
+								if (['0', '1'].indexOf(sState) == -1) {
+									bDone = true;
+								} else {
+									if (bLog) { gs.info('GlobalTools.installPlugins plugin id: ' + sPluginId + ' is running.'); }
+									gs.sleep(60000);
+								} // if not pending or running 
+							} else {
+								gs.error('GlobalTools.installPlugins plugin id: ' + sPluginId + ' progress id: ' + sProgressId + ' execution record not found!');
+							} // if execution found
+						} // while not done
+					} else {
+						sStateDisplayValue = 'Already Installed';
+						if (bLog) {gs.info('GlobalTools.installPlugins is already installed id: ' + sPluginId);}
+					} // if plugin is active
+					if (bLog) { gs.info('GlobalTools.installPlugins end id: ' + sPluginId + ' with final state: ' + sStateDisplayValue); }
+				}, this); // each plugin
+			} else {
+				gs.warn('GlobalTools.installPlugins input must be an array of plugin ids!');
+			} // if array
+			if (bLog) { gs.info('GlobalTools.installPlugins end'); }
+		} // if scheduled
+	}, // function installPlugins
 
 	// Updates one or more plugins in the background
 	updatePlugins: function (sQuery, bScheduled) {
@@ -524,7 +588,7 @@ GlobalTools.prototype = {
 	}, // updatePlugins
 
 	type: 'GlobalTools',
-	version: '1.0.6',
+	version: '1.0.12',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -533,14 +597,14 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>191</sys_mod_count>
+        <sys_mod_count>197</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-08-04 09:18:32</sys_updated_on>
+        <sys_updated_on>2025-05-16 09:54:25</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>f31ccf7697816110b434f5f3a253afaa</id>
