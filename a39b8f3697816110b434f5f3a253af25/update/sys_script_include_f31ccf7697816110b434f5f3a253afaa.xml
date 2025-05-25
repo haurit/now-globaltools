@@ -587,6 +587,20 @@ GlobalTools.prototype = {
 		} // if scheduled
 	}, // updatePlugins
 
+	useTagUtil: function(sFunction) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._TagUtil) {
+			this._TagUtil = new global.TagUtil();
+		} // if no tag util
+		if ((sFunction) && (this.getType(sFunction) == 'string')) {
+			var aArguments = [];
+			for (var i = 1; i < arguments.length; i++) {
+				aArguments.push(arguments[i]);
+			} // each arg after function
+			return this._TagUtil[sFunction].apply(this._TagUtil, aArguments);
+		} // if function
+	}, // function useTagUtil
+
 	type: 'GlobalTools',
 	version: '1.0.12',
 	author: 'Tom Hauri',
@@ -597,14 +611,14 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>197</sys_mod_count>
+        <sys_mod_count>207</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-05-16 09:54:25</sys_updated_on>
+        <sys_updated_on>2025-05-22 15:55:46</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>f31ccf7697816110b434f5f3a253afaa</id>
