@@ -153,7 +153,10 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this.sUserCurrentId = gs.getUserID();
 		this.sUserInitialId = gs.getUserID();
 		this.oRecordConfig = oRecordConfig; // initial config
-		this.oRecordValues = oRecordValues; // initial values
+		this.oRecordValues = {}; // initial values
+		this.oRecordDisplayValues = {}; // initial display values
+		this.aAllRecordValueFields = Object.keys(oRecordValues); // all initial values
+		this._parseRecordValues(oRecordValues);
 		this.sRecordId = '-1'; // new record id
 		this.sTargetTable = this._getValue('sTargetTable', '', this.oRecordConfig); // target table from config
 		this._validateInput();
@@ -168,12 +171,12 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this.bIsValidRecord = false; // false = new record
 		this.sAction = this._setAction(); // record action
 		this.sImpersonateUserId = '';
-		this.aAllRecordValueFields = Object.keys(this.oRecordValues); // all initial values
 		this.aRecordValueFields = []; // all record fields that are valid in current instance, not on the ignored list or are a sourcefield
 		this.aFields = this._getValue('aFields', [], this.oRecordConfig); // fields in the configuration (simple or complex fields)
 		this.aFieldsSimple = []; // fields from aFields with type string
 		this.oFieldsObjects = {}; // fields from aFields with type object with valid key sField as object
 		this.aFieldsComplex = []; // fields from aFields with type object with valid key sField as string
+		this.aFieldsDisplay = []; // fields where display name is used with bDisplayValue = true
 		this.aFieldsIgnore = []; // fields to be completly ignored with sFieldAction = ignore
 		this.aFieldsIgnoreOnInsert = []; // fields to be ignored on insert with sFieldAction = ignore_insert
 		this.aFieldsIgnoreOnUpdate = []; // fields to be ignored on update with sFieldAction = ignore_update
@@ -210,6 +213,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 						} // if keys
 						if (oField.hasOwnProperty('sSourceField')) {
 							this.aFieldsSource.push(oField['sSourceField']);
+						} // if source field
+						if (oField.hasOwnProperty('bDisplayValue')) {
+							this.aFieldsDisplay.push(oField['sField']);
 						} // if source field
 						if ((oField.hasOwnProperty('sFieldAction')) && (oField['sFieldAction'] == 'ignore_insert')) {
 							this.aFieldsIgnoreOnInsert.push(oField['sField']);
@@ -413,6 +419,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 		var oField,
 			sValue,
 			sSourceField,
+			bDisplayValue,
+			sDisplayValue,
 			sFixedValue,
 			aValues,
 			sValueType,
@@ -444,6 +452,11 @@ GlobalToolsRecordWriteValidate.prototype = {
 			if ((sSourceField) && (sSourceField != sField)) {
 				sValue = this._getValue(sSourceField, sValue, this.oRecordValues);
 			} // if source field and diff from field (and has value) replace value
+			bDisplayValue = this._getValue('bDisplayValue', false, oField);
+			sDisplayValue = (this.oRecordDisplayValues.hasOwnProperty(sField)) ? this._getValue(sField, '', this.oRecordDisplayValues) : '';
+			if ((bDisplayValue) && (sDisplayValue)) {
+				sValue = sDisplayValue;
+			} // if disp and disp value
 			bNoTrim = this._getValue('bNoTrim', bNoTrim, oField);
 			if ((bNoTrim === false) && (typeof sValue == 'string')) {
 				sValue = sValue.trim();
@@ -510,7 +523,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 										bFieldDone = true;
 									} // if journal
 									if (sInternalType == 'reference') {
-										sValue = this._validateReferenceFieldValues(sField, oField, sValue, geElement, edElementDescriptor, sInternalType, sValueType);
+										sValue = this._validateReferenceFieldValues(sField, oField, sValue, geElement, edElementDescriptor, sInternalType, sValueType, sDisplayValue);
 										this.grRecord.setValue(sField, sValue);
 										bFieldDone = true;
 									} else if (sInternalType == 'glide_list') {
@@ -521,7 +534,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 										} else {
 											aValues = sValue;
 										} // if add value
-										sValue = this._validateReferenceFieldValues(sField, oField, aValues, geElement, edElementDescriptor, sInternalType, sValueType);
+										sValue = this._validateReferenceFieldValues(sField, oField, aValues, geElement, edElementDescriptor, sInternalType, sValueType, '');
 										this.grRecord.setValue(sField, sValue);
 										bFieldDone = true;
 									} else if ((edElementDescriptor.isChoiceTable()) && (this._getValue('aIgnoreChoiceFields', ['short_description'], this.oRecordConfig).indexOf(sField) == -1) && (['sys_class_name'].indexOf(sInternalType) == -1)) {
@@ -579,7 +592,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 													} else if ((sErrorHandling == 'mapping') && (this._mappingCfgMgr)) {
 														sFirstTable = (edElementDescriptor) ? edElementDescriptor.getFirstTableName() : '';
 														sFirstTable = (sFirstTable) ? sFirstTable : this.sTargetTable;
-														sValue = this._mappingCfgMgr.doMappingValue(sFirstTable, sValue, '', sFirstTable, sField, sDependentField, sDependentFieldValue);
+														sValue = this._mappingCfgMgr.doMappingValue(sFirstTable, sValue, sDisplayValue, sFirstTable, sField, sDependentField, sDependentFieldValue);
 														if (sValue) {
 															this._setValue(sField, sValue, this.oRecordValues);
 															this.grRecord.setValue(sField, sValue);
@@ -835,6 +848,30 @@ GlobalToolsRecordWriteValidate.prototype = {
 	/***********************************************************************************************************
 	*	Second level functions
 	************************************************************************************************************/
+
+	_parseRecordValues: function (oRecordValues) {
+		if (oRecordValues.hasOwnProperty('values')) {
+			this.oRecordValues = oRecordValues['values'];
+			if (oRecordValues.hasOwnProperty('display_values')) {
+				this.oRecordDisplayValues = oRecordValues['display_values'];
+			} // if display values
+		} else if ((this._gtArray.isValidArray(this.aAllRecordValueFields)) && (this._gt.getType(oRecordValues[this.aAllRecordValueFields[0]]) == 'object') && (oRecordValues[this.aAllRecordValueFields[0]].hasOwnProperty('display_value'))) {
+			var oRecordValuesCleaned = {};
+			var oRecordDisplayValues = {};
+			this.aAllRecordValueFields.forEach(function (sRecordValueField) {
+				var sValue = oRecordValues[sRecordValueField]['value'];
+				var sDisplayValue = oRecordValues[sRecordValueField]['display_value']
+				oRecordValuesCleaned[sRecordValueField] = sValue;
+				if ((sDisplayValue != sValue) && (sDisplayValue != null)) {
+					oRecordDisplayValues[sRecordValueField] = sDisplayValue;
+				} // if display value
+			}, this); // each record value
+			this.oRecordValues = oRecordValuesCleaned;
+			this.oRecordDisplayValues = oRecordDisplayValues;
+		} else {
+			this.oRecordValues = oRecordValues;
+		} // if display value
+	}, // function _parseRecordValues
 
 	_setAction: function () {
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_setAction'); }
@@ -1298,7 +1335,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_validateDataPolicy'); }
 	}, // function _validateDataPolicy
 
-	_validateReferenceFieldValues: function (sField, oField, oValue, geElement, edElementDescriptor, sInternalType, sValueType) {
+	_validateReferenceFieldValues: function (sField, oField, oValue, geElement, edElementDescriptor, sInternalType, sValueType, sDisplayValue) {
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateReferenceFieldValues'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var oParams = {};
@@ -1367,7 +1404,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 				} else if ((sErrorHandling == 'mapping') && (this._mappingCfgMgr)) {
 					sFirstTable = (edElementDescriptor) ? edElementDescriptor.getFirstTableName() : '';
 					sFirstTable = (sFirstTable) ? sFirstTable : this.sTargetTable;
-					sRefValue = this._mappingCfgMgr.doMappingValue(sFirstTable, sRefInput, '', sRefTable);
+					sRefValue = this._mappingCfgMgr.doMappingValue(sFirstTable, sRefInput, sDisplayValue, sRefTable);
 					if ((sRefValue) && (sRefValue.hasOwnProperty('sTargetValue'))) {
 						aValues.push(sRefValue['sTargetValue']);
 						if ((bSingleValue) && (sRefValue.hasOwnProperty('sTargetValue2')) && (sRefValue.hasOwnProperty('aTargetFields2'))) {
@@ -1712,7 +1749,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _parseRecordError
 
 	type: 'GlobalToolsRecordWriteValidate',
-	version: '1.0.9',
+	version: '1.0.12',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -1721,14 +1758,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>785</sys_mod_count>
+        <sys_mod_count>799</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-01-10 06:49:11</sys_updated_on>
+        <sys_updated_on>2025-06-25 07:09:13</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>

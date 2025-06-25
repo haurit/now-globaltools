@@ -196,7 +196,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function getRecord
 
 	// Function for scoped apps to query a gliderecord with the options
-	getRecords: function (sTable, sQuery, aOrderBy, aOrderByDesc, iLimit, bWorkflow, bAutoSysFields, bQueryNoDomain, bNoEngines, aExtraFields) {
+	getRecords: function (sTable, sQuery, aOrderBy, aOrderByDesc, iLimit, bWorkflow, bAutoSysFields, bQueryNoDomain, bNoEngines, bNoCount, aExtraFields) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
 			gs.warn('GlobalToolsRecordRead.getRecords called with invalid table: ' + sTable);
@@ -241,6 +241,9 @@ GlobalToolsRecordRead.prototype = {
 		if (bNoEngines) {
 			grRecord.setUseEngines(false);
 		} // if no engines
+		if (bNoCount === true) {
+			grRecord.setNoCount();
+		} // if no count
 		if (bQueryNoDomain === true) {
 			grRecord.queryNoDomain();
 		} else {
@@ -248,6 +251,58 @@ GlobalToolsRecordRead.prototype = {
 		} // if queryno domain
 		return grRecord;
 	}, // function getRecords
+
+	getRecordsFields: function (sTable, sQuery, aFields, aOrderBy, bQueryNoDomain) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!this._gtArray.isValidArray(aFields))) {
+			gs.warn('GlobalToolsRecordRead.getRecordsFields table ' + sTable + ' or field array is empty!');
+			return;
+		} // if table is empty
+		var bValidFields = true;
+		var grRecord = new GlideRecord(sTable);
+		aFields.some(function (sField) {
+			if (!grRecord.isValidField(sField)) {
+				bValidFields = false;
+				gs.warn('GlobalToolsRecordRead.getRecordsFields called with invalid field: ' + sField + ' (' + sTable + ')');
+				return;
+			} // if invalid field
+		}, this);
+		if (bValidFields) {
+			var gaRecord = new GlideAggregate(sTable);
+			if ((sQuery) && (sQuery != 'null')) {
+				if (grRecord.isValidEncodedQuery(sQuery)) {
+					gaRecord.addEncodedQuery(sQuery);
+				} else {
+					gs.warn('GlobalToolsRecordRead.getRecordsFields called with invalid query: ' + sQuery + ' (' + sTable + ')');
+					return;
+				} // if invalid query
+			} // if query
+			var iMaxAggregates = Number(gs.getProperty('glide.db.max.aggregates', 100000)); // KB1699871
+			var iCountRecord = this.countRecords(sTable, sQuery);
+			if (iCountRecord > iMaxAggregates) {
+				gs.warn('GlobalToolsRecordRead.getRecordsFields more results than allowed: ' + iCountRecord + ' (property glide.db.max.aggregates: ' + iMaxAggregates + ')');
+				return;
+			} // if more records, return error
+			if (this._gtArray.isValidArray(aOrderBy)) {
+				var fnOrderBy = function (sOrderByField) {
+					gaRecord.orderBy(sOrderByField);
+				}; // function order by field
+				aOrderBy.forEach(fnOrderBy);
+			} // if order by
+			if (aFields.indexOf('sys_id' == -1)) {
+				aFields.push('sys_id');
+			} // if no sys_id
+			aFields.forEach(function (sField) {
+				gaRecord.groupBy(sField);
+			}, this); // each field
+			if (bQueryNoDomain === true) {
+				gaRecord.queryNoDomain();
+			} else {
+				gaRecord._query();
+			} // if queryno domain
+			return gaRecord;
+		} // if valid fields
+	}, // function getRecordsFields
 
 	checkRecordByField: function (sTable, sField, sValue) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
@@ -601,7 +656,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function combineQueries	
 
 	type: 'GlobalToolsRecordRead',
-	version: '1.0.11',
+	version: '1.0.12',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -609,14 +664,14 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>121</sys_mod_count>
+        <sys_mod_count>125</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-04-30 09:55:58</sys_updated_on>
+        <sys_updated_on>2025-06-15 05:44:41</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>2a51d52c1bb47150d5be777d8b4bcb25</id>

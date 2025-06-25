@@ -14,14 +14,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 05:37:15</sys_created_on>
         <sys_id>ff826c861be17510c1ecdc61ab4bcbbe</sys_id>
-        <sys_mod_count>125</sys_mod_count>
+        <sys_mod_count>126</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_ff826c861be17510c1ecdc61ab4bcbbe</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-02-18 07:35:36</sys_updated_on>
+        <sys_updated_on>2025-06-15 05:40:01</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsTable Tests">ccd68ce11b6db110d5be777d8b4bcbe6</test>
         <timeout/>
@@ -50,9 +50,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 05:37:15</sys_created_on>
         <sys_id>7c54a8c61be17510c1ecdc61ab4bcb31</sys_id>
-        <sys_mod_count>125</sys_mod_count>
+        <sys_mod_count>126</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-02-18 07:35:36</sys_updated_on>
+        <sys_updated_on>2025-06-15 05:40:01</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -79,7 +79,7 @@
 	_gtATF.runATF('getTableName', 'incident', sTableIdInc);&#13;
 	_gtATF.runATF('getTableName', 'problem', sTableIdProb);&#13;
 	_gtATF.runATF('getTableName', ['incident', 'problem'], [sTableIdInc, sTableIdProb]);&#13;
-	&#13;
+&#13;
 	_gtATF.runATF('isValidTable', undefined);&#13;
 	_gtATF.runATF('isValidTable', undefined, 'invalidtable');&#13;
 	_gtATF.runATF('isValidTable', true, 'task');&#13;
@@ -185,11 +185,14 @@
 	_gtATF.runATF('getRefFieldName', undefined, grRecord, 'invalidreftable');&#13;
 	_gtATF.runATF('getRefFieldName', 'assigned_to', grRecord, 'sys_user');&#13;
 	_gtATF.runATF('getRefFieldName', 'assigned_to', grRecord, 'sys_user', true);&#13;
-	if (grRecord.isValidField('task_for')) {&#13;
-		_gtATF.runATF('getRefFieldName', ['resolved_by', 'caller_id', 'reopened_by', 'opened_by', 'closed_by', 'assigned_to', 'task_for'], grRecord, 'sys_user', true, 'array');&#13;
-	} else {&#13;
-		_gtATF.runATF('getRefFieldName', ['resolved_by', 'caller_id', 'reopened_by', 'opened_by', 'closed_by', 'assigned_to'], grRecord, 'sys_user', true, 'array');&#13;
-	} // if task_for field&#13;
+	var aPotentialResultFields = ['task_for', 'promoted_by', 'proposed_by'];&#13;
+	var aExpectedResultFields = ['resolved_by', 'caller_id', 'reopened_by', 'opened_by', 'closed_by', 'assigned_to'];&#13;
+	aPotentialResultFields.forEach(function (sPotentialField) {&#13;
+		if (grRecord.isValidField(sPotentialField)) {&#13;
+			aExpectedResultFields.push(sPotentialField)&#13;
+		} // if valid field&#13;
+	}, this); // each potential field&#13;
+	_gtATF.runATF('getRefFieldName', aExpectedResultFields, grRecord, 'sys_user', true, 'array');&#13;
 &#13;
 	_gtATF.runATF('getDictOrOverrideValue', undefined);&#13;
 	_gtATF.runATF('getDictOrOverrideValue', undefined, 'invalidtable');&#13;
@@ -221,18 +224,18 @@
 	_gtATF.runATF('generateLucidChartERDInput', '');&#13;
 	_gtATF.runATF('generateLucidChartERDInput', '', 'invalidconfig');&#13;
 	_gtATF.runATF('generateLucidChartERDInput', '', {});&#13;
-	_gtATF.runATF('generateLucidChartERDInput', '', {a: 'b'});&#13;
-	_gtATF.runATF('generateLucidChartERDInput', [], {sTables: 'invalidtable'});&#13;
-	_gtATF.runATF('generateLucidChartERDInput', /incident \| cmdb/g, {sTables: 'incident,sys_user'});&#13;
-	_gtATF.runATF('generateLucidChartERDInput', /incident \| caller_id/g, {sTables: 'incident,sys_user', bOnlyTableWithoutHierarchy: true});&#13;
-	_gtATF.runATF('generateLucidChartERDInput', /mysql/g, {aTables: ['incident', 'sys_user', 'sys_user']});&#13;
-	_gtATF.runATF('generateLucidChartERDInput', /incident \| number/g, {aTables: ['incident'], bOnlyReferenceFields: false});&#13;
-	_gtATF.runATF('generateLucidChartERDInput', /incident \| company/g, {aTables: ['incident'], bOnlyReferenceFields: true});&#13;
-	_gtATF.runATF('generateLucidChartERDInput', /incident_task \| sys_id/g, {aPackages: ['com.snc.incident']});&#13;
-	_gtATF.runATF('generateLucidChartERDInput', /sn_admin_center_solution \| objective/g, {aApps: ['sn_admin']});&#13;
-	_gtATF.runATF('generateLucidChartERDInput', /com.snc.incident \| incident/g, {aPackages: ['com.snc.incident', 'apps/system_user'], sSchemaType: 'package'});&#13;
-	_gtATF.runATF('generateLucidChartERDInput', /cmn_cost_center \| location/g, {sTables: 'incident', bFollowReferences: true});&#13;
-	_gtATF.runATF('generateLucidChartERDInput', /task_location \| task/g, {sTables: 'incident', bFollowInboundReferences: true});&#13;
+	_gtATF.runATF('generateLucidChartERDInput', '', { a: 'b' });&#13;
+	_gtATF.runATF('generateLucidChartERDInput', [], { sTables: 'invalidtable' });&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /incident \| cmdb/g, { sTables: 'incident,sys_user' });&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /incident \| caller_id/g, { sTables: 'incident,sys_user', bOnlyTableWithoutHierarchy: true });&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /mysql/g, { aTables: ['incident', 'sys_user', 'sys_user'] });&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /incident \| number/g, { aTables: ['incident'], bOnlyReferenceFields: false });&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /incident \| company/g, { aTables: ['incident'], bOnlyReferenceFields: true });&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /incident_task \| sys_id/g, { aPackages: ['com.snc.incident'] });&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /sn_admin_center_solution \| objective/g, { aApps: ['sn_admin'] });&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /com.snc.incident \| incident/g, { aPackages: ['com.snc.incident', 'apps/system_user'], sSchemaType: 'package' });&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /cmn_cost_center \| location/g, { sTables: 'incident', bFollowReferences: true });&#13;
+	_gtATF.runATF('generateLucidChartERDInput', /task_location \| task/g, { sTables: 'incident', bFollowInboundReferences: true });&#13;
 &#13;
 	return _gtATF.endATF();&#13;
 &#13;
