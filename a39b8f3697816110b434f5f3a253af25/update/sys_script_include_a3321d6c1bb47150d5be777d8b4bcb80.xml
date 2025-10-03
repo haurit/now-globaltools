@@ -155,7 +155,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this.oRecordConfig = oRecordConfig; // initial config
 		this.oRecordValues = {}; // initial values
 		this.oRecordDisplayValues = {}; // initial display values
-		this.aAllRecordValueFields = (this._gtObject.isObject(oRecordValues)) ? Object.keys(oRecordValues) : []; // all initial values
+		this.aAllRecordValueFields = [];
 		this._parseRecordValues(oRecordValues);
 		this.sRecordId = '-1'; // new record id
 		this.sTargetTable = this._getValue('sTargetTable', '', this.oRecordConfig); // target table from config
@@ -860,27 +860,34 @@ GlobalToolsRecordWriteValidate.prototype = {
 	************************************************************************************************************/
 
 	_parseRecordValues: function (oRecordValues) {
-		if (oRecordValues.hasOwnProperty('values')) {
-			this.oRecordValues = oRecordValues['values'];
-			if (oRecordValues.hasOwnProperty('display_values')) {
-				this.oRecordDisplayValues = oRecordValues['display_values'];
-			} // if display values
-		} else if ((this._gtArray.isValidArray(this.aAllRecordValueFields)) && (this._gt.getType(oRecordValues[this.aAllRecordValueFields[0]]) == 'object') && (oRecordValues[this.aAllRecordValueFields[0]].hasOwnProperty('display_value'))) {
-			var oRecordValuesCleaned = {};
-			var oRecordDisplayValues = {};
-			this.aAllRecordValueFields.forEach(function (sRecordValueField) {
-				var sValue = oRecordValues[sRecordValueField]['value'];
-				var sDisplayValue = oRecordValues[sRecordValueField]['display_value']
-				oRecordValuesCleaned[sRecordValueField] = sValue;
-				if ((sDisplayValue != sValue) && (sDisplayValue != null)) {
-					oRecordDisplayValues[sRecordValueField] = sDisplayValue;
-				} // if display value
-			}, this); // each record value
-			this.oRecordValues = oRecordValuesCleaned;
-			this.oRecordDisplayValues = oRecordDisplayValues;
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_parseRecordValues'); }
+		if (this._gtObject.isObject(oRecordValues)) {
+			if (oRecordValues.hasOwnProperty('values')) {
+				this.oRecordValues = oRecordValues['values'];
+				if (oRecordValues.hasOwnProperty('display_values')) {
+					this.oRecordDisplayValues = oRecordValues['display_values'];
+				} // if display values
+			} else if ((this._gtArray.isValidArray(this.aAllRecordValueFields)) && (this._gt.getType(oRecordValues[this.aAllRecordValueFields[0]]) == 'object') && (oRecordValues[this.aAllRecordValueFields[0]].hasOwnProperty('display_value'))) {
+				var oRecordValuesCleaned = {};
+				var oRecordDisplayValues = {};
+				this.aAllRecordValueFields.forEach(function (sRecordValueField) {
+					var sValue = oRecordValues[sRecordValueField]['value'];
+					var sDisplayValue = oRecordValues[sRecordValueField]['display_value']
+					oRecordValuesCleaned[sRecordValueField] = sValue;
+					if ((sDisplayValue != sValue) && (sDisplayValue != null)) {
+						oRecordDisplayValues[sRecordValueField] = sDisplayValue;
+					} // if display value
+				}, this); // each record value
+				this.oRecordValues = oRecordValuesCleaned;
+				this.oRecordDisplayValues = oRecordDisplayValues;
+			} else {
+				this.oRecordValues = oRecordValues;
+			} // if display value
+			this.aAllRecordValueFields = Object.keys(this.oRecordValues);
 		} else {
-			this.oRecordValues = oRecordValues;
-		} // if display value
+			this._errorHandler('value', '400_001', 'Missing or empty record values object', '', '', false, true);
+		} // if valid object
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_parseRecordValues'); }
 	}, // function _parseRecordValues
 
 	_setAction: function () {
@@ -1778,7 +1785,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _parseRecordError
 
 	type: 'GlobalToolsRecordWriteValidate',
-	version: '1.0.15',
+	version: '1.0.142',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -1787,14 +1794,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>811</sys_mod_count>
+        <sys_mod_count>814</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-09-30 17:32:09</sys_updated_on>
+        <sys_updated_on>2025-10-03 05:38:53</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>
