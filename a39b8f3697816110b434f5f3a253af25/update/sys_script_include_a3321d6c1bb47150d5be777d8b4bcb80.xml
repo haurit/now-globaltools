@@ -68,8 +68,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	************************************************************************************************************/
 
 	validateAndWrite: function (oRecordConfig, oRecordValues, oError) {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'validateAndWrite'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'validateAndWrite'); }
 		this._errorHandlerInit(oRecordConfig, oError);
 		this._setGlobals(oRecordConfig, oRecordValues);
 		if (this._canContinue()) {
@@ -110,8 +110,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function validateAndWrite
 
 	validateAndReturnIREObject: function (oRecordConfig, oRecordValues, oError) {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'validateAndReturnIREObject'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'validateAndReturnIREObject'); }
 		this._errorHandlerInit(oRecordConfig, oError);
 		this._setGlobals(oRecordConfig, oRecordValues);
 		if (this._canContinue()) {
@@ -148,8 +148,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	************************************************************************************************************/
 
 	_setGlobals: function (oRecordConfig, oRecordValues) {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_setGlobals'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_setGlobals'); }
 		this.sUserCurrentId = gs.getUserID();
 		this.sUserInitialId = gs.getUserID();
 		this.oRecordConfig = oRecordConfig; // initial config
@@ -195,8 +195,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _setGlobals
 
 	_getFields: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getFields'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getFields'); }
 		this.aFields.forEach(function (oField) {
 			var sFieldType = this._gt.getType(oField);
 			if (sFieldType == 'string') {
@@ -270,8 +270,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _getFields
 
 	_getDependentFields: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getDependentFields'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getDependentFields'); }
 		var oDependentFields = {};
 		var sDependentField = '';
 		this.aAllRecordFields.forEach(function (sField) {
@@ -308,8 +308,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _getDependentFields
 
 	_sortAllRecordFieldsByDependent: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_sortAllRecordFieldsByDependent'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_sortAllRecordFieldsByDependent'); }
 		var _sortFieldsByDependent = function (oFirstElement, oSecondElement) {
 			if ((this.oDependentFields.hasOwnProperty(oFirstElement)) && (!this.oDependentFields.hasOwnProperty(oSecondElement))) {
 				return -1;
@@ -327,8 +327,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _sortAllRecordFieldsByDependent
 
 	_applyFieldValueConfiguration: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_applyFieldValueConfiguration'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_applyFieldValueConfiguration'); }
 		var oField;
 		this.aFieldsComplex.forEach(function (sField) {
 			oField = this._getValue(sField, {}, this.oFieldsObjects);
@@ -353,8 +353,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _applyFieldValueConfiguration
 
 	_validate: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validate'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validate'); }
 		if ((this.sAction == 'insert') && (!this._getValue('aKeys', undefined, this.oRecordConfig))) {
 			this.bIsValidRecord = false;
 		} else {
@@ -424,8 +424,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validate
 
 	_apply: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_apply'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_apply'); }
 		var oField,
 			sValue,
 			sSourceField,
@@ -754,8 +754,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _apply
 
 	_createIREPayload: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_createIREPayload'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_createIREPayload'); }
 		this.oIREPayload = { 'items': [] };
 		var sItem = {
 			'className': this._gtTable.getRecordClass(this.grRecord),
@@ -776,8 +776,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _createIREPayload
 
 	_runIRE: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_runIRE'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_runIRE'); }
 		var sIREPayload = JSON.stringify(this.oIREPayload);
 		var sDataSourceIRE = this._getValue('sDataSourceIRE', 'Other Automated', this.oRecordConfig);
 		if (this._getValue('bDataSourceIREfromValues', false, this.oRecordConfig)) {
@@ -818,8 +818,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _runIRE
 
 	_writeRecord: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_writeRecord'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_writeRecord'); }
 		var bSaveActionDone = false;
 		if ((this.bIsValidRecord) && (this._getValue('oStateFlowActionConfig', '', this.oRecordConfig))) {
 			bSaveActionDone = this._validateStateFlowAction();
@@ -891,8 +891,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _parseRecordValues
 
 	_setAction: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_setAction'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_setAction'); }
 		var sAction = this._getValue('sAction', '', this.oRecordConfig);
 		if (sAction == 'insert') {
 			this._setValue('bInsert', true, this.oRecordConfig);
@@ -938,8 +938,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _setAction
 
 	_validateInput: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateInput'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateInput'); }
 		if ((!this.oRecordConfig) || (!this.sTargetTable)) {
 			this._errorHandler('config', '405_001', 'Missing record config object or sTargetTable property', '', '', false, true);
 			if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_validateInput'); }
@@ -960,8 +960,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateInput
 
 	_runFieldValueCheck: function (oFieldValueCheck, bReturnFalseIfNotFound) {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_runFieldValueCheck'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_runFieldValueCheck'); }
 		var sField = this._getValue('sField', '', oFieldValueCheck);
 		var sValue = this._getValue(sField, '', this.oRecordValues);
 		var sErrorMessage = gs.getMessage(this._getValue('sErrorMessage', '', oFieldValueCheck), [sField, sValue]);
@@ -1003,8 +1003,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _runFieldValueCheck
 
 	_validateRecordAction: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateRecordAction'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateRecordAction'); }
 		if ((!this.bIsValidRecord) && (this.sAction == 'delete')) {
 			this._errorHandler('record', '404_001', 'Invalid action: record delete', '', [this.sTargetTable], false, true);
 		} else if ((this.bIsValidRecord) && (this.sAction == 'insert')) {
@@ -1016,8 +1016,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateRecordAction
 
 	_runDynamicFieldConfiguration: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_runDynamicFieldConfiguration'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_runDynamicFieldConfiguration'); }
 		var aDynamicFieldConfig = this._getValue('aDynamicFieldConfig', [], this.oRecordConfig);
 		if (this._isValidArray(aDynamicFieldConfig)) {
 			var sQueryCondition = '';
@@ -1048,8 +1048,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _runDynamicFieldConfiguration
 
 	_validateApplyTemplate: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateApplyTemplate'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateApplyTemplate'); }
 		var bTemplateIsMandatory = this._getValue('bTemplateIsMandatory', false, this.oRecordConfig);
 		var sTemplateName = this._getValue('sTemplateName', '', this.oRecordConfig);
 		var sTemplateValueField = this._getValue('sTemplateValueField', 'template', this.oRecordConfig);
@@ -1073,8 +1073,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateApplyTemplate
 
 	_validateImpersonate: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateImpersonate'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateImpersonate'); }
 		var sDefaultUser = this._getValue('sDefaultUser', '', this.oRecordConfig); // only for backwards compatibility
 		var sImpersonateDefaultUser = this._getValue('sImpersonateDefaultUser', sDefaultUser, this.oRecordConfig);
 		var bImpersonateDeleteFieldValue = this._getValue('bImpersonateDeleteFieldValue', false, this.oRecordConfig);
@@ -1106,8 +1106,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateImpersonate
 
 	_runImpersonate: function (bEndImpersonation) {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_runImpersonate'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_runImpersonate'); }
 		var sImpersonateUser = (bEndImpersonation) ? this.sUserInitialId : this.sImpersonateUserId;
 		if (sImpersonateUser) {
 			if (sImpersonateUser != this.sUserCurrentId) {
@@ -1127,8 +1127,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _runImpersonate
 
 	_validateRecordSecurity: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateRecordSecurity'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateRecordSecurity'); }
 		if ((this.sAction == 'insert') || ((this.sAction == 'save') && (!this.bIsValidRecord))) {
 			if (!this.grRecord.canCreate()) {
 				this._errorHandler('record', '400_101', 'Access denied: record create', '', [this.sUserCurrentId, this.sTargetTable], false, true);
@@ -1146,8 +1146,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateRecordSecurity
 
 	_validateStateFlowAction: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateStateFlowAction'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateStateFlowAction'); }
 		var sStateFlowActionValueField = this._getValue('sStateFlowActionValueField', 'action', this.oRecordConfig);
 		var sStateFlowActionValueFieldValue = this._getValue(sStateFlowActionValueField, '', this.oRecordValues);
 		var bStateFlowActionIsMandatory = this._getValue('bStateFlowActionIsMandatory', false, this.oRecordConfig);
@@ -1192,8 +1192,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateStateFlowAction
 
 	_getFieldsFromKeyArrays: function (aKeys, sType) {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getFieldsFromKeyArrays'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getFieldsFromKeyArrays'); }
 		aKeys.forEach(function (oKey) {
 			var aKey = [];
 			if (Array.isArray(oKey)) {
@@ -1217,8 +1217,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _getFieldsFromKeyArrays
 
 	_validateFields: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateFields'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateFields'); }
 		var grRecordTest = new GlideRecord(this.sTargetTable);
 		var bErrorOnAddlFieldsInBody = this._getValue('bErrorOnAddlFieldsInBody', false, this.oRecordConfig); // only for backwards compatibility
 		var bErrorOnAddlFieldsInValues = this._getValue('bErrorOnAddlFieldsInValues', bErrorOnAddlFieldsInBody, this.oRecordConfig);
@@ -1268,8 +1268,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateFields
 
 	_validateFieldSecurity: function (sField) {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateFieldSecurity'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateFieldSecurity'); }
 		if ((this.grRecord) && (sField) && (!this.grRecord[sField])) {
 			if ((this.sAction == 'insert') || ((this.sAction == 'save') && (!this.bIsValidRecord))) {
 				if (!this.grRecord[sField].canCreate()) {
@@ -1285,8 +1285,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateFieldSecurity
 
 	_validateDataPolicy: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateDataPolicy'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateDataPolicy'); }
 		var bCheckDataPolicy = this._getValue('bCheckDataPolicy', true, this.oRecordConfig);
 		if (!bCheckDataPolicy) {
 			if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_validateDataPolicy'); }
@@ -1353,8 +1353,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateDataPolicy
 
 	_validateReferenceFieldValues: function (sField, oField, oValue, geElement, edElementDescriptor, sInternalType, sValueType, sDisplayValue) {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateReferenceFieldValues'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateReferenceFieldValues'); }
 		var oParams = {};
 		var aValues = [];
 		var bSingleValue = (sValueType == 'array') ? false : true;
@@ -1461,8 +1461,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateReferenceFieldValues
 
 	_validateReferenceEntry: function (sField, sValue, sRefTable, geElement, edElementDescriptor, sInternalType, bNoActionError) {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateReferenceEntry'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateReferenceEntry'); }
 		var sDependentField = (this.oDependentFields.hasOwnProperty(sField)) ? this.oDependentFields[sField] : '';
 		bNoActionError = (bNoActionError === false) ? false : true;
 		var bMatch = true,
@@ -1550,8 +1550,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _validateReferenceEntry
 
 	_evaluateAdvRefQualifier: function (sField) {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_evaluateAdvRefQualifier'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_evaluateAdvRefQualifier'); }
 		var oVars = {
 			'current': this.grRecord
 		}; // vars object
@@ -1562,8 +1562,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _evaluateAdvRefQualifier
 
 	_runBusinessLogic: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_runBusinessLogic'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_runBusinessLogic'); }
 		try {
 			var aUpdateBusinessLogicChecks = this._getValue('aUpdateBusinessLogicChecks', [], this.oRecordConfig);
 			aUpdateBusinessLogicChecks = (this._isValidArray(aUpdateBusinessLogicChecks)) ? aUpdateBusinessLogicChecks : [aUpdateBusinessLogicChecks];
@@ -1610,6 +1610,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _runBusinessLogic
 
 	_runCustomScripts: function (bRunBefore) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_runCustomScripts'); }
 		bRunBefore = (bRunBefore === true) ? true : false;
 		var aCustomScripts = this._getValue('aCustomScripts', [], this.oRecordConfig);
@@ -1662,8 +1663,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	************************************************************************************************************/
 
 	_errorHandlerInit: function (oRecordConfig, oError) {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_errorHandlerInit'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_errorHandlerInit'); }
 		gs.flushMessages(); // flush messages before transaction
 		this.oError = oError;
 		this.sErrorReturnType = this._getValue('sErrorReturnType', 'normal', oRecordConfig);
@@ -1692,8 +1693,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	// sErrorType: runtime (exceptions), system (target instance config), config (object), record (security, save, stateflow etc.), value (single value or empty object)
 	// aErrorDetailArgs of type "value" should have the following order: field, value, expected value or format, lookup table, others...
 	_errorHandler: function (sErrorType, sErrorCode, sErrorMessage, aErrorMessageArgs, aErrorDetailArgs, bNoActionError, bFatalError) {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_errorHandler'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_errorHandler'); }
 		this.oError[this.sTableSequenceId]['bError'] = true;
 		var sErrorHandlingType = this._getValue('oErrorHandling/oErrorType/' + sErrorType, 'reject', this.oRecordConfig);
 		var sErrorHandlingCode = this._getValue('oErrorHandling/oErrorCode/' + sErrorCode, '', this.oRecordConfig);
@@ -1749,8 +1750,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _canContinue
 
 	_parseRecordError: function () {
-		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_parseRecordError'); }
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_parseRecordError'); }
 		var bParsedError = false;
 		var aGSErrorMessages = j2js(gs.getErrorMessages());
 		if (aGSErrorMessages.length > 0) {
@@ -1785,7 +1786,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _parseRecordError
 
 	type: 'GlobalToolsRecordWriteValidate',
-	version: '1.0.15',
+	version: '1.0.16',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -1794,14 +1795,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>817</sys_mod_count>
+        <sys_mod_count>818</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-10-28 12:59:07</sys_updated_on>
+        <sys_updated_on>2025-11-14 08:00:56</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>
