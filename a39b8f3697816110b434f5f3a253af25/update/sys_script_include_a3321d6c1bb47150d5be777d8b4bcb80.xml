@@ -863,7 +863,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_parseRecordValues'); }
 		if (this._gtObject.isObject(oRecordValues)) {
-			var aRecordValueProperties = Object.keys(this.oRecordValues);
+			var aRecordValueProperties = Object.keys(oRecordValues);
 			if ((oRecordValues.hasOwnProperty('values')) && (aRecordValueProperties.length == 2)) {
 				this.oRecordValues = oRecordValues['values'];
 				if (oRecordValues.hasOwnProperty('display_values')) {
@@ -872,7 +872,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 			} else if ((this._gtArray.isValidArray(aRecordValueProperties)) && (this._gt.getType(oRecordValues[aRecordValueProperties[0]]) == 'object') && (oRecordValues[aRecordValueProperties[0]].hasOwnProperty('display_value'))) {
 				var oRecordValuesCleaned = {};
 				var oRecordDisplayValues = {};
-				this.aAllRecordValueFields.forEach(function (sRecordValueField) {
+				aRecordValueProperties.forEach(function (sRecordValueField) {
 					var sValue = oRecordValues[sRecordValueField]['value'];
 					var sDisplayValue = oRecordValues[sRecordValueField]['display_value']
 					oRecordValuesCleaned[sRecordValueField] = sValue;
@@ -1797,14 +1797,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>821</sys_mod_count>
+        <sys_mod_count>822</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-11-22 07:00:47</sys_updated_on>
+        <sys_updated_on>2025-11-22 07:16:43</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>
