@@ -413,6 +413,12 @@ GlobalToolsRecordWriteValidate.prototype = {
 				} // if class path
 			} // if sys class name is empty on glide record --> workaround for reference qualifiers looking for the class name
 		} // if valid record
+		if (this._getValue('bNoWorkflow', false, this.oRecordConfig)) {
+			this.grRecord.setWorkflow(false);
+		} // if not workflow
+		if (this._getValue('bNoAutoSysFields', false, this.oRecordConfig)) {
+			this.grRecord.autoSysFields(false);
+		} // if not workflow
 		this._validateApplyTemplate();
 		this._validateImpersonate();
 		this._runImpersonate(); // impersonate before checking ACLs
@@ -1787,7 +1793,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _parseRecordError
 
 	type: 'GlobalToolsRecordWriteValidate',
-	version: '1.0.162',
+	version: '1.0.163',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -1796,14 +1802,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>825</sys_mod_count>
+        <sys_mod_count>827</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-12-01 13:59:14</sys_updated_on>
+        <sys_updated_on>2025-12-02 14:48:16</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>
