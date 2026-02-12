@@ -74,11 +74,11 @@ GlobalToolsObject.prototype = {
 													} else {
 														if ((iMaxLength > 6) && (!gs.nil(oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]]))) {
 															if (iMaxLength == 7) {
-																return oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5][aConfigPath[6]]];
+																return oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]];
 															} else {
 																if ((iMaxLength > 8) && (!gs.nil(oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]][aConfigPath[7]]))) {
 																	if (iMaxLength == 9) {
-																		return oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5][aConfigPath[6]]][aConfigPath[7]];
+																		return oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]][aConfigPath[7]];
 																	} // if found 8 level
 																} // if 8 level
 															} // if found 7 level
@@ -188,7 +188,7 @@ GlobalToolsObject.prototype = {
 															if (iMaxLength == 7) {
 																return true;
 															} else {
-																if ((iMaxLength > 8) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]].hasOwnProperty(aConfigPath[7]))) {
+																if ((iMaxLength > 7) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]].hasOwnProperty(aConfigPath[7]))) {
 																	if (iMaxLength == 9) {
 																		return true;
 																	} // if found 8 level
@@ -248,7 +248,7 @@ GlobalToolsObject.prototype = {
 															if (iMaxLength == 7) {
 																delete oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]];
 															} else {
-																if ((iMaxLength > 8) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]].hasOwnProperty(aConfigPath[7]))) {
+																if ((iMaxLength > 7) && (oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]].hasOwnProperty(aConfigPath[7]))) {
 																	if (iMaxLength == 9) {
 																		delete oConfig[aConfigPath[0]][aConfigPath[1]][aConfigPath[2]][aConfigPath[3]][aConfigPath[4]][aConfigPath[5]][aConfigPath[6]][aConfigPath[7]];
 																	} // if found 8 level
@@ -329,7 +329,7 @@ GlobalToolsObject.prototype = {
 	}, // function parseJSON
 
 	type: 'GlobalToolsObject',
-	version: '1.0.8',
+	version: '1.0.17',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -337,14 +337,14 @@ GlobalToolsObject.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:36:44</sys_created_on>
         <sys_id>52165d601bf47150d5be777d8b4bcbc4</sys_id>
-        <sys_mod_count>53</sys_mod_count>
+        <sys_mod_count>54</sys_mod_count>
         <sys_name>GlobalToolsObject</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_52165d601bf47150d5be777d8b4bcbc4</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-11-25 05:49:56</sys_updated_on>
+        <sys_updated_on>2026-02-12 07:18:28</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>52165d601bf47150d5be777d8b4bcbc4</id>

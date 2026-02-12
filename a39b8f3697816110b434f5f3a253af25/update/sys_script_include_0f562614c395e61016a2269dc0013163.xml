@@ -93,7 +93,7 @@ GlobalToolsSecurity.prototype = {
 					} else {
 						sResult = String(grUserHasRole.role.name);
 					} // if return id
-					if ((sResult) && (aRoles.indexOf(sResult))) {
+					if ((sResult) && (aRoles.indexOf(sResult) == -1)) {
 						aRoles.push(sResult);
 					} // if not in result
 				} // while roles
@@ -713,7 +713,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _parseAccessAnalyzerToCSV
 
 	type: 'GlobalToolsSecurity',
-	version: '1.0.11',
+	version: '1.0.17',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -721,14 +721,14 @@ GlobalToolsSecurity.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2025-04-30 06:56:22</sys_created_on>
         <sys_id>0f562614c395e61016a2269dc0013163</sys_id>
-        <sys_mod_count>227</sys_mod_count>
+        <sys_mod_count>229</sys_mod_count>
         <sys_name>GlobalToolsSecurity</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_0f562614c395e61016a2269dc0013163</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-05-08 10:15:31</sys_updated_on>
+        <sys_updated_on>2026-02-12 07:09:03</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>0f562614c395e61016a2269dc0013163</id>
