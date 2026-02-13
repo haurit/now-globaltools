@@ -289,7 +289,7 @@ GlobalToolsRecordRead.prototype = {
 				}; // function order by field
 				aOrderBy.forEach(fnOrderBy);
 			} // if order by
-			if (aFields.indexOf('sys_id' == -1)) {
+			if (aFields.indexOf('sys_id') == -1) {
 				aFields.push('sys_id');
 			} // if no sys_id
 			aFields.forEach(function (sField) {
@@ -656,7 +656,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function combineQueries	
 
 	type: 'GlobalToolsRecordRead',
-	version: '1.0.12',
+	version: '1.0.17',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -664,14 +664,14 @@ GlobalToolsRecordRead.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>125</sys_mod_count>
+        <sys_mod_count>126</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-06-15 05:44:41</sys_updated_on>
+        <sys_updated_on>2026-02-12 07:07:30</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>2a51d52c1bb47150d5be777d8b4bcb25</id>

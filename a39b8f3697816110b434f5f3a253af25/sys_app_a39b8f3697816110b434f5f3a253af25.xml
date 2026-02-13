@@ -32,16 +32,16 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:01:05</sys_created_on>
         <sys_id>a39b8f3697816110b434f5f3a253af25</sys_id>
-        <sys_mod_count>25</sys_mod_count>
+        <sys_mod_count>27</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-12-01 13:55:58</sys_updated_on>
+        <sys_updated_on>2026-02-13 09:10:17</sys_updated_on>
         <template/>
         <trackable>true</trackable>
         <uninstall_blocked>false</uninstall_blocked>
         <user_role/>
         <vendor/>
         <vendor_prefix/>
-        <version>1.0.162</version>
+        <version>1.1.0</version>
     </sys_app>
     <sys_translated_text action="delete_multiple" query="documentkey=a39b8f3697816110b434f5f3a253af25"/>
     <sys_attachment action="INSERT_OR_UPDATE">

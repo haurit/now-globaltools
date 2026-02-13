@@ -24,56 +24,6 @@ GlobalTools.prototype = {
 		} // if scope is allowed
 	}, // function checkAccess
 
-	// Substitute null values in simple types
-	// DEPRECATED: sObjKey --> use GlobalToolsObject.getValue instead!
-	nsub: function (sValue, sSubstitute, sType, sObjKey) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
-		if (sObjKey) {
-			if (sValue.hasOwnProperty(sObjKey)) {
-				sValue = sValue[sObjKey];
-			} else {
-				sValue = null;
-			} // if has property
-		} // if obj and objkey
-		sType = (sType) ? sType : this.getType(sValue);
-		var sSubstituteType = this.getType(sSubstitute);
-		if ((sValue) || (sValue === false) || (sValue === 0)) {
-			if ((sType == 'array') || (Array.isArray(sSubstitute))) {
-				if (Array.isArray(sValue)) {
-					return sValue;
-				} else {
-					return sValue.split(',');
-				} // if is array
-			} else if (sType == 'number') {
-				return sValue;
-			} else if ((sType == 'object') || (sSubstituteType == 'object')) {
-				return sValue;
-			} else if ((sType == 'boolean') || ((sSubstitute === true || sSubstitute === false || sSubstituteType === 'boolean'))) {
-				return Boolean(sValue);
-			} else {
-				return String(sValue);
-			} // if array, bool, string
-		} else if (((sSubstitute !== undefined)) && (sSubstitute !== null)) {
-			if (sType == 'string') {
-				return String(sSubstitute);
-			} else {
-				return sSubstitute;
-			} // if force string
-		} else {
-			if (sType == 'array') {
-				return [];
-			} else if (sType == 'object') {
-				return {};
-			} else if (sType == 'number') {
-				return -1;
-			} else if (sType == 'boolean') {
-				return false;
-			} else {
-				return '';
-			} // if array
-		} // if value
-	}, // function nsub
-
 	getType: function (oValue, bDoNotConvertCase) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (oValue === null) {
@@ -139,7 +89,7 @@ GlobalTools.prototype = {
 				return true;
 			} // if different
 		} // if not same type, array or obj
-		if ((sValue1Type == 'string') && (sValue1Type == 'string')) {
+		if ((sValue1Type == 'string') && (sValue2Type == 'string')) {
 			return String(oValue1) == String(oValue2);
 		} // if string convert to overcome character set issues
 		return oValue1 === oValue2;
@@ -602,7 +552,7 @@ GlobalTools.prototype = {
 	}, // function useTagUtil
 
 	type: 'GlobalTools',
-	version: '1.0.12',
+	version: '1.1.0',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -611,14 +561,14 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>207</sys_mod_count>
+        <sys_mod_count>211</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-05-22 15:55:46</sys_updated_on>
+        <sys_updated_on>2026-02-13 09:14:09</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>f31ccf7697816110b434f5f3a253afaa</id>

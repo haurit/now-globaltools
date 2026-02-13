@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step">
     <sys_atf_step action="INSERT_OR_UPDATE">
         <active>true</active>
+        <callable_outputs/>
         <copied_from/>
         <description>Run Server Side Validation Script</description>
         <display_name>Run Server Side Script</display_name>
@@ -13,14 +14,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:30:27</sys_created_on>
         <sys_id>39f9bdd21b25b510d5be777d8b4bcbab</sys_id>
-        <sys_mod_count>29</sys_mod_count>
+        <sys_mod_count>36</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_39f9bdd21b25b510d5be777d8b4bcbab</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-11-23 15:50:24</sys_updated_on>
+        <sys_updated_on>2026-02-13 09:06:27</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsObject Tests">4db64ce11b6db110d5be777d8b4bcb19</test>
         <timeout/>
@@ -35,9 +36,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:30:27</sys_created_on>
         <sys_id>711a75161b25b510d5be777d8b4bcb42</sys_id>
-        <sys_mod_count>29</sys_mod_count>
+        <sys_mod_count>36</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-11-23 15:50:24</sys_updated_on>
+        <sys_updated_on>2026-02-13 09:06:27</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -70,21 +71,24 @@
 	_gtATF.runATF('getValue', 'testreplace', undefined, 'testreplace');&#13;
 &#13;
 	var oObjSetValue = { 'testpath': { 'testnode': 'testvalue' } };&#13;
-	_gtATF.runATF('setValue', undefined, 'testpath/testnode_1', 'testvalue1', oObjSetValue);&#13;
+	_gtATF.runATF('setValue', true, 'testpath/testnode_1', 'testvalue1', oObjSetValue);&#13;
 	if (_gtObject.getValue('testpath/testnode_1', 'testreplace1', oObjSetValue) != 'testvalue1') {&#13;
 		_gtATF.addError('setValue', 'Value was not set correctly.');&#13;
 	} // if value not set&#13;
+	_gtATF.runATF('setValue', false, '', 'testvalue1', oObjSetValue);&#13;
+	_gtATF.runATF('setValue', false, '', 'testvalue1');&#13;
 &#13;
-	_gtATF.runATF('hasValue', true, 'testpath/testnode', 'testreplace', { 'testpath': { 'testnode': 'testvalue' } });&#13;
-	_gtATF.runATF('hasValue', false, 'testpath_invalid/testnode', 'testreplace', { 'testpath': { 'testnode': 'testvalue' } });&#13;
-	_gtATF.runATF('hasValue', false, 'testpath/testnode_invalid', 'testreplace', { 'testpath': { 'testnode': 'testvalue' } });&#13;
-	_gtATF.runATF('hasValue', true, 'testpath/testnode', 'testreplace', { 'testpath': { 'testnode': '' } });&#13;
-	_gtATF.runATF('hasValue', false, 'testpath/testnode', 'testreplace');&#13;
-	_gtATF.runATF('hasValue', false, 'testpath/testnode', 'testreplace', {});&#13;
-	_gtATF.runATF('hasValue', false, undefined, 'testreplace');&#13;
+	_gtATF.runATF('hasValue', true, 'testpath/testnode', { 'testpath': { 'testnode': 'testvalue' } });&#13;
+	_gtATF.runATF('hasValue', false, 'testpath_invalid/testnode', { 'testpath': { 'testnode': 'testvalue' } });&#13;
+	_gtATF.runATF('hasValue', false, 'testpath/testnode_invalid', { 'testpath': { 'testnode': 'testvalue' } });&#13;
+	_gtATF.runATF('hasValue', true, 'testpath/testnode', { 'testpath': { 'testnode': '' } });&#13;
+	_gtATF.runATF('hasValue', false, 'testpath/testnode');&#13;
+	_gtATF.runATF('hasValue', false, 'testpath/testnode', {});&#13;
+	_gtATF.runATF('hasValue', false, undefined);&#13;
 &#13;
-	_gtATF.runATF('deleteValue', null, 'testpath/testnode', oObjSetValue);&#13;
-	_gtATF.runATF('hasValue', false, 'testpath/testnode', null, oObjSetValue);&#13;
+	_gtATF.runATF('deleteValue', true, 'testpath/testnode', oObjSetValue);&#13;
+	_gtATF.runATF('deleteValue', false, 'testpath/testnode_invalid', oObjSetValue);&#13;
+	_gtATF.runATF('hasValue', false, 'testpath/testnode', oObjSetValue);&#13;
 	&#13;
 	var oObjDeepMerge1 = { 'testpath': { 'testnode': 'testvalue', 'testnode_1': 'testvalue_1' } };&#13;
 	var oObjDeepMerge2 = { 'testpath': { 'testnode': 'testvalue_override', 'testnode_2': 'testvalue_2' } };&#13;
