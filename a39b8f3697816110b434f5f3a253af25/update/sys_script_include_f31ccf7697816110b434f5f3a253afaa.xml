@@ -347,6 +347,22 @@ GlobalTools.prototype = {
 	}, // function scheduleHandler
 
 	// Overcome scopeing issue
+	executeScheduledScriptExecution: function (sScheduledJobName) {
+		if (sScheduledJobName) {
+			var grScheduledJob = new GlideRecord('sysauto_script');
+			grScheduledJob.addEncodedQuery('name=' + sScheduledJobName);
+			grScheduledJob.setLimit(1);
+			grScheduledJob.query();
+			if (grScheduledJob.next()) {
+				SncTriggerSynchronizer.executeNow(grScheduledJob);
+				return true;
+			} else {
+				gs.warn('global.GlobalTools.executeScheduledScriptExecution failed to find scheduled job: ' + sScheduledJobName);
+			} // if scheduled job found
+		} // if scheduled job name
+	}, // function executeScheduledScriptExecution
+
+	// Overcome scopeing issue
 	sleep: function (iMilliseconds) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		gs.sleep(iMilliseconds);
@@ -497,7 +513,7 @@ GlobalTools.prototype = {
 						} // while not done
 					} else {
 						sStateDisplayValue = 'Already Installed';
-						if (bLog) {gs.info('GlobalTools.installPlugins is already installed id: ' + sPluginId);}
+						if (bLog) { gs.info('GlobalTools.installPlugins is already installed id: ' + sPluginId); }
 					} // if plugin is active
 					if (bLog) { gs.info('GlobalTools.installPlugins end id: ' + sPluginId + ' with final state: ' + sStateDisplayValue); }
 				}, this); // each plugin
@@ -537,7 +553,8 @@ GlobalTools.prototype = {
 		} // if scheduled
 	}, // updatePlugins
 
-	useTagUtil: function(sFunction) {
+	// Overcome scopeing issue
+	useTagUtil: function (sFunction) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (!this._TagUtil) {
 			this._TagUtil = new global.TagUtil();
@@ -551,8 +568,20 @@ GlobalTools.prototype = {
 		} // if function
 	}, // function useTagUtil
 
+	// Overcome scopeing issue
+	setProperty: function (sName, oValue, sDescription) {
+		if ((sName) && ((oValue) || (oValue === ''))) {
+			var sValue = String(oValue);
+			if (sDescription) {
+				gs.setProperty(sName, sValue, sDescription);
+			} else {
+				gs.setProperty(sName, sValue);
+			} // if description
+		} // if name and value (or empty string)
+	}, // function setProperty
+
 	type: 'GlobalTools',
-	version: '1.1.0',
+	version: '1.1.1',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -561,14 +590,14 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>211</sys_mod_count>
+        <sys_mod_count>212</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-02-13 09:14:09</sys_updated_on>
+        <sys_updated_on>2026-03-29 09:42:52</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>f31ccf7697816110b434f5f3a253afaa</id>

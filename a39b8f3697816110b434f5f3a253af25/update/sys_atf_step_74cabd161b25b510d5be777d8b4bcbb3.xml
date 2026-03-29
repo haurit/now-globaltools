@@ -14,14 +14,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>74cabd161b25b510d5be777d8b4bcbb3</sys_id>
-        <sys_mod_count>381</sys_mod_count>
+        <sys_mod_count>396</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_74cabd161b25b510d5be777d8b4bcbb3</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-06-25 11:39:19</sys_updated_on>
+        <sys_updated_on>2026-03-29 12:48:04</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRecordWriteValidate Tests">a44784251b6db110d5be777d8b4bcb92</test>
         <timeout/>
@@ -36,9 +36,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>56dabd161b25b510d5be777d8b4bcb3a</sys_id>
-        <sys_mod_count>381</sys_mod_count>
+        <sys_mod_count>396</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-06-25 11:39:19</sys_updated_on>
+        <sys_updated_on>2026-03-29 12:48:04</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -1427,6 +1427,197 @@
 			gs.info('GlobalToolsRecordWriteValidate Tests oError: ' + JSON.stringify(oError));&#13;
 		} // if record&#13;
 &#13;
+		/***********************************************************************************************************&#13;
+		*	Field manipulation&#13;
+		************************************************************************************************************/&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+		var sTestId = '201';&#13;
+		if (grRecord) {&#13;
+			var sIncidentId = grRecord.getUniqueValue();&#13;
+&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'sAction': 'update',&#13;
+				'aFields': [{ 'sField': 'short_description', 'sSourceField': 'test_sugus' }],&#13;
+			}; // config&#13;
+&#13;
+			oRecordValues = {&#13;
+				'sys_id': sIncidentId,&#13;
+				'test_sugus': 'Test Field Gugus',&#13;
+			}; // values&#13;
+&#13;
+			oError = {};&#13;
+			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);&#13;
+			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = [];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+			if (grRecord) {&#13;
+				var sShortDescription = grRecord.getValue('short_description');&#13;
+				if (sShortDescription != 'Test Field Gugus') {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was not taken by source field.');&#13;
+				} // if invalid value&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);&#13;
+			} // if record&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');&#13;
+		}&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+		sTestId = '202';&#13;
+		if (grRecord) {&#13;
+			sIncidentId = grRecord.getUniqueValue();&#13;
+&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'sAction': 'update',&#13;
+				'aFields': [{ 'sField': 'short_description', 'sFixedValue': 'Fixed Gugus' }],&#13;
+			}; // config&#13;
+&#13;
+			oRecordValues = {&#13;
+				'sys_id': sIncidentId,&#13;
+			}; // values&#13;
+&#13;
+			oError = {};&#13;
+			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);&#13;
+			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = [];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+			if (grRecord) {&#13;
+				sShortDescription = grRecord.getValue('short_description');&#13;
+				if (sShortDescription != 'Fixed Gugus') {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was not taken by fixed value.');&#13;
+				} // if invalid value&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);&#13;
+			} // if record&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');&#13;
+		}&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+		sTestId = '203';&#13;
+		if (grRecord) {&#13;
+			sIncidentId = grRecord.getUniqueValue();&#13;
+&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'sAction': 'update',&#13;
+				'aFields': [{ 'sField': 'short_description', 'sSourceProperty': 'instance_name' }],&#13;
+			}; // config&#13;
+&#13;
+			oRecordValues = {&#13;
+				'sys_id': sIncidentId,&#13;
+			}; // values&#13;
+&#13;
+			oError = {};&#13;
+			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);&#13;
+			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = [];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+			if (grRecord) {&#13;
+				sShortDescription = grRecord.getValue('short_description');&#13;
+				if (sShortDescription != gs.getProperty('instance_name')) {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was not taken from sys property value.');&#13;
+				} // if invalid value&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);&#13;
+			} // if record&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');&#13;
+		}&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+		sTestId = '204';&#13;
+		if (grRecord) {&#13;
+			sIncidentId = grRecord.getUniqueValue();&#13;
+&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'sAction': 'update',&#13;
+				'aFields': [{ 'sField': 'short_description', 'sFieldAction': 'ignore' }],&#13;
+			}; // config&#13;
+&#13;
+			oRecordValues = {&#13;
+				'sys_id': sIncidentId,&#13;
+				'short_description': 'Sugus Gugus Ignore',&#13;
+			}; // values&#13;
+&#13;
+			oError = {};&#13;
+			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);&#13;
+			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = [];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+			if (grRecord) {&#13;
+				sShortDescription = grRecord.getValue('short_description');&#13;
+				if (sShortDescription == 'Sugus Gugus Ignore') {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was taken dispite field action ignore.');&#13;
+				} // if invalid value&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);&#13;
+			} // if record&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');&#13;
+		}&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+		sTestId = '205';&#13;
+		if (grRecord) {&#13;
+			sIncidentId = grRecord.getUniqueValue();&#13;
+&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'sAction': 'update',&#13;
+				'aFields': [{ 'sField': 'short_description', 'sFieldAction': 'ignore_update' }],&#13;
+			}; // config&#13;
+&#13;
+			oRecordValues = {&#13;
+				'sys_id': sIncidentId,&#13;
+				'short_description': 'Sugus Gugus Ignore Update',&#13;
+			}; // values&#13;
+&#13;
+			oError = {};&#13;
+			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);&#13;
+			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = [];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+			if (grRecord) {&#13;
+				sShortDescription = grRecord.getValue('short_description');&#13;
+				if (sShortDescription == 'Sugus Gugus Ignore Update') {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was taken dispite field action ignore_update.');&#13;
+				} // if invalid value&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);&#13;
+			} // if record&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');&#13;
+		}&#13;
 &#13;
 	} // if not add new test&#13;
 &#13;
@@ -1460,10 +1651,7 @@
 	/* Other tests that are missing&#13;
 &#13;
 		oErrorHandling (type, field)&#13;
-		sSourceField&#13;
-		sFixedValue&#13;
-		sFieldAction&#13;
-&#13;
+		&#13;
 		Other options to be compared to documentation&#13;
 	*/&#13;
 &#13;
@@ -1473,7 +1661,7 @@
 		oExpectedResult = (sFunction == 'validateAndWrite') ? '-1' : undefined;&#13;
 &#13;
 		// Put single test here for debugging START&#13;
-&#13;
+		&#13;
 &#13;
 		// Put single test here for debugging END&#13;
 &#13;
