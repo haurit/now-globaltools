@@ -273,38 +273,20 @@ GlobalToolsRecordWriteValidate.prototype = {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getDependentFields'); }
 		var oDependentFields = {};
-		var sDependentField = '';
-		this.aAllRecordFields.forEach(function (sField) {
-			sDependentField = this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'dependent');
-			if (sDependentField) {
-				oDependentFields[sField] = sDependentField;
-			} // if dependent field
-		}, this); // each record field
+		if (this._gtCache.checkValue('gtrwv_df_' + this.sTargetTable)) {
+			oDependentFields = this._gtCache.getValue('gtrwv_df_' + this.sTargetTable);
+		} else {
+			var sDependentField = '';
+			this.aAllRecordFields.forEach(function (sField) {
+				sDependentField = this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'dependent');
+				if (sDependentField) {
+					oDependentFields[sField] = sDependentField;
+				} // if dependent field
+			}, this); // each record field
+			this._gtCache.setValue('gtrwv_df_' + this.sTargetTable, oDependentFields);
+		} // if cached
 		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getDependentFields'); }
 		return oDependentFields;
-		/*
-		var oResult = {};
-		var oDependentFields = this._gtCache.getValue('gtrwv_df_' + this.sTargetTable);
-		oDependentFields = (oDependentFields) ? oDependentFields : {};
-		var sDependentField = '';
-		this.aAllRecordFields.forEach(function (sField) {
-			if (oDependentFields.hasOwnProperty(sField)) {
-				if (oDependentFields[sField]) {
-					oResult[sField] = oDependentFields[sField];
-				} // if dependent field
-			} else {
-				sDependentField = this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'dependent');
-				oDependentFields[sField] = sDependentField;
-				if (sDependentField) {
-					oResult[sField] = sDependentField;
-				} // if dependent field
-			} // if in cache
-		}, this); // each record field
-		this._gtCache.setValue('gtrwv_df_' + this.sTargetTable, oDependentFields);
-		//} // if cache dependent fields
-		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getDependentFields'); }
-		return oResult;
-		*/
 	}, // function _getDependentFields
 
 	_sortAllRecordFieldsByDependent: function () {
@@ -413,12 +395,28 @@ GlobalToolsRecordWriteValidate.prototype = {
 				} // if class path
 			} // if sys class name is empty on glide record --> workaround for reference qualifiers looking for the class name
 		} // if valid record
-		if (this._getValue('bNoWorkflow', false, this.oRecordConfig)) {
+		var bNoWorkflowForAction = false;
+		if ((!this.bIsValidRecord) && (this._getValue('bNoWorkflowInsert', '', this.oRecordConfig) !== '')) {
+			bNoWorkflowForAction = this._getValue('bNoWorkflowInsert', false, this.oRecordConfig);
+		} else if ((this.bIsValidRecord) && (this._getValue('bNoWorkflowUpdate', '', this.oRecordConfig) !== '')) {
+			bNoWorkflowForAction = this._getValue('bNoWorkflowUpdate', false, this.oRecordConfig);
+		} else {
+			bNoWorkflowForAction = this._getValue('bNoWorkflow', false, this.oRecordConfig);
+		} // if action-specific workflow flag
+		if (bNoWorkflowForAction) {
 			this.grRecord.setWorkflow(false);
-		} // if not workflow
-		if (this._getValue('bNoAutoSysFields', false, this.oRecordConfig)) {
+		} // if no workflow for action
+		var bNoAutoSysFieldsForAction = false;
+		if ((!this.bIsValidRecord) && (this._getValue('bNoAutoSysFieldsInsert', '', this.oRecordConfig) !== '')) {
+			bNoAutoSysFieldsForAction = this._getValue('bNoAutoSysFieldsInsert', false, this.oRecordConfig);
+		} else if ((this.bIsValidRecord) && (this._getValue('bNoAutoSysFieldsUpdate', '', this.oRecordConfig) !== '')) {
+			bNoAutoSysFieldsForAction = this._getValue('bNoAutoSysFieldsUpdate', false, this.oRecordConfig);
+		} else {
+			bNoAutoSysFieldsForAction = this._getValue('bNoAutoSysFields', false, this.oRecordConfig);
+		} // if action-specific auto sys fields flag
+		if (bNoAutoSysFieldsForAction) {
 			this.grRecord.autoSysFields(false);
-		} // if not workflow
+		} // if no auto sys fields for action
 		this._validateApplyTemplate();
 		this._validateImpersonate();
 		this._runImpersonate(); // impersonate before checking ACLs
@@ -500,7 +498,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 						if (sFixedValue) {
 							sValue = (sFixedValue == 'null') ? '' : sFixedValue;
 						} else if (sSourceProperty) {
-    						sValue = gs.getProperty(sSourceProperty, '');
+							sValue = gs.getProperty(sSourceProperty, '');
 						} else {
 							if (!gs.nil(sInternalType)) {
 								//gs.info('GlobalToolsRecordWriteValidate new type sField: ' + sField + ' sInternalType: ' + sInternalType + ' sValue: ' + sValue);
@@ -1797,7 +1795,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _parseRecordError
 
 	type: 'GlobalToolsRecordWriteValidate',
-	version: '1.1.1',
+	version: '1.1.2',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -1806,14 +1804,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>830</sys_mod_count>
+        <sys_mod_count>831</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-03-29 09:48:29</sys_updated_on>
+        <sys_updated_on>2026-04-03 08:14:12</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>
