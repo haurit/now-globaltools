@@ -14,14 +14,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:31:57</sys_created_on>
         <sys_id>1f3a75161b25b510d5be777d8b4bcbc3</sys_id>
-        <sys_mod_count>96</sys_mod_count>
+        <sys_mod_count>97</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_1f3a75161b25b510d5be777d8b4bcbc3</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-06-14 18:30:49</sys_updated_on>
+        <sys_updated_on>2026-05-31 19:52:46</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRecordRead Tests">a7e640251b6db110d5be777d8b4bcbef</test>
         <timeout/>
@@ -36,9 +36,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:31:57</sys_created_on>
         <sys_id>736a79161b25b510d5be777d8b4bcb58</sys_id>
-        <sys_mod_count>96</sys_mod_count>
+        <sys_mod_count>97</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-06-14 18:30:49</sys_updated_on>
+        <sys_updated_on>2026-05-31 19:52:46</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -105,7 +105,9 @@
 	_gtATF.runATF('checkRecordByField', true, 'task', 'active', 'true');&#13;
 	_gtATF.runATF('checkRecordByField', false, 'task', 'number', 'invalidnumber');&#13;
 &#13;
+	_gtATF.runATF('getSysIdByQuery', null, 'name=sugus');&#13;
 	_gtATF.runATF('getSysIdByQuery', '087310061ba17510c1ecdc61ab4bcb55', 'sys_script_include', 'name=GlobalToolsATF', true);&#13;
+	_gtATF.runATF('getSysIdByQuery', null, 'nameSTARTWITHGlobalTools', true); // more than one record&#13;
 &#13;
 	_gtATF.runATF('checkRecordByQuery', true, 'task', 'active=true');&#13;
 	_gtATF.runATF('checkRecordByQuery', false, 'task', 'number=invalidnumber');&#13;

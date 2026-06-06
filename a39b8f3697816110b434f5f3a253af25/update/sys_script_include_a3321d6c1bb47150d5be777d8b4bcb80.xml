@@ -96,7 +96,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 					} // if can continue
 				} // if can write
 			} // if validation passed
-			if (new GlideImpersonate().isImpersonating()) {
+			if (this._gt.isImpersonating()) {
 				this._runImpersonate(true); // end impersonation
 			} // if impersonating
 		} // if invalid globals
@@ -130,7 +130,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 					this._createIREPayload();
 				} // if can write
 			} // if validation passed
-			if (new GlideImpersonate().isImpersonating()) {
+			if (this._gt.isImpersonating()) {
 				this._runImpersonate(true); // end impersonation
 			} // if impersonating
 		} // if invalid globals
@@ -274,16 +274,18 @@ GlobalToolsRecordWriteValidate.prototype = {
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getDependentFields'); }
 		var oDependentFields = {};
 		if (this._gtCache.checkValue('gtrwv_df_' + this.sTargetTable)) {
-			oDependentFields = this._gtCache.getValue('gtrwv_df_' + this.sTargetTable);
+			var sDependentFields = this._gtCache.getValue('gtrwv_df_' + this.sTargetTable);
+			oDependentFields = JSON.parse(sDependentFields);
 		} else {
 			var sDependentField = '';
-			this.aAllRecordFields.forEach(function (sField) {
+			var aAllTableFields = this._gtTable.getFields(this.sTargetTable);
+			aAllTableFields.forEach(function (sField) {
 				sDependentField = this._gtTable.getDictOrOverrideValue(this.sTargetTable, sField, 'dependent');
 				if (sDependentField) {
 					oDependentFields[sField] = sDependentField;
 				} // if dependent field
 			}, this); // each record field
-			this._gtCache.setValue('gtrwv_df_' + this.sTargetTable, oDependentFields);
+			this._gtCache.setValue('gtrwv_df_' + this.sTargetTable, JSON.stringify(oDependentFields));
 		} // if cached
 		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getDependentFields'); }
 		return oDependentFields;
@@ -1086,6 +1088,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 
 	_validateImpersonate: function () {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (this._getValue('bSkipImpersonate', false, this.oRecordConfig)) {
+			return;
+		} // if skip impersonate
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateImpersonate'); }
 		var sDefaultUser = this._getValue('sDefaultUser', '', this.oRecordConfig); // only for backwards compatibility
 		var sImpersonateDefaultUser = this._getValue('sImpersonateDefaultUser', sDefaultUser, this.oRecordConfig);
@@ -1120,21 +1125,19 @@ GlobalToolsRecordWriteValidate.prototype = {
 	_runImpersonate: function (bEndImpersonation) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_runImpersonate'); }
-		var sImpersonateUser = (bEndImpersonation) ? this.sUserInitialId : this.sImpersonateUserId;
-		if (sImpersonateUser) {
-			if (sImpersonateUser != this.sUserCurrentId) {
-				gs.getSession().impersonate(sImpersonateUser);
-				if (new GlideImpersonate().isImpersonating()) {
-					this.sUserCurrentId = this.sImpersonateUserId;
-				} else {
-					if ((this._getValue('bImpersonateMandatory', false, this.oRecordConfig)) && (!bEndImpersonation)) {
-						this._errorHandler('runtime', '403_004', 'Impersonating failed and is mandatory', '', [sImpersonateUser], true, false);
-					} else {
-						this._errorHandler('runtime', '403_003', 'Impersonating failed', '', [sImpersonateUser, bEndImpersonation], false, false);
-					} // if mandatory impersonate
-				} // if impersonating
-			} // if not current user
-		} // if imp user
+		if (bEndImpersonation) {
+			this._gt.endImpersonation(this.sUserInitialId);
+			this.sUserCurrentId = gs.getUserID();
+		} else if ((this.sImpersonateUserId) && (this.sImpersonateUserId != this.sUserCurrentId)) {
+			this._gt.impersonateUser(this.sImpersonateUserId);
+			if (this._gt.isImpersonating()) {
+				this.sUserCurrentId = gs.getUserID();
+			} else if (this._getValue('bImpersonateMandatory', false, this.oRecordConfig)) {
+				this._errorHandler('runtime', '403_004', 'Impersonating failed and is mandatory', '', [this.sImpersonateUserId], true, false);
+			} else {																						
+				this._errorHandler('runtime', '403_003', 'Impersonating failed', '', [this.sImpersonateUserId, bEndImpersonation], false, false);
+			} // if impersonation took effect
+		} // if end or start impersonation
 		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_runImpersonate'); }
 	}, // function _runImpersonate
 
@@ -1795,7 +1798,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 	}, // function _parseRecordError
 
 	type: 'GlobalToolsRecordWriteValidate',
-	version: '1.1.2',
+	version: '2.1.2',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -1804,14 +1807,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>831</sys_mod_count>
+        <sys_mod_count>850</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-04-03 08:14:12</sys_updated_on>
+        <sys_updated_on>2026-05-31 17:44:14</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>

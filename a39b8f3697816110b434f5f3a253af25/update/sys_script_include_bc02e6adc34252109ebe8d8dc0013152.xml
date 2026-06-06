@@ -29,6 +29,7 @@ GlobalToolsCache.prototype = {
 	}, // function checkAccess
 
 	setValue: function (sCachePath, sCacheValue, sCacheType) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		sCacheType = (sCacheType) ? sCacheType : 'transaction';
 		if ((sCachePath) && (sCacheValue)) {
 			if (sCacheType == 'transaction') {
@@ -42,12 +43,15 @@ GlobalToolsCache.prototype = {
 	}, // function setValue
 
 	getValue: function (sCachePath, sCacheType) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		sCacheType = (sCacheType) ? sCacheType : 'transaction';
 		if (sCachePath) {
 			if (sCacheType == 'transaction') {
 				return this._gtObject.getValue(sCachePath, null, gtCache);
 			} else if (sCacheType == 'glidecontroller') {
-				return GlideController.getGlobal(sCachePath);
+				if (j2js(GlideController.exists(sCachePath))) {
+					return GlideController.getGlobal(sCachePath);
+				} // if value exists
 			} else if (sCacheType == 'session') {
 				return gs.getSession().getClientData(sCachePath);
 			} // if cache type
@@ -55,6 +59,7 @@ GlobalToolsCache.prototype = {
 	}, // function getValue
 
 	checkValue: function (sCachePath, sCacheType) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		sCacheType = (sCacheType) ? sCacheType : 'transaction';
 		var oData;
 		if (sCachePath) {
@@ -72,6 +77,7 @@ GlobalToolsCache.prototype = {
 	}, // function checkValue
 
 	clearValue: function (sCachePath, sCacheType) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		sCacheType = (sCacheType) ? sCacheType : 'transaction';
 		if (sCachePath) {
 			if (sCacheType == 'transaction') {
@@ -85,10 +91,12 @@ GlobalToolsCache.prototype = {
 	}, // function clearValue
 
 	resetCache: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		gtCache = {};
 	}, // function resetCache
 
 	getCache: function (bString) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (bString) {
 			return JSON.stringify(gtCache);
 		} // if string
@@ -96,7 +104,7 @@ GlobalToolsCache.prototype = {
 	}, // function resetCache
 
 	type: 'GlobalToolsCache',
-	version: '1.1.0',
+	version: '2.1.2',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -104,14 +112,14 @@ GlobalToolsCache.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2024-11-23 14:24:40</sys_created_on>
         <sys_id>bc02e6adc34252109ebe8d8dc0013152</sys_id>
-        <sys_mod_count>20</sys_mod_count>
+        <sys_mod_count>23</sys_mod_count>
         <sys_name>GlobalToolsCache</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_bc02e6adc34252109ebe8d8dc0013152</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-02-13 09:15:30</sys_updated_on>
+        <sys_updated_on>2026-06-03 16:02:00</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>bc02e6adc34252109ebe8d8dc0013152</id>

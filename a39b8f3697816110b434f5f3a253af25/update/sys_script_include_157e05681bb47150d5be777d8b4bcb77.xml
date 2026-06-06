@@ -83,6 +83,20 @@ GlobalToolsTable.prototype = {
 		} // if table id
 	}, // function getTableName
 
+	getTableLabel: function (sTable) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		var sLabel = (this._gtCache.hasValue('gtt_gtl/' + sTable)) ? this._gtCache.getValue('gtt_gtl/' + sTable) : ''; // cached display label
+		if (sLabel) {
+			return sLabel;
+		} // if cached
+		if ((!sTable) || (!this.isValidTable(sTable))) {
+			return sTable;
+		} // if no table
+		sLabel = String(new GlideRecord(sTable).getClassDisplayValue());
+		this._gtCache.setValue('gtt_gtl/' + sTable, sLabel);
+		return sLabel;
+	}, // function getTableLabel
+
 	isValidTable: function (sTable) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sTable) && (new GlideRecord(String(sTable)).isValid())) {
@@ -745,7 +759,7 @@ GlobalToolsTable.prototype = {
 	}, // function _generateLucidChartERDDictData
 
 	type: 'GlobalToolsTable',
-	version: '1.0.10',
+	version: '2.1.2',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -754,14 +768,14 @@ GlobalToolsTable.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:03:21</sys_created_on>
         <sys_id>157e05681bb47150d5be777d8b4bcb77</sys_id>
-        <sys_mod_count>197</sys_mod_count>
+        <sys_mod_count>208</sys_mod_count>
         <sys_name>GlobalToolsTable</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_157e05681bb47150d5be777d8b4bcb77</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-11-14 07:54:59</sys_updated_on>
+        <sys_updated_on>2026-06-01 06:05:44</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>157e05681bb47150d5be777d8b4bcb77</id>

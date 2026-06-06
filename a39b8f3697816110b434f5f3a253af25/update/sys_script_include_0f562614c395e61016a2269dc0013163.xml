@@ -275,6 +275,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _getAccessByRoleByTable
 
 	checkParentAccessResult: function (sTable, sAccessString, oRoleAccessResult) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var bFound = false;
 		var aHierarchy = this._gtTable.getTableHierarchy(sTable);
 		aHierarchy.some(function (sTmpTable) {
@@ -288,6 +289,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function checkParentAccessResult
 
 	_analyzeACL: function (oRoleAccessResult, sParentTable, sChildTable, aOperation) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var aUserRoles = this.getUsersRoles(this.sUserId, 'id');
 		aOperation = (aOperation) ? aOperation : ['read', 'write', 'create', 'delete'];
 		var bSNCInternal = this.isValidRole('snc_internal');
@@ -417,6 +419,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function generateAccessAnalyzerReport
 
 	_simulateAccessAnalyzerAssignRole: function (sRoleId, oAccessSimulatorResult) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var oPayloadAccesSimulatorChanges = {
 			userSysId: this.sUserId,
 			rolesToAssign: [sRoleId],
@@ -432,6 +435,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _simulateAccessAnalyzerAssignRole
 
 	_getAccessAnalyzerRoleObjectById: function (sRoleId) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var aRoles = this.aAccessSimulatorResult.filter(oRole => {
 			return oRole['accessEntity']['id'] === sRoleId;
 		}); // get initial role
@@ -439,6 +443,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _getAccessAnalyzerRoleObjectById
 
 	_parseAccessAnalyzerRoleObject: function (oRole, oAccessSimulatorResult, sPath) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sId = this._gtObject.getValue('accessEntity/id', '', oRole);
 		var sName = this._gtObject.getValue('accessEntity/name', '', oRole);
 		var sNewPath = (sPath) ? sPath + '/' : '';
@@ -456,6 +461,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _parseAccessAnalyzerRoleObject
 
 	_simulateAccessAnalyzerRoleByTable: function (sRoleId, sRole, sTable, bExtendTables, bOmitEmpty, bOmitSameExtendedClass, oRoleAccessResult) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var oPayloadSimulatedResults = {
 			entitySysId: this.sUserId,
 			entityType: 'USER',
@@ -551,6 +557,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _findOrCreateUserIdWithNoRole
 
 	_createUserIdWithRole: function (sRoleId) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var oErrorUser = {};
 		var oConfig = {
 			sTargetTable: 'sys_user',
@@ -610,6 +617,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _deleteCreatedRoleMap
 
 	_parseAccessAnalyzerToCSV: function (oResult, bValidateWithAccessAnalyzer) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var aCSV = [], sAccessString = '', sRead = '', sUpdate = '', sCreate = '', sDelete = '', sCreateConditions = '', sReadConditions = '', sUpdateConditions = '', sDeleteConditions = '', sCreateScripts = '', sReadScripts = '', sUpdateScripts = '', sDeleteScripts = '', oComplexACL = {};
 		if (oResult.hasOwnProperty('tables')) {
 			var fnParseFinalValue = function (sValue) {
@@ -713,7 +721,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _parseAccessAnalyzerToCSV
 
 	type: 'GlobalToolsSecurity',
-	version: '1.0.17',
+	version: '2.1.2',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -721,14 +729,14 @@ GlobalToolsSecurity.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2025-04-30 06:56:22</sys_created_on>
         <sys_id>0f562614c395e61016a2269dc0013163</sys_id>
-        <sys_mod_count>229</sys_mod_count>
+        <sys_mod_count>231</sys_mod_count>
         <sys_name>GlobalToolsSecurity</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_0f562614c395e61016a2269dc0013163</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-02-12 07:09:03</sys_updated_on>
+        <sys_updated_on>2026-06-03 16:01:28</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>0f562614c395e61016a2269dc0013163</id>

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step">
+    <sys_atf_step action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <callable_outputs/>
+        <copied_from display_value="Run Server Side Script">b469b5d21b25b510d5be777d8b4bcbe6</copied_from>
+        <description>Run Server Side Validation Script</description>
+        <display_name>Run Server Side Script</display_name>
+        <inputs/>
+        <mugshots_cache_json/>
+        <notes/>
+        <order>1</order>
+        <step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config>
+        <sys_class_name>sys_atf_step</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2026-06-01 06:11:36</sys_created_on>
+        <sys_id>f3dbb248c3150bd016a2269dc0013187</sys_id>
+        <sys_mod_count>24</sys_mod_count>
+        <sys_name>Run Server Side Script</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_atf_step_f3dbb248c3150bd016a2269dc0013187</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2026-06-06 08:59:50</sys_updated_on>
+        <table/>
+        <test display_value="GlobalToolsRecordReadComplex Tests">b7db3248c3150bd016a2269dc001318d</test>
+        <timeout/>
+        <warning_message/>
+    </sys_atf_step>
+    <sys_variable_value action="delete_multiple" query="document_key=f3dbb248c3150bd016a2269dc0013187"/>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>f3dbb248c3150bd016a2269dc0013187</document_key>
+        <order>200</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2026-06-01 06:11:36</sys_created_on>
+        <sys_id>73dbb248c3150bd016a2269dc001318b</sys_id>
+        <sys_mod_count>24</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2026-06-06 08:59:50</sys_updated_on>
+        <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
+&#13;
+	var bLog = false;&#13;
+&#13;
+	var _gtReadComplex = new global.GlobalToolsRecordReadComplex();&#13;
+	var _gtRecordWrite = new global.GlobalToolsRecordWrite();&#13;
+	var _gtATF = new global.GlobalToolsATF('GlobalToolsRecordReadComplex', _gtReadComplex, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
+&#13;
+	// 1 basic value read of a single known record&#13;
+	_gtATF.runATF('getData', /"user_name":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'] });&#13;
+&#13;
+	// 2 total record count is reported&#13;
+	_gtATF.runATF('getData', /"iNumberOfRecordsReturned":1/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'] });&#13;
+&#13;
+	// 3 camel case field label&#13;
+	_gtATF.runATF('getData', /"userName":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], bUseFieldCamelCaseLabel: true });&#13;
+&#13;
+	// 4 pascal case field label&#13;
+	_gtATF.runATF('getData', /"UserName":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], bUseFieldPascalCaseLabel: true });&#13;
+&#13;
+	// 5 display field returns the display_value / value object form&#13;
+	_gtATF.runATF('getData', /"user_name":\{"display_value"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aDisplayFields: ['user_name'] });&#13;
+&#13;
+	// 6 allfields read includes the field&#13;
+	_gtATF.runATF('getData', /"user_name":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['allfields'] });&#13;
+&#13;
+	// 7 requested fields narrow an allfields config to the requested set&#13;
+	_gtATF.runATF('getData', /"user_name":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['allfields'], aRequestedFields: ['user_name'] });&#13;
+&#13;
+	// 8 reference field dot walk produces the concatenated key (company is core on sys_user)&#13;
+	_gtATF.runATF('getData', /"company_name"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], oReferenceFields: { company: { aFields: ['name'] } } });&#13;
+&#13;
+	// 9 attachment info object is always added under the attachments key&#13;
+	_gtATF.runATF('getData', /"attachments":\{/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], bReturnAttachmentInfoObject: true });&#13;
+&#13;
+	// 10 sReturnType first returns a single object instead of an array&#13;
+	_gtATF.runATF('getData', /"data":\{"user_name":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], sReturnType: 'first' });&#13;
+&#13;
+	// 11 empty result sets the 204 no content status&#13;
+	_gtATF.runATF('getData', /"iResponseStatusCode":204/, { sTable: 'sys_user', sQuery: 'user_name=zzz_no_such_user_xyz', aFields: ['user_name'] });&#13;
+&#13;
+	// 12 bOnlyReturnOneRecord with more than one match raises 417&#13;
+	_gtATF.runATF('getData', /"iResponseStatusCode":417/, { sTable: 'sys_user', sQuery: '', bOnlyReturnOneRecord: true });&#13;
+&#13;
+	// 13 bErrorMaxReturnCount over the configured maximum raises 413&#13;
+	_gtATF.runATF('getData', /"iResponseStatusCode":413/, { sTable: 'sys_user', sQuery: '', bErrorMaxReturnCount: true, iMaxReturnCount: 1 });&#13;
+&#13;
+	// Generate test data	&#13;
+	var sCompanyId = '10000000000000000000000000000001';&#13;
+	var sManagerId = '20000000000000000000000000000001';&#13;
+	var sEmployeeId = '20000000000000000000000000000002';&#13;
+	var sRoleAId = '30000000000000000000000000000001';&#13;
+	var sRoleBId = '30000000000000000000000000000002';&#13;
+	var sHasRoleAId = '40000000000000000000000000000001';&#13;
+	var sHasRoleBId = '40000000000000000000000000000002';&#13;
+	var sIncidentId = '50000000000000000000000000000001';&#13;
+	_gtATF.generateTestData({&#13;
+		core_company: [&#13;
+			{ sys_id: sCompanyId, name: 'GTRRC Test Company' }&#13;
+		],&#13;
+		sys_user_role: [&#13;
+			{ sys_id: sRoleAId, name: 'gtrrc_test_role_a' },&#13;
+			{ sys_id: sRoleBId, name: 'gtrrc_test_role_b' }&#13;
+		],&#13;
+		sys_user: [&#13;
+			{ sys_id: sManagerId, user_name: 'gtrrc.manager', first_name: 'GTRRC', last_name: 'Manager', name: 'GTRRC Manager' },&#13;
+			{ sys_id: sEmployeeId, user_name: 'gtrrc.employee', first_name: 'GTRRC', last_name: 'Employee', name: 'GTRRC Employee', manager: sManagerId, company: sCompanyId }&#13;
+		],&#13;
+		sys_user_has_role: [&#13;
+			{ sys_id: sHasRoleAId, user: sEmployeeId, role: sRoleAId },&#13;
+			{ sys_id: sHasRoleBId, user: sEmployeeId, role: sRoleBId }&#13;
+		],&#13;
+		incident: [&#13;
+			{ sys_id: sIncidentId, short_description: 'GTRRC Test Incident' }&#13;
+		]&#13;
+	}, true); // create fixture, log errors&#13;
+&#13;
+	_gtRecordWrite.doRecord({sys_id: sIncidentId, comments: 'gtrrc journal entry 1 line one\ngtrrc journal entry 1 line two'}, {sTargetTable: 'incident', aQueryFields: ['sys_id']}, {});&#13;
+	_gtRecordWrite.doRecord({sys_id: sIncidentId, comments: 'gtrrc journal entry 2 line one\ngtrrc journal entry 2 line two'}, {sTargetTable: 'incident', aQueryFields: ['sys_id']}, {});&#13;
+	&#13;
+	// 14 PRIORITY 1: aDisplayValueTypes in value mode on a reference field returns the display_value/value object (regression guard for getInternalType)&#13;
+	_gtATF.runATF('getData', /"manager":\{"display_value":"GTRRC Manager","value":"[a-f0-9]{32}"\}/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['manager'], aDisplayValueTypes: ['reference'] }); // reference type triggers object form&#13;
+&#13;
+	// 15 aDisplayValueTypes that does NOT include the field's internal type leaves the raw sys_id value as a string&#13;
+	_gtATF.runATF('getData', /"manager":"[a-f0-9]{32}"/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['manager'], aDisplayValueTypes: ['date_time'] }); // type not listed keeps sys_id string&#13;
+&#13;
+	// 16 bLegacyDisplayValue with aDisplayValueTypes writes a flat &lt;field&gt;_dv key instead of the object&#13;
+	_gtATF.runATF('getData', /"manager_dv":"GTRRC Manager"/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['manager'], aDisplayValueTypes: ['reference'], bLegacyDisplayValue: true }); // legacy postfix form&#13;
+&#13;
+	// 17 custom legacy postfix is honoured&#13;
+	_gtATF.runATF('getData', /"manager__disp":"GTRRC Manager"/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['manager'], aDisplayValueTypes: ['reference'], bLegacyDisplayValue: true, sLegacyDisplayValuePostfix: '__disp' }); // custom postfix&#13;
+&#13;
+	// 18 PRIORITY 2: oRelatedTables join produces a child array keyed under the related table name (employee has 2 role records)&#13;
+	_gtATF.runATF('getData', /"sys_user_has_role":\[\{/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], oRelatedTables: { sys_user_has_role: { sKeySourceField: 'sys_id', sKeyTargetField: 'user', aFields: ['role'] } } }); // child join array&#13;
+&#13;
+	// 19 related table sReturnType reference keys the child result under the source field name&#13;
+	_gtATF.runATF('getData', /"sys_id":\{/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], oRelatedTables: { sys_user_has_role: { sKeySourceField: 'sys_id', sKeyTargetField: 'user', sReturnType: 'reference', aFields: ['role'] } } }); // reference keyed by source field&#13;
+&#13;
+	// 20 related table hidden return type flattens children into a flat array under the table key&#13;
+	_gtATF.runATF('getData', /"sys_user_has_role":\[\{"sys_id"/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], oRelatedTables: { sys_user_has_role: { sKeySourceField: 'sys_id', sKeyTargetField: 'user', sReturnType: 'hidden', bUniqueChildResultId: true, oRelatedTables: { sys_user_role: { sKeySourceField: 'role', sKeyTargetField: 'sys_id', aFields: ['sys_id', 'name'] } } } } }); // hidden flatten with unique ids&#13;
+&#13;
+	// 21 iRelatedTablesMandatoryTarget keeps only top records meeting the mandatory related count (employee has roles so it is kept)&#13;
+	_gtATF.runATF('getData', /"iNumberOfRecordsReturned":1/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], iRelatedTablesMandatoryTarget: 1, oRelatedTables: { sys_user_has_role: { sKeySourceField: 'sys_id', sKeyTargetField: 'user', bValidParentObject: true, aFields: ['role'] } } }); // mandatory related target met&#13;
+&#13;
+	// 22 LABELS: bUseFieldLabel uses the human readable dictionary label as the key&#13;
+	_gtATF.runATF('getData', /"User ID":"gtrrc.employee"/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], bUseFieldLabel: true }); // field label key&#13;
+&#13;
+	// 23 bUseTableCamelCaseLabel converts the related table key to camel case&#13;
+	_gtATF.runATF('getData', /"sysUserHasRole":\[/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], bUseTableCamelCaseLabel: true, oRelatedTables: { sys_user_has_role: { sKeySourceField: 'sys_id', sKeyTargetField: 'user', aFields: ['role'] } } }); // camel case related table label&#13;
+&#13;
+	// 24 bUseTablePascalCaseLabel converts the related table key to pascal case&#13;
+	_gtATF.runATF('getData', /"SysUserHasRole":\[/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], bUseTablePascalCaseLabel: true, oRelatedTables: { sys_user_has_role: { sKeySourceField: 'sys_id', sKeyTargetField: 'user', aFields: ['role'] } } }); // pascal case related table label&#13;
+&#13;
+	// 25 sTableName overrides the related result key with an explicit label&#13;
+	_gtATF.runATF('getData', /"roles":\[/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], oRelatedTables: { sys_user_has_role: { sKeySourceField: 'sys_id', sKeyTargetField: 'user', sTableName: 'roles', aFields: ['role'] } } }); // explicit related table label&#13;
+&#13;
+	// 26 sRefFieldConcatChar customises the join character for reference field keys (company populated on the fixture employee)&#13;
+	_gtATF.runATF('getData', /"company\.name":"GTRRC Test Company"/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], sRefFieldConcatChar: '.', oReferenceFields: { company: { aFields: ['name'] } } }); // custom concat char&#13;
+&#13;
+	// 27 ORDERING: aOrderByDesc path runs and returns the fixture rows&#13;
+	_gtATF.runATF('getData', /"user_name":"gtrrc/, { sTable: 'sys_user', sQuery: 'user_nameSTARTSWITHgtrrc.', aFields: ['user_name'], aOrderByDesc: ['user_name'], iMaxReturnCount: 1 }); // order by desc returns gtrrc.manager first&#13;
+&#13;
+	// 28 aQueryParamsOrderByFields (request override) takes precedence over aOrderBy and still returns rows&#13;
+	_gtATF.runATF('getData', /"user_name":"gtrrc.employee"/, { sTable: 'sys_user', sQuery: 'user_nameSTARTSWITHgtrrc.', aFields: ['user_name'], aOrderBy: ['sys_id'], aQueryParamsOrderByFields: ['user_name'], iMaxReturnCount: 1 }); // request order override (employee sorts before manager)&#13;
+&#13;
+	// 29 PAGING: iRequestReturnOffset with iMaxReturnCount pages the window and still reports the full matched count (2 fixture users)&#13;
+	_gtATF.runATF('getData', /"iNumberOfRecordsReturned":2/, { sTable: 'sys_user', sQuery: 'user_nameSTARTSWITHgtrrc.', aFields: ['user_name'], iMaxReturnCount: 1, iRequestReturnOffset: 1 }); // offset paging keeps full count&#13;
+&#13;
+	// 30 iRequestMaxReturnCount overrides the configured iMaxReturnCount default and returns the data envelope&#13;
+	_gtATF.runATF('getData', /"data":\[\{/, { sTable: 'sys_user', sQuery: 'user_nameSTARTSWITHgtrrc.', aFields: ['user_name'], iMaxReturnCount: 100, iRequestMaxReturnCount: 1 }); // request max overrides config&#13;
+&#13;
+	// 31 GR FLAGS: bNoWorkflow read path still returns the record&#13;
+	_gtATF.runATF('getData', /"user_name":"gtrrc.employee"/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], bNoWorkflow: true }); // no workflow read&#13;
+&#13;
+	// 32 bUseGlideRecordSecure read path returns the record for an admin caller&#13;
+	_gtATF.runATF('getData', /"user_name":"gtrrc.employee"/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], bUseGlideRecordSecure: true }); // GlideRecordSecure read&#13;
+&#13;
+	// 33 bNoDomain read path returns the record&#13;
+	_gtATF.runATF('getData', /"user_name":"gtrrc.employee"/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], bNoDomain: true }); // no domain read&#13;
+&#13;
+	// 34 ATTACHMENTS: bReturnAttachmentInfoArray adds the attachments key as an array form&#13;
+	_gtATF.runATF('getData', /"attachments":\[/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], bReturnAttachmentInfoArray: true }); // attachment array form&#13;
+&#13;
+	// 35 JOURNAL: oJournalFields reads the last comments journal entry into the comments key&#13;
+	_gtATF.runATF('getData', /comments":"/, { sTable: 'incident', sQuery: 'sys_id=' + sIncidentId, aFields: ['short_description'], oJournalFields: { comments: { iNumber: 1 } } }); // journal field last entry&#13;
+&#13;
+	// 36 oJournalFields with sReturnType array returns the journal entries as an array&#13;
+	_gtATF.runATF('getData', /comments":\["/, { sTable: 'incident', sQuery: 'sys_id=' + sIncidentId, aFields: ['short_description'], oJournalFields: { comments: { iNumber: -1, sReturnType: 'array' } } }); // journal array form&#13;
+&#13;
+	// 37 ATTRIBUTE PIVOT: oAttributeTable pivots matching rows onto the record under sFieldPrefix + name-field value (here a role assignment keyed by its role)&#13;
+	_gtATF.runATF('getData', new RegExp('"attr_' + sRoleAId + '"'), { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], oAttributeTable: { sBaseTableName: 'sys_user', sAttributeTableName: 'sys_user_has_role', sAttributeReferenceField: 'user', sAttributeNameField: 'role', sAttributeValueField: 'role', aCIAttributeNames: [sRoleAId, sRoleBId], sFieldPrefix: 'attr_' } }); // attribute pivot writes prefixed key&#13;
+&#13;
+	// 38 oAttributeTable does nothing when the configured base table does not match the record base (no attr_ key, record still returned)&#13;
+	_gtATF.runATF('getData', /"data":\[\{"user_name":"gtrrc.employee"\}\]/, { sTable: 'sys_user', sQuery: 'user_name=gtrrc.employee', aFields: ['user_name'], oAttributeTable: { sBaseTableName: 'cmdb', sAttributeTableName: 'sys_user_has_role', sAttributeReferenceField: 'user', sAttributeNameField: 'role', sAttributeValueField: 'role', aCIAttributeNames: [sRoleAId], sFieldPrefix: 'attr_' } }); // base table mismatch skips pivot, only user_name present&#13;
+&#13;
+	return _gtATF.endATF();&#13;
+})(outputs, steps, params, stepResult, assertEqual);</value>
+        <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
+    </sys_variable_value>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>f3dbb248c3150bd016a2269dc0013187</document_key>
+        <order>100</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2026-06-01 06:11:36</sys_created_on>
+        <sys_id>f3dbb248c3150bd016a2269dc001318a</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2026-06-01 06:11:36</sys_updated_on>
+        <value>3.1</value>
+        <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
+    </sys_variable_value>
+</record_update>

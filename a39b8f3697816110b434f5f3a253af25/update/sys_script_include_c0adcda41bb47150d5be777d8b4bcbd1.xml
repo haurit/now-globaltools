@@ -33,6 +33,15 @@ GlobalToolsRecordWrite.prototype = {
 			var bLog = (String(oConfig['bLog']) == 'true') ? true : false;
 			if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord oValues: ' + JSON.stringify(oValues)); }
 			if (bLog) { gs.info('GlobalToolsRecordWrite.doRecord oConfig: ' + JSON.stringify(oConfig)); }
+			var aJournalTypes = ['journal', 'journal_input', 'journal_list'];
+			var _gtTable = this._gtTable;
+			var _setFieldValue = function (grRecord, sField, oValue) {
+				if (aJournalTypes.indexOf(_gtTable.getInternalType(grRecord, sField)) != -1) {
+					grRecord[sField].setJournalEntry(oValue);
+				} else {
+					grRecord.setValue(sField, oValue);
+				} // if journal field
+			}; // function _setFieldValue
 			var sQuery = '', aQuery = [], bQueryEmptyFieldDone = false;
 			var bQueryEmptyFields = (String(oConfig['bQueryEmptyFields']) == 'true') ? true : false; // default is false
 			var aQueryFields = (Array.isArray(oConfig['aQueryFields'])) ? oConfig['aQueryFields'] : [oConfig['aQueryFields']];
@@ -104,19 +113,19 @@ GlobalToolsRecordWrite.prototype = {
 				} else {
 					if (oConfig['oValues']) {
 						Object.keys(oConfig['oValues']).forEach(function (sField) {
-							grRecord.setValue(sField, oConfig['oValues'][sField]);
+							_setFieldValue(grRecord, sField, oConfig['oValues'][sField]);
 						}); // each values field
 					} // if values
 					if (oValues['aTargetFields']) {
 						oValues['aTargetFields'].forEach(function (sField) {
 							if (oValues[sField]) {
-								grRecord.setValue(sField, oValues[sField]);
+								_setFieldValue(grRecord, sField, oValues[sField]);
 							} // if value
 						}); // each field
 					} else {
 						Object.keys(oValues).forEach(function (sField) {
 							if (oValues.hasOwnProperty(sField)) {
-								grRecord.setValue(sField, oValues[sField]);
+								_setFieldValue(grRecord, sField, oValues[sField]);
 							} // if has property;
 						}); // each field
 					} // if target fields
@@ -276,7 +285,7 @@ GlobalToolsRecordWrite.prototype = {
 	}, // function abortGRAction
 
 	type: 'GlobalToolsRecordWrite',
-	version: '1.0.11',
+	version: '2.1.2',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -284,13 +293,13 @@ GlobalToolsRecordWrite.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 09:59:44</sys_created_on>
         <sys_id>c0adcda41bb47150d5be777d8b4bcbd1</sys_id>
-        <sys_mod_count>35</sys_mod_count>
+        <sys_mod_count>39</sys_mod_count>
         <sys_name>GlobalToolsRecordWrite</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_c0adcda41bb47150d5be777d8b4bcbd1</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-04-19 18:40:38</sys_updated_on>
+        <sys_updated_on>2026-06-05 05:34:26</sys_updated_on>
     </sys_script_include>
 </record_update>
