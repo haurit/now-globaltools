@@ -14,14 +14,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>74cabd161b25b510d5be777d8b4bcbb3</sys_id>
-        <sys_mod_count>396</sys_mod_count>
+        <sys_mod_count>399</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_74cabd161b25b510d5be777d8b4bcbb3</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-03-29 12:48:04</sys_updated_on>
+        <sys_updated_on>2026-05-30 09:47:21</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRecordWriteValidate Tests">a44784251b6db110d5be777d8b4bcb92</test>
         <timeout/>
@@ -36,9 +36,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>56dabd161b25b510d5be777d8b4bcb3a</sys_id>
-        <sys_mod_count>396</sys_mod_count>
+        <sys_mod_count>399</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-03-29 12:48:04</sys_updated_on>
+        <sys_updated_on>2026-05-30 09:47:21</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -1619,6 +1619,8 @@
 			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');&#13;
 		}&#13;
 &#13;
+		//_gt.sleep(5000);&#13;
+&#13;
 	} // if not add new test&#13;
 &#13;
 	/* TODO TESTS:&#13;
@@ -1662,6 +1664,31 @@
 &#13;
 		// Put single test here for debugging START&#13;
 		&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aMandatoryFields': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+			'aFields': [{ 'sField': 'assignment_group', 'aKeys': ['name'] }, { 'sField': 'assigned_to', 'aKeys': ['user_name'] }],&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'origin_id': 'sugus0',&#13;
+			'origin_table': 'sugus1',&#13;
+			'calendar_duration': 'sugus2',&#13;
+			'assignment_group': 'Hardware',&#13;
+			'assigned_to': 'luke.wilson'&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_005', '400_020', '400_035', '400_036', '400_034'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 107 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
 &#13;
 		// Put single test here for debugging END&#13;
 &#13;

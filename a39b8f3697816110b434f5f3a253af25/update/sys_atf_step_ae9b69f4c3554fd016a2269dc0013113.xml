@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_step">
+    <sys_atf_step action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <callable_outputs/>
+        <copied_from display_value="Run Server Side Script">f3dbb248c3150bd016a2269dc0013187</copied_from>
+        <description>Run Server Side Validation Script</description>
+        <display_name>Run Server Side Script</display_name>
+        <inputs/>
+        <mugshots_cache_json/>
+        <notes/>
+        <order>1</order>
+        <step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config>
+        <sys_class_name>sys_atf_step</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2026-06-03 08:16:20</sys_created_on>
+        <sys_id>ae9b69f4c3554fd016a2269dc0013113</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_name>Run Server Side Script</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_atf_step_ae9b69f4c3554fd016a2269dc0013113</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2026-06-03 08:17:21</sys_updated_on>
+        <table/>
+        <test display_value="GlobalToolsScriptedREST Tests">5e9b69f4c3554fd016a2269dc001310c</test>
+        <timeout/>
+        <warning_message/>
+    </sys_atf_step>
+    <sys_variable_value action="delete_multiple" query="document_key=ae9b69f4c3554fd016a2269dc0013113"/>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>ae9b69f4c3554fd016a2269dc0013113</document_key>
+        <order>100</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2026-06-03 08:16:20</sys_created_on>
+        <sys_id>669b69f4c3554fd016a2269dc001319e</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2026-06-03 08:16:20</sys_updated_on>
+        <value>3.1</value>
+        <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
+    </sys_variable_value>
+    <sys_variable_value action="INSERT_OR_UPDATE">
+        <document>sys_atf_step</document>
+        <document_key>ae9b69f4c3554fd016a2269dc0013113</document_key>
+        <order>200</order>
+        <sys_class_name>sys_variable_value</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2026-06-03 08:16:20</sys_created_on>
+        <sys_id>e29b69f4c3554fd016a2269dc001319f</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2026-06-03 08:17:21</sys_updated_on>
+        <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
+&#13;
+	var bLog = false;&#13;
+	var _gtSREST = new global.GlobalToolsScriptedREST();&#13;
+	var _gtATF = new global.GlobalToolsATF('GlobalToolsScriptedREST', _gtSREST, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
+&#13;
+	var fnRequest = function (oQueryParams, oBodyData, sUri) {&#13;
+		return { queryParams: (oQueryParams || {}), pathParams: {}, body: { data: (oBodyData || {}) }, uri: (sUri || '/api/now/globaltools/atf') };&#13;
+&#13;
+	}; // function fnRequest mocks a scripted REST request&#13;
+	var fnResponse = function () {&#13;
+		return { _status: '', _body: null, _error: null, _contentType: '', setContentType: function (s) { this['_contentType'] = s; }, setStatus: function (i) { this['_status'] = i; }, setBody: function (o) { this['_body'] = o; }, setError: function (e) { this['_error'] = e; } };&#13;
+	}; // function fnResponse mocks a scripted REST response and records calls&#13;
+&#13;
+	// getData (read) is exercised in JSON mode so no real response is required&#13;
+	_gtATF.runATF('getData', /"incident":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} } }, true); // basic keyed result&#13;
+	_gtATF.runATF('getData', /"iNumberOfRecordsReturned":/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, bReturnNumberOfRecords: true }, true); // record count requested&#13;
+	_gtATF.runATF('getData', /"Incident":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, bUseTableLabel: true }, true); // table label key&#13;
+	_gtATF.runATF('getData', /"sysUser":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { sys_user: {} }, bUseTableCamelCaseLabel: true }, true); // camel case table label key&#13;
+	_gtATF.runATF('getData', {}, fnRequest(), fnResponse(), { sAction: 'insert', oTables: { incident: {} } }, true); // non read action rejected (405_002)&#13;
+	_gtATF.runATF('getData', {}, fnRequest(), fnResponse(), 'notanobject', true); // missing config object (405_001)&#13;
+	_gtATF.runATF('getData', {}, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, aMandatoryQueryParams: 'company' }, true); // mandatory query param missing (400_001)&#13;
+	_gtATF.runATF('getData', {}, fnRequest({ encoded_query: ['zzz_not_a_field_xyz=1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, sCheckEncodedQueryParam: 'encoded_query' }, true); // invalid encoded query (400_007)&#13;
+	_gtATF.runATF('getData', /"incident":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, bLogToTable: true, sLogTable: 'syslog' }, true); // logRequest path via getData logging&#13;
+	&#13;
+	// setData (write) returns nothing, so assert against the mock response it populates&#13;
+	var oRespBadAction = fnResponse();&#13;
+	_gtSREST.setData(fnRequest(null, { incident: {} }), oRespBadAction, { sAction: 'badaction', oTables: { incident: {} } });&#13;
+	if (!oRespBadAction['_error']) { _gtATF.addError('setData', 'invalid action did not set a response error.'); } // if no error&#13;
+	var oRespNoBody = fnResponse();&#13;
+	_gtSREST.setData(fnRequest(null, {}), oRespNoBody, { sAction: 'insert', oTables: { incident: {} } });&#13;
+	if (!oRespNoBody['_error']) { _gtATF.addError('setData', 'empty body did not set a response error.'); } // if no error&#13;
+	var oRespNoTable = fnResponse();&#13;
+	_gtSREST.setData(fnRequest(null, { problem: {} }), oRespNoTable, { sAction: 'insert', oTables: { incident: {} } });&#13;
+	if (!oRespNoTable['_error']) { _gtATF.addError('setData', 'missing body table did not set a response error.'); } // if no error&#13;
+	var oRespNoConfig = fnResponse();&#13;
+	_gtSREST.setData(fnRequest(null, { incident: {} }), oRespNoConfig, 'notanobject');&#13;
+	if (!oRespNoConfig['_error']) { _gtATF.addError('setData', 'missing config did not set a response error.'); } // if no error&#13;
+	var oRespInsert = fnResponse();&#13;
+	var sMarker = 'GlobalToolsScriptedREST ATF ' + new GlideDateTime().getNumericValue(); // unique short description&#13;
+	_gtSREST.setData(fnRequest(null, { incident: { short_description: sMarker } }), oRespInsert, { sAction: 'insert', oTables: { incident: {} }, bNoWorkflow: true });&#13;
+	var sNewIncidentId = (oRespInsert['_body']) ? String(oRespInsert['_body']['sys_id']) : ''; // created record id&#13;
+	if (oRespInsert['_status'] != 201) { _gtATF.addError('setData', 'insert did not return status 201, got: ' + oRespInsert['_status']); } // if not 201&#13;
+	if ((!sNewIncidentId) || (sNewIncidentId.length != 32)) { _gtATF.addError('setData', 'insert did not return a valid sys_id, got: ' + sNewIncidentId); } // if no sys_id&#13;
+	var grNewIncident = new GlideRecord('incident'); // clean up the created test record&#13;
+	if ((sNewIncidentId) &amp;&amp; (grNewIncident.get(sNewIncidentId))) { grNewIncident.deleteRecord(); } // if cleanup&#13;
+&#13;
+	return _gtATF.endATF();&#13;
+	&#13;
+})(outputs, steps, params, stepResult, assertEqual);</value>
+        <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
+    </sys_variable_value>
+</record_update>

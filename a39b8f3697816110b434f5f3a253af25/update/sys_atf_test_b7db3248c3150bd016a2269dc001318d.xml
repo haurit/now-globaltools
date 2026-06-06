@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_atf_test">
+    <sys_atf_test action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <copied_from display_value="GlobalToolsArray Tests">3e9644e11b6db110d5be777d8b4bcb58</copied_from>
+        <description>Test the GlobalToolsRecordReadComplex Script Include</description>
+        <enable_parameterized_testing>false</enable_parameterized_testing>
+        <fail_on_server_error>true</fail_on_server_error>
+        <name>GlobalToolsRecordReadComplex Tests</name>
+        <parameters/>
+        <remember/>
+        <sn_atf_tg_generated>false</sn_atf_tg_generated>
+        <sys_class_name>sys_atf_test</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2026-06-01 06:11:36</sys_created_on>
+        <sys_id>b7db3248c3150bd016a2269dc001318d</sys_id>
+        <sys_mod_count>4</sys_mod_count>
+        <sys_name>GlobalToolsRecordReadComplex Tests</sys_name>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_atf_test_b7db3248c3150bd016a2269dc001318d</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2026-06-03 08:15:48</sys_updated_on>
+        <test_origin>manual</test_origin>
+    </sys_atf_test>
+    <sys_variable_value action="delete_multiple" query="document_key=b7db3248c3150bd016a2269dc001318d"/>
+</record_update>

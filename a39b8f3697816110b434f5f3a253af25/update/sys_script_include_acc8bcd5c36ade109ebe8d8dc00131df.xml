@@ -32,6 +32,7 @@ GlobalToolsDateTime.prototype = {
 	}, // function checkAccess
 
 	formatMS: function (iMilliseconds) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sResult = '';
 		var sPostfix = ' ms';
 		if (iMilliseconds > 999) {
@@ -181,6 +182,7 @@ GlobalToolsDateTime.prototype = {
 	}, // function stopTimer
 
 	getTimer: function (sType) {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		var sInput = JSON.stringify(this._gtCache.getValue(this.sClass));
 		if (sType == 'debug') {
 			return JSON.stringify(this._gtCache.getValue(this.sClass));
@@ -251,7 +253,7 @@ GlobalToolsDateTime.prototype = {
 	}, // function _evaluateTimer
 
 	type: 'GlobalToolsDateTime',
-	version: '1.0.10',
+	version: '2.1.2',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -259,14 +261,14 @@ GlobalToolsDateTime.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2024-12-17 08:37:47</sys_created_on>
         <sys_id>acc8bcd5c36ade109ebe8d8dc00131df</sys_id>
-        <sys_mod_count>67</sys_mod_count>
+        <sys_mod_count>69</sys_mod_count>
         <sys_name>GlobalToolsDateTime</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_acc8bcd5c36ade109ebe8d8dc00131df</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-02-14 07:37:10</sys_updated_on>
+        <sys_updated_on>2026-06-03 15:58:59</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>acc8bcd5c36ade109ebe8d8dc00131df</id>
