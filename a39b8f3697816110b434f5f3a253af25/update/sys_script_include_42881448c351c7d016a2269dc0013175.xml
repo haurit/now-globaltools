@@ -124,8 +124,12 @@ GlobalToolsScriptedREST.prototype = {
 				this._setError('405_002', [], [sAction]);
 			} // if not a write action
 			if (!this.bError) {
-				this.oBody = this._getValue('body/data', {}, this.oRequest); // request payload
-				if (Object.keys(this.oBody).length == 0) {
+				try {
+					this.oBody = this._getValue('body/data', {}, this.oRequest); // request payload
+				} catch (oException) {
+					this._setError('400_002', [], [String(oException)]); // body unreadable (e.g. HTTP DELETE wired to delete action)
+				} // try read body
+				if ((!this.bError) && (Object.keys(this.oBody).length == 0)) {
 					this._setError('400_002');
 				} // if empty body
 			} // if action valid
@@ -540,11 +544,17 @@ GlobalToolsScriptedREST.prototype = {
 	************************************************************************************************************/
 
 	// Impersonate for the whole request (config sImpersonateUser or body user). The window wraps all tables.
+	// Body access is gated by sAction because oRequest.body throws on HTTP GET/DELETE - try/catch is a defensive belt for any other method that rejects body access.
 	_startImpersonation: function () {
 		this.sOriginalUserId = ''; // nothing impersonated yet
 		var sUserIdentifier = this._getValue('sImpersonateUser', '', this.oConfig);
-		var sBodyUser = this._getValue('body/data/user', '', this.oRequest);
-		sUserIdentifier = (sBodyUser) ? sBodyUser : sUserIdentifier;
+		var sAction = this._getValue('sAction', '', this.oConfig);
+		if (['insert', 'update', 'save', 'delete'].indexOf(sAction) != -1) { // write path may carry a body
+			try {
+				var sBodyUser = this._getValue('body/data/user', '', this.oRequest);
+				sUserIdentifier = (sBodyUser) ? sBodyUser : sUserIdentifier;
+			} catch (oException) { /* request method rejects body access, fall through to config value */ } // try body user
+		} // if write action
 		if (sUserIdentifier) {
 			var sImpersonateUserId = this._resolveUserId(sUserIdentifier); // identifier (name/sys_id/email) -> sys_id
 			if (!sImpersonateUserId) {
@@ -616,20 +626,19 @@ GlobalToolsScriptedREST.prototype = {
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
-};
-]]></script>
+};]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-05-31 18:18:23</sys_created_on>
         <sys_id>42881448c351c7d016a2269dc0013175</sys_id>
-        <sys_mod_count>4</sys_mod_count>
+        <sys_mod_count>6</sys_mod_count>
         <sys_name>GlobalToolsScriptedREST</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_42881448c351c7d016a2269dc0013175</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-06-05 05:25:04</sys_updated_on>
+        <sys_updated_on>2026-06-07 10:19:31</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>42881448c351c7d016a2269dc0013175</id>

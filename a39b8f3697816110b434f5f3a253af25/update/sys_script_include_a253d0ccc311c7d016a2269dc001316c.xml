@@ -97,6 +97,11 @@ GlobalToolsRecordReadComplex.prototype = {
 
 	_getTableData: function (oReadConfig, bIsRelated) {
 		var sTable = this._getValue('sTable', '', oReadConfig);
+		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
+			this._setError('400_001', [String(sTable)]);
+			gs.warn('GlobalToolsRecordReadComplex._getTableData called with invalid sTable: ' + String(sTable) + ' bIsRelated=' + String(bIsRelated));
+			return (this._getValue('sReturnType', 'array', oReadConfig) === 'array') ? [] : {};
+		} // if invalid table
 		var sReturnType = this._getValue('sReturnType', 'array', oReadConfig);
 		var sQuery = this._getValue('sQuery', '', oReadConfig);
 		var aFields = this._getValue('aFields', [], oReadConfig);
@@ -605,14 +610,14 @@ GlobalToolsRecordReadComplex.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-05-31 17:55:55</sys_created_on>
         <sys_id>a253d0ccc311c7d016a2269dc001316c</sys_id>
-        <sys_mod_count>9</sys_mod_count>
+        <sys_mod_count>12</sys_mod_count>
         <sys_name>GlobalToolsRecordReadComplex</sys_name>
         <sys_package display_value="Global" source="global">global</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a253d0ccc311c7d016a2269dc001316c</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-06-04 13:09:07</sys_updated_on>
+        <sys_updated_on>2026-06-07 11:17:36</sys_updated_on>
     </sys_script_include>
     <sys_claim action="INSERT_OR_UPDATE">
         <claim_owner_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</claim_owner_scope>
