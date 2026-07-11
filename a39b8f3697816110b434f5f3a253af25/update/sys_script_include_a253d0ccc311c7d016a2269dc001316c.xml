@@ -5,8 +5,8 @@
         <api_name>global.GlobalToolsRecordReadComplex</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development&#13;
-Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
+        <description>Tools to support (scoped) app development
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.
 Probably obsolete with ECMA 21</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsRecordReadComplex</name>
@@ -274,7 +274,10 @@ GlobalToolsRecordReadComplex.prototype = {
 				sReferenceFieldLabel = ((this.bUseFieldLabel) && (sReferenceFieldLabel)) ? sReferenceFieldLabel : sReferenceField;
 			} // if camel case, variables or field label
 		} // if reference field
-		aFields.forEach(function (sField) {
+		aFields.forEach(function (oFieldDef) {
+			var bFieldObject = this._gtObject.isObject(oFieldDef);
+			var sField = (bFieldObject) ? this._getValue('sField', '', oFieldDef) : oFieldDef;
+			var sLabelOverride = (bFieldObject) ? this._getValue('sLabel', '', oFieldDef) : '';
 			var sFieldLabel = sField;
 			var sInternalType = '';
 			var oQuestion;
@@ -299,6 +302,9 @@ GlobalToolsRecordReadComplex.prototype = {
 			} else if (this.bUseFieldLabel) {
 				sFieldLabel = (grRecord.isValidField(sField)) ? String(grRecord[sField].getLabel()) : sField;
 			} // if label style
+			if (sLabelOverride) {
+				sFieldLabel = sLabelOverride; // explicit output key override (sLabel)
+			} // if label override
 			if (!sReferenceField) {
 				var sValue = String(this._gtObject.getValue('value', '', { 'value': grRecord.getValue(sField) }));
 				if ((!bDisplay) && (this._gtArray.isValidArray(this.aDisplayValueTypes))) {
@@ -315,13 +321,13 @@ GlobalToolsRecordReadComplex.prototype = {
 					oRecord[sFieldLabel] = sValue;
 				} // if display
 			} else {
-				this._getReferenceFieldValue(grRecord, oRecord, sField, sFieldLabel, sReferenceField, sReferenceFieldLabel, oQuestion, bDisplay);
+				this._getReferenceFieldValue(grRecord, oRecord, sField, sFieldLabel, sReferenceField, sReferenceFieldLabel, oQuestion, bDisplay, sLabelOverride);
 			} // if direct or reference field
 		}, this); // each field
 	}, // function _getFieldValues
 
-	_getReferenceFieldValue: function (grRecord, oRecord, sField, sFieldLabel, sReferenceField, sReferenceFieldLabel, oQuestion, bDisplay) {
-		var sKey = sReferenceFieldLabel + this.sRefFieldConcatChar + sFieldLabel;
+	_getReferenceFieldValue: function (grRecord, oRecord, sField, sFieldLabel, sReferenceField, sReferenceFieldLabel, oQuestion, bDisplay, sLabelOverride) {
+		var sKey = (sLabelOverride) ? sLabelOverride : (sReferenceFieldLabel + this.sRefFieldConcatChar + sFieldLabel);
 		if ((sReferenceField != 'variables') && (!grRecord[sReferenceField])) {
 			oRecord[sKey] = '';
 			return;
@@ -436,7 +442,7 @@ GlobalToolsRecordReadComplex.prototype = {
 			} // if related table query
 			var sReturnType = this._getValue('sReturnType', '', oRelatedTable);
 			var sRelatedTable = (String(sRelatedTableKey).indexOf('|') != -1) ? sRelatedTableKey.split('|')[0] : sRelatedTableKey;
-			var sTableLabel = this._getValue('sTableName', '', oRelatedTable);
+			var sTableLabel = this._getValue('sLabel', this._getValue('sTableName', '', oRelatedTable), oRelatedTable); // sLabel preferred, sTableName kept for legacy compat
 			sTableLabel = (sTableLabel) ? sTableLabel : this._getTableLabel(sRelatedTableKey);
 			var oChildConfig = {
 				'sTable': sRelatedTable,
@@ -460,6 +466,7 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _getRelTables
 
 	_assignRelatedResult: function (oRecord, oRelatedTable, sRelatedTableKey, sKeySourceField, sTableLabel, sReturnType, oRelResult) {
+		var bMergeToParent = this._getValue('bMergeToParent', false, oRelatedTable);
 		if (sReturnType == 'first') {
 			Object.keys(oRelResult).forEach(function (sRelResultField) {
 				oRecord[sTableLabel + this.sRefFieldConcatChar + sRelResultField] = oRelResult[sRelResultField];
@@ -467,7 +474,14 @@ GlobalToolsRecordReadComplex.prototype = {
 		} else if (sReturnType == 'reference') {
 			oRecord[sKeySourceField] = oRelResult;
 		} else if (sReturnType == 'hidden') {
-			oRecord[this._getTableLabel(sRelatedTableKey)] = this._flattenHiddenResult(oRelResult, this._getValue('bUniqueChildResultId', false, oRelatedTable));
+			var aFlattened = this._flattenHiddenResult(oRelResult, this._getValue('bUniqueChildResultId', false, oRelatedTable));
+			if (bMergeToParent) {
+				this._mergeToParent(oRecord, aFlattened, oRelatedTable, sTableLabel);
+			} else if (this._gtArray.isValidArray(aFlattened)) {
+				oRecord[sTableLabel] = aFlattened; // plain hidden flat array (omit key when empty), now honors the sLabel/sTableName override
+			} // if merge to parent
+		} else if (bMergeToParent) {
+			this._mergeToParent(oRecord, oRelResult, oRelatedTable, sTableLabel); // non-hidden related table merged directly onto the parent (e.g. a bundle/subscription join flattened onto its root)
 		} else {
 			oRecord[sTableLabel] = oRelResult;
 		} // if return type
@@ -483,10 +497,9 @@ GlobalToolsRecordReadComplex.prototype = {
 			Object.keys(oChildResult).forEach(function (sChildResultTable) {
 				var oChild = oChildResult[sChildResultTable];
 				var oChildRecord = (this._gtArray.isValidArray(oChild)) ? oChild[0] : oChild;
-				if (!oChildRecord) {
-					aChildRecords.push('');
-					return;
-				} // if empty child
+				if (!this._gtObject.isObject(oChildRecord)) {
+					return; // skip empty children (no '' placeholders in the result)
+				} // if not a populated child
 				if ((bUniqueChildResultId) && (this._gtObject.hasValue('sys_id', oChildRecord))) {
 					var sUniqueId = oChildRecord['sys_id'];
 					if (!oUniqueCache.hasOwnProperty(sUniqueId)) {
@@ -500,6 +513,71 @@ GlobalToolsRecordReadComplex.prototype = {
 		}, this); // each child result
 		return aChildRecords;
 	}, // function _flattenHiddenResult
+
+	_mergeToParent: function (oRecord, aCandidates, oRelatedTable, sLabel) {
+		var bMergeArray = this._getValue('bMergeArray', false, oRelatedTable);
+		var bUseLast = this._getValue('bMergeToParentUseLast', false, oRelatedTable);
+		var aNonEmpty = [];
+		if (this._gtArray.isValidArray(aCandidates)) {
+			aNonEmpty = aCandidates.filter(function (oEntry) {
+				return this._hasPopulatedValue(oEntry); // keep only records that carry at least one non-empty value (a record of all-'' fields is treated as no match)
+			}, this); // keep only populated record objects
+		} // if candidates array
+		if (aNonEmpty.length == 0) {
+			this._getMergeFieldLabels(oRelatedTable).forEach(function (sMergeLabel) {
+				oRecord[sMergeLabel] = ''; // no match found, still emit the declared merge fields so the parent schema stays consistent
+			}); // each declared merge field
+			return;
+		} // if none
+		if (bMergeArray) {
+			oRecord[sLabel] = aNonEmpty; // multi-hit: array of non-empty records
+		} else {
+			var oWinner = (bUseLast) ? aNonEmpty[aNonEmpty.length - 1] : aNonEmpty[0];
+			Object.keys(oWinner).forEach(function (sField) {
+				oRecord[sField] = oWinner[sField]; // merge winning record's fields onto parent
+			}); // each field
+		} // if array mode
+	}, // function _mergeToParent
+
+	_hasPopulatedValue: function (oEntry) {
+		if (!this._gtObject.isObject(oEntry)) {
+			return false; // not a record object
+		} // if not object
+		var bPopulated = false;
+		Object.keys(oEntry).forEach(function (sKey) {
+			var oFieldValue = oEntry[sKey];
+			if ((oFieldValue !== '') && (oFieldValue !== null) && (oFieldValue !== undefined)) {
+				bPopulated = true; // a non-empty scalar, object (display_value/value form) or array counts as populated
+			} // if value populated
+		}); // each field
+		return bPopulated;
+	}, // function _hasPopulatedValue
+
+	_getMergeFieldLabels: function (oRelatedTable) {
+		var aLabels = [];
+		this._getValue('aFields', [], oRelatedTable).forEach(function (oFieldDef) {
+			var bFieldObject = this._gtObject.isObject(oFieldDef);
+			var sField = (bFieldObject) ? this._getValue('sField', '', oFieldDef) : oFieldDef;
+			var sLabelOverride = (bFieldObject) ? this._getValue('sLabel', '', oFieldDef) : '';
+			aLabels.push(sLabelOverride || sField);
+		}, this); // each direct field
+		var oReferenceFields = this._getValue('oReferenceFields', {}, oRelatedTable);
+		Object.keys(oReferenceFields).forEach(function (sReferenceField) {
+			this._getValue('aFields', [], oReferenceFields[sReferenceField]).forEach(function (oFieldDef) {
+				var bFieldObject = this._gtObject.isObject(oFieldDef);
+				var sField = (bFieldObject) ? this._getValue('sField', '', oFieldDef) : oFieldDef;
+				var sLabelOverride = (bFieldObject) ? this._getValue('sLabel', '', oFieldDef) : '';
+				aLabels.push(sLabelOverride || (sReferenceField + this.sRefFieldConcatChar + sField));
+			}, this); // each reference field entry
+		}, this); // each reference field
+		var oNestedRelatedTables = this._getValue('oRelatedTables', {}, oRelatedTable);
+		Object.keys(oNestedRelatedTables).forEach(function (sNestedKey) {
+			if (this._getValue('bMergeToParent', false, oNestedRelatedTables[sNestedKey])) {
+				aLabels = aLabels.concat(this._getMergeFieldLabels(oNestedRelatedTables[sNestedKey])); // nested merge chain contributes its own labels
+			} // if nested table also merges to parent
+		}, this); // each nested related table
+		return aLabels;
+	}, // function _getMergeFieldLabels
 
 	_getHistoryWalkRecord: function (grRecord) {
 		if (!grRecord) {
@@ -583,9 +661,10 @@ GlobalToolsRecordReadComplex.prototype = {
 		if (aFields[0] == 'allfields') {
 			return this.aRequestedFields;
 		} // if all fields configured
-		return this.aRequestedFields.filter(function (sField) {
-			return (aFields.indexOf(sField) != -1);
-		}); // only requested fields that are configured
+		return aFields.filter(function (oFieldDef) {
+			var sField = (this._gtObject.isObject(oFieldDef)) ? this._getValue('sField', '', oFieldDef) : oFieldDef;
+			return (this.aRequestedFields.indexOf(sField) != -1);
+		}, this); // only configured fields that were requested (keeps sLabel field objects intact)
 	}, // function _filterRequestedFields
 
 	_setError: function (sErrorCode, aErrorDetailArgs) {
@@ -610,28 +689,28 @@ GlobalToolsRecordReadComplex.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-05-31 17:55:55</sys_created_on>
         <sys_id>a253d0ccc311c7d016a2269dc001316c</sys_id>
-        <sys_mod_count>13</sys_mod_count>
+        <sys_mod_count>16</sys_mod_count>
         <sys_name>GlobalToolsRecordReadComplex</sys_name>
         <sys_package display_value="Global" source="global">global</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a253d0ccc311c7d016a2269dc001316c</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-06-08 05:46:37</sys_updated_on>
+        <sys_updated_on>2026-07-10 12:49:01</sys_updated_on>
     </sys_script_include>
     <sys_claim action="INSERT_OR_UPDATE">
         <claim_owner_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</claim_owner_scope>
         <claim_timestamp>19e7f37175c0000001</claim_timestamp>
         <metadata_update_name>sys_script_include_a253d0ccc311c7d016a2269dc001316c</metadata_update_name>
         <previous_claim_app_version>2.1.1</previous_claim_app_version>
-        <previous_claim_name>Global Tools</previous_claim_name>
+        <previous_claim_name/>
         <previous_claim_scope>a39b8f3697816110b434f5f3a253af25</previous_claim_scope>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-05-31 18:06:17</sys_created_on>
+        <sys_created_on>2026-07-10 12:38:04</sys_created_on>
         <sys_id>8bd59404c351c7d016a2269dc0013106</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-05-31 18:06:17</sys_updated_on>
+        <sys_updated_on>2026-07-10 12:38:04</sys_updated_on>
     </sys_claim>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a253d0ccc311c7d016a2269dc001316c</id>
