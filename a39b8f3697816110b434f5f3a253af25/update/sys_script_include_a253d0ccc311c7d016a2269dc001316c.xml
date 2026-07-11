@@ -54,7 +54,9 @@ GlobalToolsRecordReadComplex.prototype = {
 		this._setReadGlobals(oReadConfig);
 		var oResult = { 'data': [], 'iNumberOfRecordsReturned': 0, 'iResponseStatusCode': 200, 'bError': false, 'aErrorMessages': [] };
 		try {
+			if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getTableData'); }
 			oResult['data'] = this._getTableData(oReadConfig, false);
+			if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getTableData'); }
 		} catch (oException) {
 			this._setError('500_001', [String(oException)]);
 		} // try read
@@ -102,6 +104,7 @@ GlobalToolsRecordReadComplex.prototype = {
 			gs.warn('GlobalToolsRecordReadComplex._getTableData called with invalid sTable: ' + String(sTable) + ' bIsRelated=' + String(bIsRelated));
 			return (this._getValue('sReturnType', 'array', oReadConfig) === 'array') ? [] : {};
 		} // if invalid table
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getTableData/' + sTable); }
 		var sReturnType = this._getValue('sReturnType', 'array', oReadConfig);
 		var sQuery = this._getValue('sQuery', '', oReadConfig);
 		var aFields = this._getValue('aFields', [], oReadConfig);
@@ -135,6 +138,7 @@ GlobalToolsRecordReadComplex.prototype = {
 			aFields = this._filterRequestedFields(aFields);
 			aDisplayFields = this._filterRequestedFields(aDisplayFields);
 		} // if top table
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getTableData/' + sTable + '/query'); }
 		var grRecord = (this.bUseGlideRecordSecure) ? new GlideRecordSecure(sTable) : new GlideRecord(sTable);
 		if (this.bNoWorkflow) {
 			grRecord.setWorkflow(false);
@@ -146,6 +150,8 @@ GlobalToolsRecordReadComplex.prototype = {
 		if (!bIsRelated) { this.iNumberOfRecordsReturned = Number(sRecordCount); }
 		if ((bErrorMaxReturnCount) && (Number(sRecordCount) > Number(iMaxReturnCount))) {
 			this._setError('413_001', [iMaxReturnCount, sRecordCount]);
+			if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getTableData/' + sTable + '/query'); }
+			if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getTableData/' + sTable); }
 			return {};
 		} // if error on max count
 		if (iReturnOffset) {
@@ -161,6 +167,8 @@ GlobalToolsRecordReadComplex.prototype = {
 		} else {
 			grRecord.query();
 		} // if no domain
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getTableData/' + sTable + '/query'); }
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getTableData/' + sTable); }
 		if ((bOnlyReturnOneRecord) && (sRecordCount > 1)) {
 			this._setError('417_001', [sRecordCount]);
 			return {};
@@ -224,6 +232,7 @@ GlobalToolsRecordReadComplex.prototype = {
 		if ((sTable == sRecordClassName) && (!this.bUseGlideRecordSecure)) {
 			return grRecord;
 		} // if record is already the class record
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getClassRecord'); }
 		var grRecordClass = new GlideRecord(sRecordClassName);
 		if ((this.bNoDomain) || (this.bNoWorkflow)) {
 			grRecordClass.addQuery('sys_id', sSysId);
@@ -239,6 +248,7 @@ GlobalToolsRecordReadComplex.prototype = {
 		} else {
 			grRecordClass.get(sSysId);
 		} // if no domain or workflow
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getClassRecord'); }
 		return grRecordClass;
 	}, // function _getClassRecord
 
@@ -261,6 +271,7 @@ GlobalToolsRecordReadComplex.prototype = {
 		if (!grRecord) {
 			return;
 		} // if no record
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getFieldValues'); }
 		var sReferenceFieldLabel = '';
 		if (sReferenceField) {
 			if (this.bUseFieldCamelCaseLabel) {
@@ -324,6 +335,7 @@ GlobalToolsRecordReadComplex.prototype = {
 				this._getReferenceFieldValue(grRecord, oRecord, sField, sFieldLabel, sReferenceField, sReferenceFieldLabel, oQuestion, bDisplay, sLabelOverride);
 			} // if direct or reference field
 		}, this); // each field
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getFieldValues'); }
 	}, // function _getFieldValues
 
 	_getReferenceFieldValue: function (grRecord, oRecord, sField, sFieldLabel, sReferenceField, sReferenceFieldLabel, oQuestion, bDisplay, sLabelOverride) {
@@ -332,6 +344,7 @@ GlobalToolsRecordReadComplex.prototype = {
 			oRecord[sKey] = '';
 			return;
 		} // if no reference value
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getReferenceFieldValue'); }
 		var sValue = '';
 		var sDisplayValue = '';
 		var sInternalType = '';
@@ -357,9 +370,11 @@ GlobalToolsRecordReadComplex.prototype = {
 		} else {
 			oRecord[sKey] = sValue;
 		} // if display
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getReferenceFieldValue'); }
 	}, // function _getReferenceFieldValue
 
 	_getJournalFieldValues: function (grRecord, oRecord, oJournalFields) {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getJournalFieldValues'); }
 		Object.keys(oJournalFields).forEach(function (sField) {
 			if ((!grRecord.isValidField(sField)) || ((this.bUseGlideRecordSecure) && (!grRecord[sField].canRead()))) {
 				return; // invalid or unreadable journal field
@@ -374,9 +389,11 @@ GlobalToolsRecordReadComplex.prototype = {
 				oRecord[sField] = String(grRecord[sField].getJournalEntry(iNumber));
 			} // if number and return type
 		}, this); // each journal field
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getJournalFieldValues'); }
 	}, // function _getJournalFieldValues
 
 	_getRefFieldValues: function (grRecord, oRecord, oReferenceFields) {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getRefFieldValues'); }
 		Object.keys(oReferenceFields).forEach(function (sReferenceField) {
 			var aFields = this._getValue('aFields', [], oReferenceFields[sReferenceField]);
 			var aDisplayFields = this._getValue('aDisplayFields', [], oReferenceFields[sReferenceField]);
@@ -397,6 +414,7 @@ GlobalToolsRecordReadComplex.prototype = {
 			this._getFieldValues(grRecord, oRecord, aFields, sReferenceField, false);
 			this._getFieldValues(grRecord, oRecord, aDisplayFields, sReferenceField, true);
 		}, this); // each reference field
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getRefFieldValues'); }
 	}, // function _getRefFieldValues
 
 	_getAttributeTables: function (grRecord, oRecord, oAttributeTable) {
@@ -409,6 +427,7 @@ GlobalToolsRecordReadComplex.prototype = {
 		if (!sAttributeTableName) {
 			return; // no attribute table
 		} // if no attribute table
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getAttributeTables'); }
 		var sAttributeReferenceField = this._getValue('sAttributeReferenceField', '', oAttributeTable);
 		var sAttributeNameField = this._getValue('sAttributeNameField', '', oAttributeTable);
 		var sAttributeValueField = this._getValue('sAttributeValueField', '', oAttributeTable);
@@ -420,6 +439,7 @@ GlobalToolsRecordReadComplex.prototype = {
 		while (grAttribute.next()) {
 			oRecord[sFieldPrefix + grAttribute.getValue(sAttributeNameField)] = String(this._getValue('value', '', { 'value': grAttribute.getValue(sAttributeValueField) }));
 		} // while attribute
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getAttributeTables'); }
 	}, // function _getAttributeTables
 
 	_getRelTables: function (grRecord, oRecord, oRelatedTables) {
@@ -583,6 +603,7 @@ GlobalToolsRecordReadComplex.prototype = {
 		if (!grRecord) {
 			return grRecord;
 		} // if no record
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getHistoryWalkRecord'); }
 		var hwRecord = new sn_hw.HistoryWalker(grRecord.getTableName(), grRecord.getUniqueValue(), true);
 		var bContinue = true;
 		var grWalkedRecord = grRecord;
@@ -593,6 +614,7 @@ GlobalToolsRecordReadComplex.prototype = {
 				bContinue = false;
 			} // if walked record is at or before the target date
 		} while ((bContinue) && (hwRecord.walkBackward()));
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getHistoryWalkRecord'); }
 		return grWalkedRecord;
 	}, // function _getHistoryWalkRecord
 
@@ -607,6 +629,7 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _getQuestionFromVariable
 
 	_getAttachmentInfo: function (sTable, sSysId, oRecord, bReturnObject) {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getAttachmentInfo'); }
 		var aAttachments = this._gtAttachment.getAttachments(sTable, sSysId, '', 'object', false);
 		aAttachments = (this._gtArray.isValidArray(aAttachments)) ? aAttachments : [];
 		if (bReturnObject) {
@@ -618,9 +641,11 @@ GlobalToolsRecordReadComplex.prototype = {
 		} else {
 			oRecord['attachments'] = aAttachments;
 		} // if return object
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getAttachmentInfo'); }
 	}, // function _getAttachmentInfo
 
 	_getAllFields: function (sTable, aFields) {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getAllFields'); }
 		var aAllFields = this._gtTable.getFields(sTable);
 		aAllFields = (this._gtArray.isValidArray(aAllFields)) ? aAllFields : [];
 		if (aFields.length > 1) {
@@ -631,7 +656,9 @@ GlobalToolsRecordReadComplex.prototype = {
 				return (aExcludeFields.indexOf(sField) == -1);
 			}); // remove excluded fields
 		} // if exclusions present
-		return this._gtArray.unique(aAllFields).sort();
+		var aResult = this._gtArray.unique(aAllFields).sort();
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getAllFields'); }
+		return aResult;
 	}, // function _getAllFields
 
 	_getTableLabel: function (sTable) {
@@ -679,7 +706,7 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _setError
 
 	type: 'GlobalToolsRecordReadComplex',
-	version: '2.1.2',
+	version: '2.1.3',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -689,14 +716,14 @@ GlobalToolsRecordReadComplex.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-05-31 17:55:55</sys_created_on>
         <sys_id>a253d0ccc311c7d016a2269dc001316c</sys_id>
-        <sys_mod_count>16</sys_mod_count>
+        <sys_mod_count>19</sys_mod_count>
         <sys_name>GlobalToolsRecordReadComplex</sys_name>
         <sys_package display_value="Global" source="global">global</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a253d0ccc311c7d016a2269dc001316c</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-10 12:49:01</sys_updated_on>
+        <sys_updated_on>2026-07-11 17:28:27</sys_updated_on>
     </sys_script_include>
     <sys_claim action="INSERT_OR_UPDATE">
         <claim_owner_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</claim_owner_scope>
@@ -706,11 +733,11 @@ GlobalToolsRecordReadComplex.prototype = {
         <previous_claim_name/>
         <previous_claim_scope>a39b8f3697816110b434f5f3a253af25</previous_claim_scope>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-07-10 12:38:04</sys_created_on>
+        <sys_created_on>2026-07-11 16:08:11</sys_created_on>
         <sys_id>8bd59404c351c7d016a2269dc0013106</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-10 12:38:04</sys_updated_on>
+        <sys_updated_on>2026-07-11 16:08:11</sys_updated_on>
     </sys_claim>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a253d0ccc311c7d016a2269dc001316c</id>

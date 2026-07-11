@@ -20,16 +20,7 @@ GlobalToolsScriptedREST.prototype = {
 		} else {
 			this._gtCache = new global.GlobalToolsCache();
 		} // if cache
-		this.bTimer = ((oTimer) && ((oTimer === true) || (oTimer instanceof GlobalToolsDateTime))) ? true : false;
-		if (this.bTimer) {
-			if (oTimer === true) {
-				this._gtDateTime = new global.GlobalToolsDateTime('gtsr');
-				this._sTimerPrefix = '';
-			} else {
-				this._gtDateTime = oTimer;
-				this._sTimerPrefix = 'gtsr/';
-			} // if own timer
-		} // initialize timer
+		this._initTimer(oTimer);
 		this._gt = new global.GlobalTools();
 		this._gtObject = new global.GlobalToolsObject();
 		this._getValue = this._gtObject.getValue;
@@ -58,6 +49,29 @@ GlobalToolsScriptedREST.prototype = {
 		} // if scope is allowed
 	}, // function checkAccess
 
+	// Set up performance timing from the constructor oTimer argument: true = own timer (this class emits the result),
+	// a GlobalToolsDateTime instance = shared timer (the owner emits, we contribute under the 'gtsr/' prefix).
+	_initTimer: function (oTimer) {
+		this.bTimer = ((oTimer) && ((oTimer === true) || (oTimer instanceof GlobalToolsDateTime))) ? true : false;
+		if (this.bTimer) {
+			if (oTimer === true) {
+				this._gtDateTime = new global.GlobalToolsDateTime('gtsr');
+				this._sTimerPrefix = '';
+			} else {
+				this._gtDateTime = oTimer;
+				this._sTimerPrefix = 'gtsr/';
+			} // if own timer
+		} // if timer enabled
+	}, // function _initTimer
+
+	// Allow the request config to switch timing on (oConfig.bUseTimer) when no timer was passed to the constructor.
+	// Runs before the entry-point timer starts so the whole request, including the delegated read/write engines, is measured.
+	_enableTimerFromConfig: function (oConfig) {
+		if ((!this.bTimer) && (this._gtObject.isObject(oConfig)) && (this._getValue('bUseTimer', false, oConfig))) {
+			this._initTimer(true); // config requested its own (owning) timer
+		} // if config timer requested
+	}, // function _enableTimerFromConfig
+
 	/***********************************************************************************************************
 	*	Public entry points (mirror NOWCORESTUtils.getData / setData)
 	************************************************************************************************************/
@@ -65,6 +79,7 @@ GlobalToolsScriptedREST.prototype = {
 	// Read entry point. Shapes the response, delegates the deep read to GlobalToolsRecordReadComplex.
 	getData: function (oRequest, oResponse, oConfig, bJSON) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		this._enableTimerFromConfig(oConfig);
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getData'); }
 		this._setRequestGlobals(oRequest, oResponse, oConfig, bJSON);
 		try {
@@ -116,6 +131,7 @@ GlobalToolsScriptedREST.prototype = {
 	// Write entry point. Iterates the configured tables and delegates validation/write to GlobalToolsRecordWriteValidate.
 	setData: function (oRequest, oResponse, oConfig) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		this._enableTimerFromConfig(oConfig);
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'setData'); }
 		this._setRequestGlobals(oRequest, oResponse, oConfig, false);
 		try {
@@ -296,6 +312,7 @@ GlobalToolsScriptedREST.prototype = {
 	}, // function _parseRequestParams
 
 	_validateEncodedQueryParam: function () {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_validateEncodedQueryParam'); }
 		var sCheckParam = this._getValue('sCheckEncodedQueryParam', '', this.oConfig);
 		if (sCheckParam) {
 			var aConfigTables = Object.keys(this._getValue('oTables', {}, this.oConfig));
@@ -308,9 +325,11 @@ GlobalToolsScriptedREST.prototype = {
 				} // if invalid encoded query
 			} // if first table
 		} // if check configured
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_validateEncodedQueryParam'); }
 	}, // function _validateEncodedQueryParam
 
 	_setResponse: function (oBody) {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_setResponse'); }
 		if (this.bJSON) {
 			this.oBody = oBody;
 		} else {
@@ -323,6 +342,7 @@ GlobalToolsScriptedREST.prototype = {
 			} // if body without result
 		} // if json mode
 		this.oResponseBody = oBody;
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_setResponse'); }
 	}, // function _setResponse
 
 	// Relay the read engine's already-resolved error (code + message) into the REST response.
@@ -393,6 +413,7 @@ GlobalToolsScriptedREST.prototype = {
 	// Per table config following the new schema is used as is; legacy NOWCORESTUtils config is
 	// translated by _applyLegacyConfigShim (triggered by bLegacyConfig or legacy keys).
 	_buildWriteConfig: function (sTable, sAction) {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_buildWriteConfig'); }
 		var oRecordConfig = {};
 		this._gtObject.deepMerge(oRecordConfig, this.oConfig['oTables'][sTable]); // copy, do not mutate caller config
 		this._applyLegacyConfigShim(oRecordConfig); // translate NOWCORESTUtils era config keys
@@ -403,6 +424,7 @@ GlobalToolsScriptedREST.prototype = {
 			oRecordConfig['bSkipImpersonate'] = true; // transport owns the request impersonation window
 		} // if not per record impersonation
 		this._applyGlobalFlags(oRecordConfig);
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_buildWriteConfig'); }
 		return oRecordConfig;
 	}, // function _buildWriteConfig
 
@@ -453,6 +475,7 @@ GlobalToolsScriptedREST.prototype = {
 
 	// Build the read config consumed by GlobalToolsRecordReadComplex.getData(oReadConfig).
 	_buildReadConfig: function (sTable) {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_buildReadConfig'); }
 		var oTableConfig = this._getValue('oTables/' + sTable, {}, this.oConfig);
 		var oReadConfig = {};
 		this._gtObject.deepMerge(oReadConfig, oTableConfig); // static read shape (aFields, oRelatedTables, ...)
@@ -467,6 +490,7 @@ GlobalToolsScriptedREST.prototype = {
 		oReadConfig['oQueryParams'] = this.oRequestQueryParams;
 		this._applyGlobalFlags(oReadConfig);
 		this._applyReadLabelFlags(oReadConfig);
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_buildReadConfig'); }
 		return oReadConfig;
 	}, // function _buildReadConfig
 
@@ -533,10 +557,11 @@ GlobalToolsScriptedREST.prototype = {
 
 	_getDisplayName: function (sTable, sRecordId) {
 		if ((sTable) && (sRecordId) && (sRecordId != '-1')) {
+			if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getDisplayName'); }
 			var grRecord = this._gtRead.getRecord(sTable, sRecordId);
-			if ((grRecord) && (grRecord.isValidRecord())) {
-				return String(grRecord.getDisplayValue());
-			} // if valid record
+			var sDisplayName = ((grRecord) && (grRecord.isValidRecord())) ? String(grRecord.getDisplayValue()) : '';
+			if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getDisplayName'); }
+			return sDisplayName;
 		} // if table and id
 		return '';
 	}, // function _getDisplayName
@@ -547,6 +572,7 @@ GlobalToolsScriptedREST.prototype = {
 
 	// Impersonate for the whole request (config sImpersonateUser or body user). The window wraps all tables.
 	_startImpersonation: function () {
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_startImpersonation'); }
 		this.sOriginalUserId = ''; // nothing impersonated yet
 		var sUserIdentifier = this._getValue('sImpersonateUser', '', this.oConfig);
 		var bIsReadAction = (this._getValue('sAction', '', this.oConfig) == 'read');
@@ -565,6 +591,7 @@ GlobalToolsScriptedREST.prototype = {
 				} // if impersonating
 			} // if resolved and not the caller
 		} // if impersonation requested
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_startImpersonation'); }
 	}, // function _startImpersonation
 
 	_endImpersonation: function () {
@@ -624,7 +651,7 @@ GlobalToolsScriptedREST.prototype = {
 	}, // function _getWriteEngine
 
 	type: 'GlobalToolsScriptedREST',
-	version: '2.1.2',
+	version: '2.1.3',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -634,14 +661,14 @@ GlobalToolsScriptedREST.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-05-31 18:18:23</sys_created_on>
         <sys_id>42881448c351c7d016a2269dc0013175</sys_id>
-        <sys_mod_count>15</sys_mod_count>
+        <sys_mod_count>16</sys_mod_count>
         <sys_name>GlobalToolsScriptedREST</sys_name>
-        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_42881448c351c7d016a2269dc0013175</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-11 08:58:26</sys_updated_on>
+        <sys_updated_on>2026-07-11 16:58:26</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>42881448c351c7d016a2269dc0013175</id>
