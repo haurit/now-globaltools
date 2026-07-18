@@ -15,6 +15,7 @@ Probably obsolete with ECMA 21</description>
 GlobalToolsScriptedREST.prototype = {
 	initialize: function (gtCache, oTimer) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		this._gdtStart = new GlideDateTime();
 		if (gtCache instanceof GlobalToolsCache) {
 			this._gtCache = gtCache;
 		} else {
@@ -27,10 +28,11 @@ GlobalToolsScriptedREST.prototype = {
 		this._gtArray = new global.GlobalToolsArray();
 		this._gtTable = new global.GlobalToolsTable(this._gtCache, this._gtDateTime);
 		this._gtRead = new global.GlobalToolsRecordRead();
+		this._gtAttachment = new global.GlobalToolsAttachment();
 		this._gtWrite = '';
 		this._gtReadComplex = '';
 		this.iResponseStatusCode = 200;
-		this.oResponseBody = {}; 
+		this.oResponseBody = {};
 		this.oBody = {};
 		this.aMessage = [];
 		this.bError = false;
@@ -49,8 +51,6 @@ GlobalToolsScriptedREST.prototype = {
 		} // if scope is allowed
 	}, // function checkAccess
 
-	// Set up performance timing from the constructor oTimer argument: true = own timer (this class emits the result),
-	// a GlobalToolsDateTime instance = shared timer (the owner emits, we contribute under the 'gtsr/' prefix).
 	_initTimer: function (oTimer) {
 		this.bTimer = ((oTimer) && ((oTimer === true) || (oTimer instanceof GlobalToolsDateTime))) ? true : false;
 		if (this.bTimer) {
@@ -64,8 +64,6 @@ GlobalToolsScriptedREST.prototype = {
 		} // if timer enabled
 	}, // function _initTimer
 
-	// Allow the request config to switch timing on (oConfig.bUseTimer) when no timer was passed to the constructor.
-	// Runs before the entry-point timer starts so the whole request, including the delegated read/write engines, is measured.
 	_enableTimerFromConfig: function (oConfig) {
 		if ((!this.bTimer) && (this._gtObject.isObject(oConfig)) && (this._getValue('bUseTimer', false, oConfig))) {
 			this._initTimer(true); // config requested its own (owning) timer
@@ -73,10 +71,9 @@ GlobalToolsScriptedREST.prototype = {
 	}, // function _enableTimerFromConfig
 
 	/***********************************************************************************************************
-	*	Public entry points (mirror NOWCORESTUtils.getData / setData)
+	*	Public entry points
 	************************************************************************************************************/
 
-	// Read entry point. Shapes the response, delegates the deep read to GlobalToolsRecordReadComplex.
 	getData: function (oRequest, oResponse, oConfig, bJSON) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this._enableTimerFromConfig(oConfig);
@@ -116,19 +113,18 @@ GlobalToolsScriptedREST.prototype = {
 		} finally {
 			this._endImpersonation(); // always end impersonation
 		} // try read
-		if (this.bLogToTable) {
-			this.logRequest();
-		} // if log to table
 		if (this.bTimer) {
 			this._gtDateTime.stopTimer(this._sTimerPrefix + 'getData');
-			if (!this._sTimerPrefix) { gs.info('GlobalToolsScriptedREST.getData timer: ' + this._gtDateTime.getTimer()); }
+			if ((!this.bLogToTable) && (!this._sTimerPrefix)) { gs.info('GlobalToolsScriptedREST.getData timer: ' + this._gtDateTime.getTimer()); }
 		} // if timer
+		if (this.bLogToTable) {
+			this._logRequest();
+		} // if log to table
 		if (this.bJSON) {
 			return this.oBody;
 		} // if json mode
 	}, // function getData
 
-	// Write entry point. Iterates the configured tables and delegates validation/write to GlobalToolsRecordWriteValidate.
 	setData: function (oRequest, oResponse, oConfig) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this._enableTimerFromConfig(oConfig);
@@ -156,6 +152,11 @@ GlobalToolsScriptedREST.prototype = {
 					} // if body misses table
 					var oRecordConfig = this._buildWriteConfig(sTable, sAction); // adapter -> write engine config
 					var oRecordValues = this.oBody[sTable]; // values for this table
+					var sStateFlowActionValueField = this._getValue('sStateFlowActionValueField', 'action', oRecordConfig);
+					var sBodyLevelAction = this._getValue('action', '', this.oBody); // legacy top-level action, sibling of the table keys
+					if ((sStateFlowActionValueField) && (sBodyLevelAction) && (!this._gtObject.hasValue(sStateFlowActionValueField, oRecordValues))) {
+						oRecordValues[sStateFlowActionValueField] = sBodyLevelAction; // per-table action wins if set, otherwise fall back to the top-level value
+					} // if table has no action of its own but a top-level default exists
 					var sRecordId = this._getWriteEngine().validateAndWrite(oRecordConfig, oRecordValues, oError);
 					if (this._parseWriteError(sTable, oError)) {
 						return true;
@@ -172,67 +173,14 @@ GlobalToolsScriptedREST.prototype = {
 		} finally {
 			this._endImpersonation(); // always end impersonation
 		} // try write
-		if (this.bLogToTable) {
-			this.logRequest();
-		} // if log to table
 		if (this.bTimer) {
 			this._gtDateTime.stopTimer(this._sTimerPrefix + 'setData');
-			if (!this._sTimerPrefix) { gs.info('GlobalToolsScriptedREST.setData timer: ' + this._gtDateTime.getTimer()); }
+			if ((!this.bLogToTable) && (!this._sTimerPrefix)) { gs.info('GlobalToolsScriptedREST.setData timer: ' + this._gtDateTime.getTimer()); }
 		} // if timer
+		if (this.bLogToTable) {
+			this._logRequest();
+		} // if log to table
 	}, // function setData
-
-	// Configurable request logging. Table, source/message field names, optional per-part column routing and
-	// body inclusion are all read from oConfig; defaults keep the source/message single-table shape.
-	logRequest: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
-		try {
-			var sLogTable = this._getValue('sLogTable', 'u_gt_scripted_rest_log', this.oConfig);
-			if (!gs.tableExists(sLogTable)) {
-				return; // no log table to write to
-			} // if no table
-			var sSourceField = this._getValue('sLogSourceField', 'source', this.oConfig); // field for the request uri
-			var sMessageField = this._getValue('sLogMessageField', 'message', this.oConfig); // field for the combined message
-			var oLogFieldMap = this._getValue('oLogFieldMap', {}, this.oConfig); // optional part -> dedicated column routing
-			var sSeparator = this._getValue('sLogMessageSeparator', ' / ', this.oConfig); // joins message parts
-			var bLogRequestBody = this._getValue('bLogRequestBody', true, this.oConfig); // include the request payload
-			var bLogResponseBody = this._getValue('bLogResponseBody', true, this.oConfig); // include the response/result
-			var oLabels = { 'action': 'Action', 'user': 'User', 'queryParams': 'queryParams', 'pathParams': 'pathParams', 'requestBody': 'request body', 'result': 'result' }; // readable message labels
-			var oParts = {}; // collected non-empty log parts keyed by routing key
-			oParts['action'] = this._getValue('sAction', '', this.oConfig);
-			oParts['user'] = (this.sImpersonateUser) ? gs.getUserName() + ' (Impersonated: ' + this.sImpersonateUser + ')' : gs.getUserName();
-			if (JSON.stringify(this._getValue('queryParams', {}, this.oRequest)) != '{}') {
-				oParts['queryParams'] = JSON.stringify(this.oRequest['queryParams']);
-			} // if query params
-			if (JSON.stringify(this._getValue('pathParams', {}, this.oRequest)) != '{}') {
-				oParts['pathParams'] = JSON.stringify(this.oRequest['pathParams']);
-			} // if path params
-			if ((bLogRequestBody) && (this._getValue('sAction', '', this.oConfig) != 'read')) {
-				oParts['requestBody'] = JSON.stringify(this.oBody);
-			} // if request body
-			if ((bLogResponseBody) && (this.oResponseBody)) {
-				oParts['result'] = JSON.stringify(this.oResponseBody);
-			} // if result
-			var grLog = new GlideRecord(sLogTable);
-			if (grLog.isValidField(sSourceField)) {
-				grLog.setValue(sSourceField, this._getValue('uri', '', this.oRequest)); // request uri
-			} // if source field
-			var aMessage = []; // parts not routed to a dedicated column
-			Object.keys(oParts).forEach(function (sPartKey) {
-				var sTargetField = this._getValue(sPartKey, '', oLogFieldMap); // dedicated column for this part
-				if ((sTargetField) && (grLog.isValidField(sTargetField))) {
-					grLog.setValue(sTargetField, oParts[sPartKey]);
-				} else {
-					aMessage.push(oLabels[sPartKey] + ': ' + oParts[sPartKey]);
-				} // if dedicated column
-			}, this); // each log part
-			if ((aMessage.length > 0) && (grLog.isValidField(sMessageField))) {
-				grLog.setValue(sMessageField, aMessage.join(sSeparator)); // combined remainder
-			} // if message
-			grLog.insert();
-		} catch (oException) {
-			gs.error('GlobalToolsScriptedREST.logRequest Error: ' + String(oException));
-		} // try log
-	}, // function logRequest
 
 	/***********************************************************************************************************
 	*	Request / response plumbing
@@ -247,6 +195,7 @@ GlobalToolsScriptedREST.prototype = {
 		this.bLogToTable = this._getValue('bLogToTable', false, this.oConfig);
 		this.bBodyNoResult = this._getValue('bBodyNoResult', false, this.oConfig);
 		this.bError = false; // reset per-call state
+		this._gdtStart = new GlideDateTime(); // reset per-call so logged response_time reflects this request only
 		this.iResponseStatusCode = 200;
 		this.oBody = {};
 		this.oResponseBody = {};
@@ -258,7 +207,6 @@ GlobalToolsScriptedREST.prototype = {
 		} // if no config
 	}, // function _setRequestGlobals
 
-	// Parse read query parameters (encoded_query, history_walk, paging, requested/order fields, mandatory/exclude params)
 	_parseRequestParams: function () {
 		if (this._getValue('sAction', '', this.oConfig) != 'read') {
 			this._setError('405_002', [], [this._getValue('sAction', '', this.oConfig)]);
@@ -372,22 +320,24 @@ GlobalToolsScriptedREST.prototype = {
 		} // if json mode
 	}, // function _setEngineError
 
-	_setError: function (sErrorCode, aErrorMessageArgs, aErrorDetailArgs) {
+	_setError: function (sErrorCode, aErrorMessageArgs, aErrorDetailArgs, sStatusOverride) {
 		this.bError = true;
 		aErrorMessageArgs = (this._gtArray.isValidArray(aErrorMessageArgs)) ? aErrorMessageArgs : [];
 		aErrorDetailArgs = (this._gtArray.isValidArray(aErrorDetailArgs)) ? aErrorDetailArgs : [];
 		var sErrorMessage = gs.getMessage('GlobalToolsScriptedREST_' + sErrorCode + '_ErrorMessage', aErrorMessageArgs);
 		var sErrorDetail = gs.getMessage('GlobalToolsScriptedREST_' + sErrorCode + '_ErrorDetail', aErrorDetailArgs);
 		var aErrorCode = sErrorCode.split('_');
+		var sStatus = sStatusOverride || aErrorCode[0];
 		if (this.bLog) {
 			gs.error('GlobalToolsScriptedREST._setError Code: ' + sErrorCode + ' Message: ' + sErrorMessage + ' Detail: ' + sErrorDetail);
 		} // if log
-		this.oResponseBody = { 'Status': aErrorCode[0], 'ErrorMessage': sErrorCode + ': ' + sErrorMessage, 'ErrorDetail': sErrorDetail };
+		this.oResponseBody = { 'Status': sStatus, 'ErrorMessage': sErrorCode + ': ' + sErrorMessage, 'ErrorDetail': sErrorDetail };
+		this.iResponseStatusCode = Number(sStatus);
 		if (this.bJSON) {
 			this.oBody = {};
 		} else {
 			var seError = new sn_ws_err.ServiceError();
-			seError.setStatus(aErrorCode[0]);
+			seError.setStatus(sStatus);
 			seError.setMessage(sErrorCode + ': ' + sErrorMessage);
 			seError.setDetail(sErrorDetail);
 			this.oResponse.setError(seError);
@@ -409,9 +359,6 @@ GlobalToolsScriptedREST.prototype = {
 	*	Config translation adapter (REST oConfig -> engine contracts)
 	************************************************************************************************************/
 
-	// Build a GlobalToolsRecordWriteValidate config from the REST per table config + global flags.
-	// Per table config following the new schema is used as is; legacy NOWCORESTUtils config is
-	// translated by _applyLegacyConfigShim (triggered by bLegacyConfig or legacy keys).
 	_buildWriteConfig: function (sTable, sAction) {
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_buildWriteConfig'); }
 		var oRecordConfig = {};
@@ -428,9 +375,6 @@ GlobalToolsScriptedREST.prototype = {
 		return oRecordConfig;
 	}, // function _buildWriteConfig
 
-	// Translate a legacy NOWCORESTUtils per table config into the GlobalToolsRecordWriteValidate schema.
-	// Runs when bLegacyConfig is true or when an unambiguous legacy key is present. Operates on the copy only.
-	// aKeys / aFields / aMandatoryFields / aUpdateBusinessLogicChecks / bErrorOnAddlFieldsInBody carry over unchanged.
 	_applyLegacyConfigShim: function (oRecordConfig) {
 		var bLegacy = ((this._getValue('bLegacyConfig', false, oRecordConfig)) || (oRecordConfig.hasOwnProperty('aFieldCfgCondition')) || (oRecordConfig.hasOwnProperty('aBeforeBodyChecks')));
 		if (!bLegacy) {
@@ -453,7 +397,6 @@ GlobalToolsScriptedREST.prototype = {
 		return oRecordConfig;
 	}, // function _applyLegacyConfigShim
 
-	// Rename the inner keys of legacy check entries (field value checks and dynamic field config share this shape).
 	_translateLegacyChecks: function (aChecks) {
 		aChecks = (this._gtArray.isValidArray(aChecks)) ? aChecks : [aChecks];
 		aChecks.forEach(function (oCheck) {
@@ -473,7 +416,6 @@ GlobalToolsScriptedREST.prototype = {
 		} // if old key present and new key absent
 	}, // function _renameKey
 
-	// Build the read config consumed by GlobalToolsRecordReadComplex.getData(oReadConfig).
 	_buildReadConfig: function (sTable) {
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_buildReadConfig'); }
 		var oTableConfig = this._getValue('oTables/' + sTable, {}, this.oConfig);
@@ -494,7 +436,6 @@ GlobalToolsScriptedREST.prototype = {
 		return oReadConfig;
 	}, // function _buildReadConfig
 
-	// Assemble the effective query for a read table from config and request params.
 	_buildReadQuery: function (sTable, oTableConfig) {
 		var sConfigQuery = this._getValue('sQuery', '', oTableConfig);
 		var sRequestQuery = (this._getValue('bPreventQueryParams', false, oTableConfig)) ? '' : this.sQueryParamsQuery;
@@ -505,7 +446,6 @@ GlobalToolsScriptedREST.prototype = {
 		return this._gtRead.combineQueries(sConfigQuery, sRequestQuery);
 	}, // function _buildReadQuery
 
-	// Copy known global flags from the request config root onto an engine config when not already set per table.
 	_applyGlobalFlags: function (oEngineConfig) {
 		var aFlags = ['bLog', 'sLogLevel', 'bUseGlideRecordSecure', 'bNoWorkflow', 'bNoAutoSysFields', 'bNoDomain', 'sTemplateName', 'bTemplateIsMandatory', 'bUseIRE', 'sErrorReturnType', 'bCheckDictionaryMandatory'];
 		aFlags.forEach(function (sFlag) {
@@ -524,24 +464,29 @@ GlobalToolsScriptedREST.prototype = {
 		}, this); // each label flag
 	}, // function _applyReadLabelFlags
 
-	// Inspect the shared oError for a table sequence id, set the REST error if the write failed.
 	_parseWriteError: function (sTable, oError) {
 		var oTableError = this._getValue(sTable, {}, oError);
 		if (this._getValue('bError', false, oTableError)) {
 			var aErrorMessages = this._getValue('aErrorMessages', [], oTableError);
-			var sDetail = '';
+			var sDetail = '', iCode = -1, iFinalCode = -1;
 			if (this._gtArray.isValidArray(aErrorMessages)) {
 				var aDetails = []; // human readable detail parts
 				aErrorMessages.forEach(function (oErrorMessage) {
 					if (this._gtObject.isObject(oErrorMessage)) {
-						aDetails.push(this._getValue('sMessageDetail', this._getValue('sMessage', '', oErrorMessage), oErrorMessage));
+						iCode = Number(String(this._getValue('sCode', '', oErrorMessage)).split('_')[0]); // status prefix of this error's code
+						aDetails.push(String(this._getValue('sMessageDetail', this._getValue('sMessage', '', oErrorMessage), oErrorMessage)).replace(/"/g, "'"));
 					} else {
-						aDetails.push(String(oErrorMessage));
+						iCode = Number(String(oErrorMessage).split('_')[0]); // 'code' return type: oErrorMessage is the raw code string
+						aDetails.push(String(oErrorMessage).replace(/"/g, "'"));
 					} // if error object
+					if (iCode > iFinalCode) {
+						iFinalCode = iCode; // keep the worst (highest) status across all collected errors
+					} // if worse status
 				}, this); // each error message
 				sDetail = this._getAllErrorMessages(aDetails);
 			} // if error messages
-			this._setError('500_005', [sTable], [sTable, sDetail]);
+			var sErrorCode = ((iFinalCode > 0) && (iFinalCode < 500)) ? '400_008' : '500_005'; // client vs server side write failure
+			this._setError(sErrorCode, [sTable], [sTable, sDetail], (iFinalCode > 0) ? String(iFinalCode) : '');
 			return true;
 		} // if table error
 		return false;
@@ -570,7 +515,6 @@ GlobalToolsScriptedREST.prototype = {
 	*	Helpers
 	************************************************************************************************************/
 
-	// Impersonate for the whole request (config sImpersonateUser or body user). The window wraps all tables.
 	_startImpersonation: function () {
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_startImpersonation'); }
 		this.sOriginalUserId = ''; // nothing impersonated yet
@@ -598,14 +542,11 @@ GlobalToolsScriptedREST.prototype = {
 		this._gt.endImpersonation(this.sOriginalUserId);
 	}, // function _endImpersonation
 
-	// Resolve a user identifier (user_name, sys_id or email) to a sys_user sys_id, '' if not found.
 	_resolveUserId: function (sUserIdentifier) {
 		var grUser = this._gtRead.getRecords('sys_user', 'user_name=' + sUserIdentifier + '^ORsys_id=' + sUserIdentifier + '^ORemail=' + sUserIdentifier, '', '', 1, '', '', this._getValue('bNoDomain', false, this.oConfig));
 		return (grUser.next()) ? String(grUser.getUniqueValue()) : '';
 	}, // function _resolveUserId
 
-	// Resolve a response key for a table. Handles the REST '|index' convention and the label style choice;
-	// the pure display-label lookup is delegated to GlobalToolsTable, camelCase/PascalCase/raw stay here.
 	_getTableLabel: function (sTable) {
 		var sTableKey = sTable;
 		var sIndexName = '';
@@ -650,6 +591,112 @@ GlobalToolsScriptedREST.prototype = {
 		return this._gtWrite;
 	}, // function _getWriteEngine
 
+	_logRequest: function () {
+		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		try {
+			if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_logRequest'); }
+			var sLogTable = this._getValue('sLogTable', 'u_gt_scripted_rest_log', this.oConfig);
+			if (!gs.tableExists(sLogTable)) {
+				return; // no log table to write to
+			} // if no table
+			var grLog = new GlideRecord(sLogTable);
+			var sSourceField = this._getValue('sLogSourceField', 'source', this.oConfig);
+			var b_logRequestBody = this._getValue('b_logRequestBody', true, this.oConfig);
+			var bLogResponseBody = this._getValue('bLogResponseBody', true, this.oConfig);
+			if (this._gtTable.getAbsoluteBase(sLogTable) == 'syslog') {		
+				var sMessageField = this._getValue('sLogMessageField', 'message', this.oConfig);	
+				var oLogFieldMap = this._getValue('oLogFieldMap', {}, this.oConfig);
+				var sSeparator = this._getValue('sLogMessageSeparator', ' / ', this.oConfig);
+				var oLabels = { 'action': 'Action', 'user': 'User', 'queryParams': 'queryParams', 'pathParams': 'pathParams', 'requestBody': 'request body', 'result': 'result' };
+				var oParts = {};
+				oParts['action'] = this._getValue('sAction', '', this.oConfig);
+				oParts['user'] = (this.sImpersonateUser) ? gs.getUserName() + ' (Impersonated: ' + this.sImpersonateUser + ')' : gs.getUserName();
+				if (JSON.stringify(this._getValue('queryParams', {}, this.oRequest)) != '{}') {
+					oParts['queryParams'] = JSON.stringify(this.oRequest['queryParams']);
+				} // if query params
+				if (JSON.stringify(this._getValue('pathParams', {}, this.oRequest)) != '{}') {
+					oParts['pathParams'] = JSON.stringify(this.oRequest['pathParams']);
+				} // if path params
+				if ((b_logRequestBody) && (this._getValue('sAction', '', this.oConfig) != 'read')) {
+					oParts['requestBody'] = JSON.stringify(this.oBody);
+				} // if request body
+				if ((bLogResponseBody) && (this.oResponseBody)) {
+					oParts['result'] = JSON.stringify(this.oResponseBody);
+				} // if result
+				if (grLog.isValidField(sSourceField)) {
+					grLog.setValue(sSourceField, this._getValue('uri', '', this.oRequest));
+				} // if source field
+				var aMessage = [];
+				Object.keys(oParts).forEach(function (sPartKey) {
+					var sTargetField = this._getValue(sPartKey, '', oLogFieldMap);
+					if ((sTargetField) && (grLog.isValidField(sTargetField))) {
+						grLog.setValue(sTargetField, oParts[sPartKey]);
+					} else {
+						aMessage.push(oLabels[sPartKey] + ': ' + oParts[sPartKey]);
+					} // if dedicated column
+				}, this); // each log part
+				if ((aMessage.length > 0) && (grLog.isValidField(sMessageField))) {
+					grLog.setValue(sMessageField, aMessage.join(sSeparator));
+				} // if message
+				grLog.insert();
+				if (this.bTimer) {
+					this._gtDateTime.stopTimer(this._sTimerPrefix + '_logRequest');
+					if (!this._sTimerPrefix) { gs.info('GlobalToolsScriptedREST._logRequest timer: ' + this._gtDateTime.getTimer()); }
+				} // if timer
+			} else {
+				sSourceField = ((!grLog.isValidField(sSourceField)) && (grLog.isValidField('u_' + sSourceField))) ? 'u_' + sSourceField : sSourceField;
+				var sStatusField = this._getValue('sLogStatusField', 'status', this.oConfig);
+				sStatusField = ((!grLog.isValidField(sStatusField)) && (grLog.isValidField('u_' + sStatusField))) ? 'u_' + sStatusField : sStatusField;
+				var sActionField = this._getValue('sLogActionField', 'action', this.oConfig);
+				sActionField = ((!grLog.isValidField(sActionField)) && (grLog.isValidField('u_' + sActionField))) ? 'u_' + sActionField : sActionField;
+				var sQueryParamField = this._getValue('sLogQueryParamField', 'query_param', this.oConfig);
+				sQueryParamField = ((!grLog.isValidField(sQueryParamField)) && (grLog.isValidField('u_' + sQueryParamField))) ? 'u_' + sQueryParamField : sQueryParamField;
+				var sUserField = this._getValue('sLogUserField', 'user', this.oConfig);
+				sUserField = ((!grLog.isValidField(sUserField)) && (grLog.isValidField('u_' + sUserField))) ? 'u_' + sUserField : sUserField;
+				var sReponseTimeField = this._getValue('sLogResponseTimeField', 'response_time', this.oConfig); // field for the user
+				sReponseTimeField = ((!grLog.isValidField(sReponseTimeField)) && (grLog.isValidField('u_' + sReponseTimeField))) ? 'u_' + sReponseTimeField : sReponseTimeField;
+				if (grLog.isValidField(sSourceField)) {
+					grLog.setValue(sSourceField, this._getValue('uri', '', this.oRequest));
+				} // if source field
+				if (grLog.isValidField(sActionField)) {
+					grLog.setValue(sActionField, this._getValue('sAction', '', this.oConfig));
+				} // if action field
+				if (grLog.isValidField(sQueryParamField)) {
+					var sQueryParam = JSON.stringify(this._getValue('queryParams', {}, this.oRequest));
+					if (sQueryParam != '{}') {
+						grLog.setValue(sQueryParamField, sQueryParam);
+					} // if query params
+				} // if user field
+				if (grLog.isValidField(sUserField)) {
+					grLog.setValue(sUserField, (this.sImpersonateUser) ? gs.getUserName() + ' (Impersonated: ' + this.sImpersonateUser + ')' : gs.getUserName());
+				} // if user field
+				if (grLog.isValidField(sStatusField)) {
+					grLog.setValue(sStatusField, String(this.iResponseStatusCode));
+				} // if status field
+				if (grLog.isValidField(sReponseTimeField)) {
+					var _gdtEnd = new GlideDateTime();
+					grLog[sReponseTimeField].setDateNumericValue(_gdtEnd.getNumericValue() - this._gdtStart.getNumericValue());
+				} // if action field
+				var sLogId = grLog.insert();
+				if ((b_logRequestBody) && (this._getValue('sAction', '', this.oConfig) != 'read')) {
+					this._gtAttachment.writeAttachment(grLog, 'request_body.json', JSON.stringify(this.oBody), 'application/json');
+				} // if request body
+				if ((bLogResponseBody) && (this.oResponseBody)) {
+					this._gtAttachment.writeAttachment(grLog, 'response_body.json', JSON.stringify(this.oResponseBody), 'application/json');
+				} // if response body
+				if (this.bTimer) {
+					this._gtDateTime.stopTimer(this._sTimerPrefix + '_logRequest');
+					if ((sLogId) && (!this._sTimerPrefix)) {
+						var sTimer = this._gtDateTime.getTimer();
+						this._gtAttachment.writeAttachment(grLog, 'timer.json', sTimer, 'application/json');
+					} // if own timer
+				} // if timer
+			} // if log table
+		} catch (oException) {
+			gs.error('GlobalToolsScriptedREST._logRequest Error: ' + String(oException));
+		} // try log
+	}, // function _logRequest
+
 	type: 'GlobalToolsScriptedREST',
 	version: '2.1.3',
 	author: 'Tom Hauri',
@@ -661,14 +708,14 @@ GlobalToolsScriptedREST.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-05-31 18:18:23</sys_created_on>
         <sys_id>42881448c351c7d016a2269dc0013175</sys_id>
-        <sys_mod_count>16</sys_mod_count>
+        <sys_mod_count>18</sys_mod_count>
         <sys_name>GlobalToolsScriptedREST</sys_name>
         <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_42881448c351c7d016a2269dc0013175</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-11 16:58:26</sys_updated_on>
+        <sys_updated_on>2026-07-18 13:33:37</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>42881448c351c7d016a2269dc0013175</id>
