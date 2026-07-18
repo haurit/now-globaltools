@@ -192,7 +192,7 @@ GlobalToolsScriptedREST.prototype = {
 		this.oConfig = (this._gtObject.isObject(oConfig)) ? oConfig : {};
 		this.bJSON = (bJSON === true) ? true : false;
 		this.bLog = this._getValue('bLog', false, this.oConfig);
-		this.bLogToTable = this._getValue('bLogToTable', false, this.oConfig);
+		this.bLogToTable = this._getValue('bLogToTable', this._getValue('oLogHandling/bLogToTable', false, this.oConfig), this.oConfig); // bLogToTable stays root level, falls back to oLogHandling
 		this.bBodyNoResult = this._getValue('bBodyNoResult', false, this.oConfig);
 		this.bError = false; // reset per-call state
 		this._gdtStart = new GlideDateTime(); // reset per-call so logged response_time reflects this request only
@@ -595,18 +595,19 @@ GlobalToolsScriptedREST.prototype = {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		try {
 			if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_logRequest'); }
-			var sLogTable = this._getValue('sLogTable', 'u_gt_scripted_rest_log', this.oConfig);
+			var oLogHandling = this._getValue('oLogHandling', {}, this.oConfig);
+			var sLogTable = this._getValue('sLogTable', 'syslog', oLogHandling);
 			if (!gs.tableExists(sLogTable)) {
 				return; // no log table to write to
 			} // if no table
 			var grLog = new GlideRecord(sLogTable);
-			var sSourceField = this._getValue('sLogSourceField', 'source', this.oConfig);
-			var b_logRequestBody = this._getValue('b_logRequestBody', true, this.oConfig);
-			var bLogResponseBody = this._getValue('bLogResponseBody', true, this.oConfig);
-			if (this._gtTable.getAbsoluteBase(sLogTable) == 'syslog') {		
-				var sMessageField = this._getValue('sLogMessageField', 'message', this.oConfig);	
-				var oLogFieldMap = this._getValue('oLogFieldMap', {}, this.oConfig);
-				var sSeparator = this._getValue('sLogMessageSeparator', ' / ', this.oConfig);
+			var sSourceField = this._getValue('sLogSourceField', 'source', oLogHandling);
+			var bLogRequestBody = this._getValue('bLogRequestBody', true, oLogHandling);
+			var bLogResponseBody = this._getValue('bLogResponseBody', true, oLogHandling);
+			if (this._gtTable.getAbsoluteBase(sLogTable) == 'syslog') {
+				var sMessageField = this._getValue('sLogMessageField', 'message', oLogHandling);
+				var oLogFieldMap = this._getValue('oLogFieldMap', {}, oLogHandling);
+				var sSeparator = this._getValue('sLogMessageSeparator', ' / ', oLogHandling);
 				var oLabels = { 'action': 'Action', 'user': 'User', 'queryParams': 'queryParams', 'pathParams': 'pathParams', 'requestBody': 'request body', 'result': 'result' };
 				var oParts = {};
 				oParts['action'] = this._getValue('sAction', '', this.oConfig);
@@ -617,7 +618,7 @@ GlobalToolsScriptedREST.prototype = {
 				if (JSON.stringify(this._getValue('pathParams', {}, this.oRequest)) != '{}') {
 					oParts['pathParams'] = JSON.stringify(this.oRequest['pathParams']);
 				} // if path params
-				if ((b_logRequestBody) && (this._getValue('sAction', '', this.oConfig) != 'read')) {
+				if ((bLogRequestBody) && (this._getValue('sAction', '', this.oConfig) != 'read')) {
 					oParts['requestBody'] = JSON.stringify(this.oBody);
 				} // if request body
 				if ((bLogResponseBody) && (this.oResponseBody)) {
@@ -645,15 +646,15 @@ GlobalToolsScriptedREST.prototype = {
 				} // if timer
 			} else {
 				sSourceField = ((!grLog.isValidField(sSourceField)) && (grLog.isValidField('u_' + sSourceField))) ? 'u_' + sSourceField : sSourceField;
-				var sStatusField = this._getValue('sLogStatusField', 'status', this.oConfig);
+				var sStatusField = this._getValue('sLogStatusField', 'status', oLogHandling);
 				sStatusField = ((!grLog.isValidField(sStatusField)) && (grLog.isValidField('u_' + sStatusField))) ? 'u_' + sStatusField : sStatusField;
-				var sActionField = this._getValue('sLogActionField', 'action', this.oConfig);
+				var sActionField = this._getValue('sLogActionField', 'action', oLogHandling);
 				sActionField = ((!grLog.isValidField(sActionField)) && (grLog.isValidField('u_' + sActionField))) ? 'u_' + sActionField : sActionField;
-				var sQueryParamField = this._getValue('sLogQueryParamField', 'query_param', this.oConfig);
+				var sQueryParamField = this._getValue('sLogQueryParamField', 'query_param', oLogHandling);
 				sQueryParamField = ((!grLog.isValidField(sQueryParamField)) && (grLog.isValidField('u_' + sQueryParamField))) ? 'u_' + sQueryParamField : sQueryParamField;
-				var sUserField = this._getValue('sLogUserField', 'user', this.oConfig);
+				var sUserField = this._getValue('sLogUserField', 'user', oLogHandling);
 				sUserField = ((!grLog.isValidField(sUserField)) && (grLog.isValidField('u_' + sUserField))) ? 'u_' + sUserField : sUserField;
-				var sReponseTimeField = this._getValue('sLogResponseTimeField', 'response_time', this.oConfig); // field for the user
+				var sReponseTimeField = this._getValue('sLogResponseTimeField', 'response_time', oLogHandling); // field for the user
 				sReponseTimeField = ((!grLog.isValidField(sReponseTimeField)) && (grLog.isValidField('u_' + sReponseTimeField))) ? 'u_' + sReponseTimeField : sReponseTimeField;
 				if (grLog.isValidField(sSourceField)) {
 					grLog.setValue(sSourceField, this._getValue('uri', '', this.oRequest));
@@ -678,7 +679,7 @@ GlobalToolsScriptedREST.prototype = {
 					grLog[sReponseTimeField].setDateNumericValue(_gdtEnd.getNumericValue() - this._gdtStart.getNumericValue());
 				} // if action field
 				var sLogId = grLog.insert();
-				if ((b_logRequestBody) && (this._getValue('sAction', '', this.oConfig) != 'read')) {
+				if ((bLogRequestBody) && (this._getValue('sAction', '', this.oConfig) != 'read')) {
 					this._gtAttachment.writeAttachment(grLog, 'request_body.json', JSON.stringify(this.oBody), 'application/json');
 				} // if request body
 				if ((bLogResponseBody) && (this.oResponseBody)) {
@@ -708,14 +709,14 @@ GlobalToolsScriptedREST.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-05-31 18:18:23</sys_created_on>
         <sys_id>42881448c351c7d016a2269dc0013175</sys_id>
-        <sys_mod_count>18</sys_mod_count>
+        <sys_mod_count>19</sys_mod_count>
         <sys_name>GlobalToolsScriptedREST</sys_name>
         <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_42881448c351c7d016a2269dc0013175</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-18 13:33:37</sys_updated_on>
+        <sys_updated_on>2026-07-18 15:38:51</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>42881448c351c7d016a2269dc0013175</id>
