@@ -5,9 +5,9 @@
         <api_name>global.GlobalToolsScriptedREST</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development
-Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.
-Probably obsolete with ECMA 21</description>
+        <description>Tools to support (scoped) app development&#13;
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
+Probably obsolete with ECMA 21 </description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsScriptedREST</name>
         <sandbox_callable>false</sandbox_callable>
@@ -74,11 +74,11 @@ GlobalToolsScriptedREST.prototype = {
 	*	Public entry points
 	************************************************************************************************************/
 
-	getData: function (oRequest, oResponse, oConfig, bJSON) {
+	getData: function (oRequest, oResponse, oConfig, bJSON, oDynamicValues) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		this._enableTimerFromConfig(oConfig);
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getData'); }
-		this._setRequestGlobals(oRequest, oResponse, oConfig, bJSON);
+		this._setRequestGlobals(oRequest, oResponse, oConfig, bJSON, oDynamicValues);
 		try {
 			this._startImpersonation(); // request-scoped impersonation so security applies to reads
 			this._validateEncodedQueryParam(); // optional encoded query validation
@@ -86,10 +86,16 @@ GlobalToolsScriptedREST.prototype = {
 				var oReadResult = {}; // accumulated read body
 				Object.keys(this._getValue('oTables', {}, this.oConfig)).forEach(function (sTable) {
 					if (!this.bError) {
+						var oTableConfig = this._getValue('oTables/' + sTable, {}, this.oConfig);
 						var sTableLabel = this._getTableLabel(sTable); // labelled response key
 						var oReadConfig = this._buildReadConfig(sTable); // adapter -> read engine config
 						var oTableResult = this._getReadEngine().getData(oReadConfig); // forward dependency
-						oReadResult[sTableLabel] = this._getValue('data', '', oTableResult);
+						var oTableData = this._getValue('data', '', oTableResult);
+						if ((this._getValue('bMergeToParent', false, oTableConfig)) && (this._gtObject.isObject(oTableData))) {
+							this._gtObject.deepMerge(oReadResult, oTableData); // flatten this table's single-object result onto the response root instead of nesting it under sTableLabel
+						} else {
+							oReadResult[sTableLabel] = oTableData;
+						} // if merge to parent
 						this.iNumberOfRecordsReturned += Number(this._getValue('iNumberOfRecordsReturned', 0, oTableResult));
 						if (this._getValue('bError', false, oTableResult)) {
 							this._setEngineError(oTableResult);
@@ -186,10 +192,11 @@ GlobalToolsScriptedREST.prototype = {
 	*	Request / response plumbing
 	************************************************************************************************************/
 
-	_setRequestGlobals: function (oRequest, oResponse, oConfig, bJSON) {
+	_setRequestGlobals: function (oRequest, oResponse, oConfig, bJSON, oDynamicValues) {
 		this.oRequest = oRequest;
 		this.oResponse = oResponse;
 		this.oConfig = (this._gtObject.isObject(oConfig)) ? oConfig : {};
+		this.oDynamicValues = (this._gtObject.isObject(oDynamicValues)) ? oDynamicValues : {}; // caller-supplied runtime values (e.g. gs.getUserID()) resolvable as [placeholder] tokens in sQuery / sParameterQuery
 		this.bJSON = (bJSON === true) ? true : false;
 		this.bLog = this._getValue('bLog', false, this.oConfig);
 		this.bLogToTable = this._getValue('bLogToTable', this._getValue('oLogHandling/bLogToTable', false, this.oConfig), this.oConfig); // bLogToTable stays root level, falls back to oLogHandling
@@ -438,9 +445,11 @@ GlobalToolsScriptedREST.prototype = {
 
 	_buildReadQuery: function (sTable, oTableConfig) {
 		var sConfigQuery = this._getValue('sQuery', '', oTableConfig);
+		sConfigQuery = this._gt.replacePlaceholders(sConfigQuery, this.oDynamicValues); // [placeholder] tokens resolved from runtime values passed into getData/setData, so config never needs script-side mutation
 		var sRequestQuery = (this._getValue('bPreventQueryParams', false, oTableConfig)) ? '' : this.sQueryParamsQuery;
 		var sParameterQuery = this._getValue('sParameterQuery', '', oTableConfig);
 		if ((!sRequestQuery) && (sParameterQuery)) {
+			sParameterQuery = this._gt.replacePlaceholders(sParameterQuery, this.oDynamicValues); // dynamic values resolve first, take precedence over request query params
 			sRequestQuery = this._gt.replacePlaceholders(sParameterQuery, this.oRequestQueryParams); // [param] placeholders
 		} // if parameter query template
 		return this._gtRead.combineQueries(sConfigQuery, sRequestQuery);
@@ -699,7 +708,7 @@ GlobalToolsScriptedREST.prototype = {
 	}, // function _logRequest
 
 	type: 'GlobalToolsScriptedREST',
-	version: '2.1.3',
+	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -709,14 +718,14 @@ GlobalToolsScriptedREST.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-05-31 18:18:23</sys_created_on>
         <sys_id>42881448c351c7d016a2269dc0013175</sys_id>
-        <sys_mod_count>19</sys_mod_count>
+        <sys_mod_count>20</sys_mod_count>
         <sys_name>GlobalToolsScriptedREST</sys_name>
         <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_42881448c351c7d016a2269dc0013175</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-18 15:38:51</sys_updated_on>
+        <sys_updated_on>2026-07-19 13:34:09</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>42881448c351c7d016a2269dc0013175</id>

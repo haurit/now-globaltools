@@ -5,14 +5,14 @@
         <api_name>global.GlobalToolsRecordReadComplex</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development
-Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.
-Probably obsolete with ECMA 21</description>
+        <description>Tools to support (scoped) app development&#13;
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
+Probably obsolete with ECMA 21 </description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsRecordReadComplex</name>
         <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var GlobalToolsRecordReadComplex = Class.create();
-GlobalToolsRecordReadComplex.prototype = { 
+GlobalToolsRecordReadComplex.prototype = {
 	initialize: function (gtCache, oTimer) {
 		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
 		if (gtCache instanceof GlobalToolsCache) {
@@ -206,7 +206,7 @@ GlobalToolsRecordReadComplex.prototype = {
 			if ((bReturnAttachmentInfoObject) || (bReturnAttachmentInfoArray)) {
 				this._getAttachmentInfo(sRecordClassName, sSysId, oRecord, bReturnAttachmentInfoObject);
 			} // if attachment info
-			if (sReturnType == 'first') {
+			if ((sReturnType == 'first') || (sReturnType == 'object')) {
 				bBreak = true;
 			} else {
 				if (this._gtObject.isObject(oRelatedTables)) {
@@ -225,7 +225,7 @@ GlobalToolsRecordReadComplex.prototype = {
 		if ((!bIsRelated) && (aTable.length == 0)) {
 			this.iResponseStatusCode = 204; // no content
 		} // if top table empty
-		if ((sReturnType == 'first') || (sReturnType == 'reference')) {
+		if ((sReturnType == 'first') || (sReturnType == 'object') || (sReturnType == 'reference')) {
 			return oRecord;
 		} // if single record return
 		return aTable;
@@ -494,6 +494,8 @@ GlobalToolsRecordReadComplex.prototype = {
 			Object.keys(oRelResult).forEach(function (sRelResultField) {
 				oRecord[sTableLabel + this.sRefFieldConcatChar + sRelResultField] = oRelResult[sRelResultField];
 			}, this); // each first result field
+		} else if (sReturnType == 'object') {
+			oRecord[sTableLabel] = oRelResult; // single nested object under sLabel, no array wrap, no flatten onto parent
 		} else if (sReturnType == 'reference') {
 			oRecord[sKeySourceField] = oRelResult;
 		} else if (sReturnType == 'hidden') {
@@ -719,14 +721,14 @@ GlobalToolsRecordReadComplex.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-05-31 17:55:55</sys_created_on>
         <sys_id>a253d0ccc311c7d016a2269dc001316c</sys_id>
-        <sys_mod_count>20</sys_mod_count>
+        <sys_mod_count>21</sys_mod_count>
         <sys_name>GlobalToolsRecordReadComplex</sys_name>
         <sys_package display_value="Global" source="global">global</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a253d0ccc311c7d016a2269dc001316c</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-18 13:26:36</sys_updated_on>
+        <sys_updated_on>2026-07-19 13:34:20</sys_updated_on>
     </sys_script_include>
     <sys_claim action="INSERT_OR_UPDATE">
         <claim_owner_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</claim_owner_scope>
@@ -736,11 +738,11 @@ GlobalToolsRecordReadComplex.prototype = {
         <previous_claim_name/>
         <previous_claim_scope>a39b8f3697816110b434f5f3a253af25</previous_claim_scope>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-07-18 12:34:03</sys_created_on>
+        <sys_created_on>2026-07-19 13:32:16</sys_created_on>
         <sys_id>8bd59404c351c7d016a2269dc0013106</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-18 12:34:03</sys_updated_on>
+        <sys_updated_on>2026-07-19 13:32:16</sys_updated_on>
     </sys_claim>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a253d0ccc311c7d016a2269dc001316c</id>

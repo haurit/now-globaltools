@@ -7,21 +7,21 @@
         <display_name>Run Server Side Script</display_name>
         <inputs/>
         <mugshots_cache_json/>
-        <notes>Enhanced for 2.1.3</notes>
+        <notes>Test the GlobalToolsScriptedREST Script Include</notes>
         <order>1</order>
         <step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config>
         <sys_class_name>sys_atf_step</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-06-03 08:16:20</sys_created_on>
         <sys_id>ae9b69f4c3554fd016a2269dc0013113</sys_id>
-        <sys_mod_count>22</sys_mod_count>
+        <sys_mod_count>26</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_ae9b69f4c3554fd016a2269dc0013113</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-18 16:08:26</sys_updated_on>
+        <sys_updated_on>2026-07-19 14:04:50</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsScriptedREST Tests">5e9b69f4c3554fd016a2269dc001310c</test>
         <timeout/>
@@ -34,11 +34,11 @@
         <order>100</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-07-18 15:29:46</sys_created_on>
+        <sys_created_on>2026-07-19 13:32:13</sys_created_on>
         <sys_id>669b69f4c3554fd016a2269dc001319e</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-18 15:29:46</sys_updated_on>
+        <sys_updated_on>2026-07-19 13:32:13</sys_updated_on>
         <value>3.1</value>
         <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
     </sys_variable_value>
@@ -48,11 +48,11 @@
         <order>200</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-07-18 15:29:46</sys_created_on>
+        <sys_created_on>2026-07-19 13:32:13</sys_created_on>
         <sys_id>e29b69f4c3554fd016a2269dc001319f</sys_id>
-        <sys_mod_count>7</sys_mod_count>
+        <sys_mod_count>3</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-18 16:08:26</sys_updated_on>
+        <sys_updated_on>2026-07-19 14:04:50</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
 &#13;
 	var bLog = false;&#13;
@@ -90,7 +90,10 @@
 	_gtATF.runATF('getData', {}, fnRequest(), fnResponse(), 'notanobject', true); // missing config object (405_001)&#13;
 	_gtATF.runATF('getData', {}, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, aMandatoryQueryParams: 'company' }, true); // mandatory query param missing (400_001)&#13;
 	_gtATF.runATF('getData', {}, fnRequest({ encoded_query: ['zzz_not_a_field_xyz=1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, sCheckEncodedQueryParam: 'encoded_query' }, true); // invalid encoded query (400_007)&#13;
-		&#13;
+	_gtATF.runATF('getData', /"incident":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, oLogHandling: { bLogToTable: true, sLogTable: 'syslog' } }, true); // logRequest path via getData logging (oLogHandling)&#13;
+	_gtATF.runATF('getData', /"user_name":"gtrrc.employee"/, fnRequest(), fnResponse(), { sAction: 'read', oTables: { sys_user: { sQuery: 'sys_id=[employeeId]', aFields: ['user_name'] } } }, true, { employeeId: sEmployeeId }); // oDynamicValues resolves the [employeeId] placeholder token in sQuery without mutating oConfig via GlobalToolsObjects.setValue&#13;
+	_gtATF.runATF('getData', /^\{"user_name":"gtrrc.employee","incident":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { sys_user: { sQuery: 'sys_id=' + sEmployeeId, sReturnType: 'first', bMergeToParent: true, aFields: ['user_name'] }, incident: {} } }, true); // top-level bMergeToParent merges the single-object sys_user result onto the response root (anchored regex proves user_name is a root key, not nested under a sys_user wrapper); incident (still an array) stays nested under its own key&#13;
+&#13;
 	var sLogMarkerUri = '/api/now/globaltools/atf/logdefault_' + Math.floor(Math.random() * 1000).toString();&#13;
 	var oRespLogDefault = fnResponse();&#13;
 	_gtSREST.getData(fnRequest({ max_return_items: ['1'] }, null, sLogMarkerUri), oRespLogDefault, { sAction: 'read', oTables: { incident: {} }, oLogHandling: { bLogToTable: true } }, true);&#13;
@@ -101,8 +104,10 @@
 	} else if (String(grDefaultLog.getValue('message')).indexOf('Action: read') == -1) {&#13;
 		_gtATF.addError('getData', 'default log handling syslog entry message missing expected content, got: ' + grDefaultLog.getValue('message'));&#13;
 	} // if message mismatch&#13;
+	// default log handling: bLogToTable only, sLogTable left unset so it defaults to 'syslog' - must work without any custom table&#13;
 	// the custom table flavor (sLogTable pointing at a non-syslog table) is NOT covered here since it needs a pre-existing custom table in the instance; skipped by design&#13;
-	&#13;
+&#13;
+&#13;
 	// setData (write) returns nothing, so assert against the mock response it populates&#13;
 	var oRespBadAction = fnResponse();&#13;
 	_gtSREST.setData(fnRequest(null, { incident: {} }), oRespBadAction, { sAction: 'badaction', oTables: { incident: {} } });&#13;
