@@ -206,18 +206,17 @@ GlobalToolsRecordReadComplex.prototype = {
 			if ((bReturnAttachmentInfoObject) || (bReturnAttachmentInfoArray)) {
 				this._getAttachmentInfo(sRecordClassName, sSysId, oRecord, bReturnAttachmentInfoObject);
 			} // if attachment info
-			if ((sReturnType == 'first') || (sReturnType == 'object')) {
-				bBreak = true;
-			} else {
-				if (this._gtObject.isObject(oRelatedTables)) {
-					this._getRelTables(grRecordClass, oRecord, oRelatedTables);
-				} // if related tables
-				if ((this.iRelatedTablesMandatoryCount != this.iRelatedTablesMandatoryTarget) && (!bIsRelated)) {
+			if (this._gtObject.isObject(oRelatedTables)) {
+				this._getRelTables(grRecordClass, oRecord, oRelatedTables);
+			} // if related tables
+			if ((this.iRelatedTablesMandatoryCount != this.iRelatedTablesMandatoryTarget) && (!bIsRelated)) {
 					continue; // top record did not meet mandatory related target
 				} else {
 					aTable.push(oRecord);
 				} // if mandatory related target met
-			} // if first
+			if ((sReturnType == 'first') || (sReturnType == 'object')) {
+				bBreak = true;
+			} // if first or object
 		} // while record
 		if ((bIsRelated) && (this._gtArray.isValidArray(aTable)) && (aTable.length > 0) && (this._getValue('bValidParentObject', false, oReadConfig))) {
 			this.iRelatedTablesMandatoryCount++;
@@ -721,14 +720,14 @@ GlobalToolsRecordReadComplex.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-05-31 17:55:55</sys_created_on>
         <sys_id>a253d0ccc311c7d016a2269dc001316c</sys_id>
-        <sys_mod_count>21</sys_mod_count>
+        <sys_mod_count>22</sys_mod_count>
         <sys_name>GlobalToolsRecordReadComplex</sys_name>
         <sys_package display_value="Global" source="global">global</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a253d0ccc311c7d016a2269dc001316c</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-19 13:34:20</sys_updated_on>
+        <sys_updated_on>2026-07-19 17:17:14</sys_updated_on>
     </sys_script_include>
     <sys_claim action="INSERT_OR_UPDATE">
         <claim_owner_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</claim_owner_scope>
