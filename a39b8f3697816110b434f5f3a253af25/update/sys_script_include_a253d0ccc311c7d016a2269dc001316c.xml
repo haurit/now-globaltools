@@ -5,16 +5,16 @@
         <api_name>global.GlobalToolsRecordReadComplex</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development&#13;
-Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
-Probably obsolete with ECMA 21 </description>
+        <description>Tools to support (scoped) app development
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.
+Probably obsolete with ECMA 21</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsRecordReadComplex</name>
         <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var GlobalToolsRecordReadComplex = Class.create();
 GlobalToolsRecordReadComplex.prototype = {
 	initialize: function (gtCache, oTimer) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (gtCache instanceof GlobalToolsCache) {
 			this._gtCache = gtCache;
 		} else {
@@ -40,16 +40,17 @@ GlobalToolsRecordReadComplex.prototype = {
 		this.oVarTypeIntTypeMap = { '3': 'choice', '5': 'choice', '7': 'boolean', '8': 'reference', '9': 'date', '10': 'date_time', '18': 'reference', '21': 'list', '31': 'reference' };
 	}, // function initialize
 
-	checkAccess: function (sCallerScope) {
+	_checkAccess: function (sCallerScope) {
+		if (this.oAllowedScopes) { return this.oAllowedScopes.hasOwnProperty(String(sCallerScope)); }
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-			return true;
-		} // if scope is allowed
-	}, // function checkAccess
+		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
+		this.oAllowedScopes['rhino.global'] = true;
+		return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));
+	}, // function _checkAccess
 
 	getData: function (oReadConfig) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getData'); }
 		this._setReadGlobals(oReadConfig);
 		var oResult = { 'data': [], 'iResponseStatusCode': 200, 'bError': false, 'aErrorMessages': [] };
@@ -74,6 +75,7 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function getData
 
 	_setReadGlobals: function (oReadConfig) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		this.bLog = this._getValue('bLog', false, oReadConfig);
 		this.bUseGlideRecordSecure = this._getValue('bUseGlideRecordSecure', false, oReadConfig);
 		this.bNoWorkflow = this._getValue('bNoWorkflow', false, oReadConfig);
@@ -97,10 +99,24 @@ GlobalToolsRecordReadComplex.prototype = {
 		this.iNumberOfRecordsReturned = 0;
 		this.iRelatedTablesMandatoryTarget = 0;
 		this.iRelatedTablesMandatoryCount = 0;
-		this.oFieldsCache = { 'aFields': {}, 'aDisplayFields': {} }; // all-field lookups per class
+		this.oFieldsCache = this._gtCache.getValue('gtrrc_fields_cache');
+		if (!this._gtObject.isObject(this.oFieldsCache)) {
+			this.oFieldsCache = { 'aFields': {}, 'aDisplayFields': {}, 'oInternalTypes': {} };
+			this._gtCache.setValue('gtrrc_fields_cache', this.oFieldsCache);
+		} // if not cached yet
 	}, // function _setReadGlobals
 
+	_getCachedInternalType: function (grRecord, sField) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var sCacheKey = grRecord.getTableName() + '.' + sField;
+		if (!this.oFieldsCache['oInternalTypes'].hasOwnProperty(sCacheKey)) {
+			this.oFieldsCache['oInternalTypes'][sCacheKey] = this._gtTable.getInternalType(grRecord, sField);
+		} // if not cached
+		return this.oFieldsCache['oInternalTypes'][sCacheKey];
+	}, // function _getCachedInternalType
+
 	_getTableData: function (oReadConfig, bIsRelated) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sTable = this._getValue('sTable', '', oReadConfig);
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
 			this._setError('500_001', [String(sTable)]);
@@ -124,13 +140,15 @@ GlobalToolsRecordReadComplex.prototype = {
 		var iReturnOffset = '';
 		var bOnlyReturnOneRecord = false;
 		var bErrorMaxReturnCount = false;
+		var iMaxReturnCountAllLevels = this._getValue('iMaxReturnCountAllLevels', '', oReadConfig);
+		var aPreparedRelTables = (this._gtObject.isObject(oRelatedTables)) ? this._prepareRelTableConfigs(oRelatedTables, iMaxReturnCountAllLevels) : [];
 		if (!bIsRelated) {
 			bOnlyReturnOneRecord = this._getValue('bOnlyReturnOneRecord', false, oReadConfig);
 			bErrorMaxReturnCount = this._getValue('bErrorMaxReturnCount', false, oReadConfig);
 			iMaxReturnCount = this._getValue('iMaxReturnCount', 100, oReadConfig);
 			var iRequestMaxReturnCount = this._getValue('iRequestMaxReturnCount', '', oReadConfig);
 			if ((iMaxReturnCount) && (iRequestMaxReturnCount)) {
-				iMaxReturnCount = iRequestMaxReturnCount; // request paging overrides config default
+				iMaxReturnCount = iRequestMaxReturnCount;
 			} // if request max return count
 			iReturnOffset = this._getValue('iRequestReturnOffset', '', oReadConfig);
 			this.iRelatedTablesMandatoryTarget = Number(this._getValue('iRelatedTablesMandatoryTarget', 0, oReadConfig));
@@ -140,6 +158,11 @@ GlobalToolsRecordReadComplex.prototype = {
 			aOrderByDesc = (this._gtArray.isValidArray(aRequestOrderByDesc)) ? aRequestOrderByDesc : aOrderByDesc;
 			aFields = this._filterRequestedFields(aFields);
 			aDisplayFields = this._filterRequestedFields(aDisplayFields);
+		} else {
+			iMaxReturnCount = this._getValue('iMaxReturnCount', '', oReadConfig);
+			if ((!iMaxReturnCount) && (iMaxReturnCountAllLevels)) {
+				iMaxReturnCount = iMaxReturnCountAllLevels;
+			} // if no explicit cap
 		} // if top table
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getTableData/' + sTable + '/query'); }
 		var grRecord = (this.bUseGlideRecordSecure) ? new GlideRecordSecure(sTable) : new GlideRecord(sTable);
@@ -149,7 +172,11 @@ GlobalToolsRecordReadComplex.prototype = {
 		if ((sQuery) && (sQuery !== 'false')) {
 			grRecord.addEncodedQuery(sQuery);
 		} // if query
-		var sRecordCount = this._gtRead.countRecords(sTable, grRecord.getEncodedQuery());
+		var sRecordCount = '';
+		var bNeedCount = ((!bIsRelated) && ((bErrorMaxReturnCount) || (bOnlyReturnOneRecord) || (this.bReturnNumberOfRecords)));
+		if (bNeedCount) {
+			sRecordCount = this._gtRead.countRecords(sTable, grRecord.getEncodedQuery());
+		} // if count needed
 		if (!bIsRelated) { this.iNumberOfRecordsReturned = Number(sRecordCount); }
 		if ((bErrorMaxReturnCount) && (Number(sRecordCount) > Number(iMaxReturnCount))) {
 			this._setError('413_001', [iMaxReturnCount, sRecordCount]);
@@ -163,8 +190,8 @@ GlobalToolsRecordReadComplex.prototype = {
 		} else if (iMaxReturnCount) {
 			grRecord.setLimit(iMaxReturnCount);
 		} // if return offset
-		aOrderBy.forEach(function (sOrderByField) { grRecord.orderBy(sOrderByField); }); // order by
-		aOrderByDesc.forEach(function (sOrderByField) { grRecord.orderByDesc(sOrderByField); }); // order by desc
+		aOrderBy.forEach(function (sOrderByField) { grRecord.orderBy(sOrderByField); });
+		aOrderByDesc.forEach(function (sOrderByField) { grRecord.orderByDesc(sOrderByField); });
 		if (this.bNoDomain) {
 			grRecord.queryNoDomain();
 		} else {
@@ -181,7 +208,7 @@ GlobalToolsRecordReadComplex.prototype = {
 		var bBreak = false;
 		while ((grRecord.next()) && (!bBreak)) {
 			if ((this.iRelatedTablesMandatoryTarget != 0) && (!bIsRelated)) {
-				this.iRelatedTablesMandatoryCount = 0; // reset per top record
+				this.iRelatedTablesMandatoryCount = 0;
 			} // if mandatory target
 			var sSysId = grRecord.getUniqueValue();
 			var sRecordClassName = String(grRecord.getRecordClassName());
@@ -206,14 +233,14 @@ GlobalToolsRecordReadComplex.prototype = {
 			if ((bReturnAttachmentInfoObject) || (bReturnAttachmentInfoArray)) {
 				this._getAttachmentInfo(sRecordClassName, sSysId, oRecord, bReturnAttachmentInfoObject);
 			} // if attachment info
-			if (this._gtObject.isObject(oRelatedTables)) {
-				this._getRelTables(grRecordClass, oRecord, oRelatedTables);
+			if (aPreparedRelTables.length > 0) {
+				this._getRelTables(grRecordClass, oRecord, aPreparedRelTables);
 			} // if related tables
 			if ((this.iRelatedTablesMandatoryCount != this.iRelatedTablesMandatoryTarget) && (!bIsRelated)) {
-					continue; // top record did not meet mandatory related target
-				} else {
-					aTable.push(oRecord);
-				} // if mandatory related target met
+				continue; // top record did not meet mandatory related target
+			} else {
+				aTable.push(oRecord);
+			} // if mandatory related target met
 			if ((sReturnType == 'first') || (sReturnType == 'object')) {
 				bBreak = true;
 			} // if first or object
@@ -231,7 +258,8 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _getTableData
 
 	_getClassRecord: function (grRecord, sTable, sRecordClassName, sSysId) {
-		if ((sTable == sRecordClassName) && (!this.bUseGlideRecordSecure)) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (sTable == sRecordClassName) {
 			return grRecord;
 		} // if record is already the class record
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getClassRecord'); }
@@ -255,21 +283,24 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _getClassRecord
 
 	_applyFields: function (grRecord, oRecord, aFields, sRecordClassName, bDisplay) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (!this._gtArray.isValidArray(aFields)) {
 			return;
 		} // if no fields
 		var sCacheType = (bDisplay) ? 'aDisplayFields' : 'aFields';
 		if (aFields[0] == 'allfields') {
-			if (!this.oFieldsCache[sCacheType].hasOwnProperty(sRecordClassName)) {
-				this.oFieldsCache[sCacheType][sRecordClassName] = this._getAllFields(sRecordClassName, aFields);
+			var sFieldCacheKey = sRecordClassName + '|' + aFields.join(','); // class + field-list signature (allfields plus any exclusions) so a shared transaction cache cannot collide across differing configs
+			if (!this.oFieldsCache[sCacheType].hasOwnProperty(sFieldCacheKey)) {
+				this.oFieldsCache[sCacheType][sFieldCacheKey] = this._getAllFields(sRecordClassName, aFields);
 			} // if not cached
-			this._getFieldValues(grRecord, oRecord, this.oFieldsCache[sCacheType][sRecordClassName], '', bDisplay);
+			this._getFieldValues(grRecord, oRecord, this.oFieldsCache[sCacheType][sFieldCacheKey], '', bDisplay);
 		} else {
 			this._getFieldValues(grRecord, oRecord, aFields, '', bDisplay);
 		} // if all fields
 	}, // function _applyFields
 
 	_getFieldValues: function (grRecord, oRecord, aFields, sReferenceField, bDisplay) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (!grRecord) {
 			return;
 		} // if no record
@@ -294,7 +325,8 @@ GlobalToolsRecordReadComplex.prototype = {
 			var sFieldLabel = sField;
 			var sInternalType = '';
 			var oQuestion;
-			if ((!sReferenceField) && ((!grRecord.isValidField(sField)) || ((this.bUseGlideRecordSecure) && (!grRecord[sField].canRead())))) {
+			var bValidField = grRecord.isValidField(sField);
+			if ((!sReferenceField) && ((!bValidField) || ((this.bUseGlideRecordSecure) && (!grRecord[sField].canRead())))) {
 				return; // invalid or unreadable field
 			} else if ((sReferenceField) && (sReferenceField == 'variables')) {
 				oQuestion = this._getQuestionFromVariable(grRecord, sField);
@@ -313,15 +345,16 @@ GlobalToolsRecordReadComplex.prototype = {
 			} else if (this.bUseFieldPascalCaseLabel) {
 				sFieldLabel = this._gt.convertUnderscoretoPascalCase(sField);
 			} else if (this.bUseFieldLabel) {
-				sFieldLabel = (grRecord.isValidField(sField)) ? String(grRecord[sField].getLabel()) : sField;
+				sFieldLabel = (bValidField) ? String(grRecord[sField].getLabel()) : sField;
 			} // if label style
 			if (sLabelOverride) {
-				sFieldLabel = sLabelOverride; // explicit output key override (sLabel)
+				sFieldLabel = sLabelOverride;
 			} // if label override
 			if (!sReferenceField) {
-				var sValue = String(this._gtObject.getValue('value', '', { 'value': grRecord.getValue(sField) }));
+				var sValue = grRecord.getValue(sField);
+				sValue = ((sValue === null) || (sValue === undefined)) ? '' : String(sValue);
 				if ((!bDisplay) && (this._gtArray.isValidArray(this.aDisplayValueTypes))) {
-					sInternalType = this._gtTable.getInternalType(grRecord, sField);
+					sInternalType = this._getCachedInternalType(grRecord, sField);
 				} // if value mode and display value types configured
 				if ((bDisplay) || ((sInternalType) && (this.aDisplayValueTypes.indexOf(sInternalType) != -1))) {
 					var sDisplayValue = String(grRecord.getDisplayValue(sField));
@@ -341,6 +374,7 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _getFieldValues
 
 	_getReferenceFieldValue: function (grRecord, oRecord, sField, sFieldLabel, sReferenceField, sReferenceFieldLabel, oQuestion, bDisplay, sLabelOverride) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sKey = (sLabelOverride) ? sLabelOverride : (sReferenceFieldLabel + this.sRefFieldConcatChar + sFieldLabel);
 		if ((sReferenceField != 'variables') && (!grRecord[sReferenceField])) {
 			oRecord[sKey] = '';
@@ -360,7 +394,7 @@ GlobalToolsRecordReadComplex.prototype = {
 			sValue = String(grRecord[sReferenceField][sField]);
 			sDisplayValue = String(grRecord[sReferenceField][sField].getDisplayValue());
 			if ((!bDisplay) && (this._gtArray.isValidArray(this.aDisplayValueTypes))) {
-				sInternalType = this._gtTable.getInternalType(grRecord, sReferenceField + '.' + sField);
+				sInternalType = this._getCachedInternalType(grRecord, sReferenceField + '.' + sField);
 			} // if value mode and display types
 		} // if variables or dot walk
 		if (((bDisplay) || ((sInternalType) && (this.aDisplayValueTypes.indexOf(sInternalType) != -1))) && (sValue != sDisplayValue)) {
@@ -376,12 +410,13 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _getReferenceFieldValue
 
 	_getJournalFieldValues: function (grRecord, oRecord, oJournalFields) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getJournalFieldValues'); }
 		Object.keys(oJournalFields).forEach(function (sField) {
 			if ((!grRecord.isValidField(sField)) || ((this.bUseGlideRecordSecure) && (!grRecord[sField].canRead()))) {
 				return; // invalid or unreadable journal field
 			} // if invalid field
-			var sReturnType = this._getValue('sReturnType', 'string', oJournalFields[sField]); // string or array
+			var sReturnType = this._getValue('sReturnType', 'string', oJournalFields[sField]);
 			var iNumber = Number(this._getValue('iNumber', 1, oJournalFields[sField])); // 1 last, 2-x last x, -1 all
 			if (iNumber == 1) {
 				oRecord[sField] = String(grRecord[sField].getJournalEntry(1));
@@ -395,6 +430,7 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _getJournalFieldValues
 
 	_getRefFieldValues: function (grRecord, oRecord, oReferenceFields) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getRefFieldValues'); }
 		Object.keys(oReferenceFields).forEach(function (sReferenceField) {
 			var aFields = this._getValue('aFields', [], oReferenceFields[sReferenceField]);
@@ -408,8 +444,8 @@ GlobalToolsRecordReadComplex.prototype = {
 				aDisplayFields = (bAllDisplayFields) ? [] : aDisplayFields;
 				for (var sVariableName in grRecord.variables) {
 					if (sVariableName) {
-						if (bAllFields) { aFields.push(sVariableName); } // collect value variables
-						if (bAllDisplayFields) { aDisplayFields.push(sVariableName); } // collect display variables
+						if (bAllFields) { aFields.push(sVariableName); }
+						if (bAllDisplayFields) { aDisplayFields.push(sVariableName); }
 					} // if variable name
 				} // each variable
 			} // if variables all fields
@@ -420,10 +456,11 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _getRefFieldValues
 
 	_getAttributeTables: function (grRecord, oRecord, oAttributeTable) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sBaseTableRecord = this._gtTable.getAbsoluteBase(grRecord.getTableName());
 		var sBaseTableName = this._getValue('sBaseTableName', '', oAttributeTable);
 		if ((!sBaseTableName) || (sBaseTableName != sBaseTableRecord)) {
-			return; // attribute table base does not match this record
+			return;
 		} // if base table mismatch
 		var sAttributeTableName = this._getValue('sAttributeTableName', '', oAttributeTable);
 		if (!sAttributeTableName) {
@@ -439,17 +476,58 @@ GlobalToolsRecordReadComplex.prototype = {
 		grAttribute.addEncodedQuery(sAttributeReferenceField + '=' + grRecord.getUniqueValue() + '^' + sAttributeNameField + 'IN' + aAttributeNames.join(','));
 		grAttribute.query();
 		while (grAttribute.next()) {
-			oRecord[sFieldPrefix + grAttribute.getValue(sAttributeNameField)] = String(this._getValue('value', '', { 'value': grAttribute.getValue(sAttributeValueField) }));
+			var sAttributeValue = grAttribute.getValue(sAttributeValueField);
+			oRecord[sFieldPrefix + grAttribute.getValue(sAttributeNameField)] = ((sAttributeValue === null) || (sAttributeValue === undefined)) ? '' : String(sAttributeValue);
 		} // while attribute
 		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_getAttributeTables'); }
 	}, // function _getAttributeTables
 
-	_getRelTables: function (grRecord, oRecord, oRelatedTables) {
+	_prepareRelTableConfigs: function (oRelatedTables, iMaxReturnCountAllLevels) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var aPrepared = [];
 		Object.keys(oRelatedTables).forEach(function (sRelatedTableKey) {
 			var oRelatedTable = oRelatedTables[sRelatedTableKey];
-			var sKeySourceField = this._getValue('sKeySourceField', '', oRelatedTable);
-			var sKeyTargetField = this._getValue('sKeyTargetField', '', oRelatedTable);
-			var sKeyTargetFieldOperator = this._getValue('sKeyTargetFieldOperator', '=', oRelatedTable);
+			var sReturnType = this._getValue('sReturnType', '', oRelatedTable);
+			var sRelatedTable = (String(sRelatedTableKey).indexOf('|') != -1) ? sRelatedTableKey.split('|')[0] : sRelatedTableKey;
+			var sTableLabel = this._getValue('sLabel', this._getValue('sTableName', '', oRelatedTable), oRelatedTable); // sLabel preferred, sTableName kept for legacy compat
+			sTableLabel = (sTableLabel) ? sTableLabel : this._getTableLabel(sRelatedTableKey);
+			var sOwnMaxReturnCountAllLevels = this._getValue('iMaxReturnCountAllLevels', '', oRelatedTable);
+			aPrepared.push({
+				'sRelatedTableKey': sRelatedTableKey,
+				'oRelatedTable': oRelatedTable,
+				'sKeySourceField': this._getValue('sKeySourceField', '', oRelatedTable),
+				'sKeyTargetField': this._getValue('sKeyTargetField', '', oRelatedTable),
+				'sKeyTargetFieldOperator': this._getValue('sKeyTargetFieldOperator', '=', oRelatedTable),
+				'sRelTableQuery': this._getValue('sQuery', '', oRelatedTable),
+				'sReturnType': sReturnType,
+				'sTableLabel': sTableLabel,
+				'oChildConfig': {
+					'sTable': sRelatedTable,
+					'sQuery': '',
+					'iMaxReturnCount': this._getValue('iMaxReturnCount', '', oRelatedTable),
+					'iMaxReturnCountAllLevels': (sOwnMaxReturnCountAllLevels) ? sOwnMaxReturnCountAllLevels : iMaxReturnCountAllLevels, // per-relation override wins, else cascades from parent
+					'aOrderBy': this._getValue('aOrderBy', [], oRelatedTable),
+					'aOrderByDesc': this._getValue('aOrderByDesc', [], oRelatedTable),
+					'aFields': this._getValue('aFields', [], oRelatedTable),
+					'aDisplayFields': this._getValue('aDisplayFields', [], oRelatedTable),
+					'oJournalFields': this._getValue('oJournalFields', {}, oRelatedTable),
+					'oReferenceFields': this._getValue('oReferenceFields', {}, oRelatedTable),
+					'oRelatedTables': this._getValue('oRelatedTables', {}, oRelatedTable),
+					'oAttributeTable': this._getValue('oAttributeTable', {}, oRelatedTable),
+					'sReturnType': sReturnType,
+					'bValidParentObject': this._getValue('bValidParentObject', false, oRelatedTable),
+					'bReturnAttachmentInfoObject': this._getValue('bReturnAttachmentInfoObject', false, oRelatedTable),
+					'bReturnAttachmentInfoArray': this._getValue('bReturnAttachmentInfoArray', false, oRelatedTable)
+				} // child read config template, only sQuery changes per parent row
+			}); // prepared entry
+		}, this); // each related table
+		return aPrepared;
+	}, // function _prepareRelTableConfigs
+
+	_getRelTables: function (grRecord, oRecord, aPreparedRelTables) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		aPreparedRelTables.forEach(function (oPrepared) {
+			var sKeySourceField = oPrepared['sKeySourceField'];
 			var sKeyValue = '';
 			if (sKeySourceField.indexOf('variables.') != -1) {
 				var oQuestion = this._getQuestionFromVariable(grRecord, sKeySourceField.replace('variables.', ''));
@@ -457,44 +535,25 @@ GlobalToolsRecordReadComplex.prototype = {
 			} else {
 				sKeyValue = String(grRecord.getValue(sKeySourceField));
 			} // if variable source field
-			var sQuery = sKeyTargetField + sKeyTargetFieldOperator + sKeyValue;
-			var sRelTableQuery = this._getValue('sQuery', '', oRelatedTable);
-			if (sRelTableQuery) {
-				sQuery = sQuery + '^' + sRelTableQuery;
+			var sQuery = oPrepared['sKeyTargetField'] + oPrepared['sKeyTargetFieldOperator'] + sKeyValue;
+			if (oPrepared['sRelTableQuery']) {
+				sQuery = sQuery + '^' + oPrepared['sRelTableQuery'];
 			} // if related table query
-			var sReturnType = this._getValue('sReturnType', '', oRelatedTable);
-			var sRelatedTable = (String(sRelatedTableKey).indexOf('|') != -1) ? sRelatedTableKey.split('|')[0] : sRelatedTableKey;
-			var sTableLabel = this._getValue('sLabel', this._getValue('sTableName', '', oRelatedTable), oRelatedTable); // sLabel preferred, sTableName kept for legacy compat
-			sTableLabel = (sTableLabel) ? sTableLabel : this._getTableLabel(sRelatedTableKey);
-			var oChildConfig = {
-				'sTable': sRelatedTable,
-				'sQuery': sQuery,
-				'aOrderBy': this._getValue('aOrderBy', [], oRelatedTable),
-				'aOrderByDesc': this._getValue('aOrderByDesc', [], oRelatedTable),
-				'aFields': this._getValue('aFields', [], oRelatedTable),
-				'aDisplayFields': this._getValue('aDisplayFields', [], oRelatedTable),
-				'oJournalFields': this._getValue('oJournalFields', {}, oRelatedTable),
-				'oReferenceFields': this._getValue('oReferenceFields', {}, oRelatedTable),
-				'oRelatedTables': this._getValue('oRelatedTables', {}, oRelatedTable),
-				'oAttributeTable': this._getValue('oAttributeTable', {}, oRelatedTable),
-				'sReturnType': sReturnType,
-				'bValidParentObject': this._getValue('bValidParentObject', false, oRelatedTable),
-				'bReturnAttachmentInfoObject': this._getValue('bReturnAttachmentInfoObject', false, oRelatedTable),
-				'bReturnAttachmentInfoArray': this._getValue('bReturnAttachmentInfoArray', false, oRelatedTable)
-			}; // child read config
-			var oRelResult = this._getTableData(oChildConfig, true);
-			this._assignRelatedResult(oRecord, oRelatedTable, sRelatedTableKey, sKeySourceField, sTableLabel, sReturnType, oRelResult);
+			oPrepared['oChildConfig']['sQuery'] = sQuery;
+			var oRelResult = this._getTableData(oPrepared['oChildConfig'], true);
+			this._assignRelatedResult(oRecord, oPrepared['oRelatedTable'], oPrepared['sRelatedTableKey'], sKeySourceField, oPrepared['sTableLabel'], oPrepared['sReturnType'], oRelResult);
 		}, this); // each related table
 	}, // function _getRelTables
 
 	_assignRelatedResult: function (oRecord, oRelatedTable, sRelatedTableKey, sKeySourceField, sTableLabel, sReturnType, oRelResult) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var bMergeToParent = this._getValue('bMergeToParent', false, oRelatedTable);
 		if (sReturnType == 'first') {
 			Object.keys(oRelResult).forEach(function (sRelResultField) {
 				oRecord[sTableLabel + this.sRefFieldConcatChar + sRelResultField] = oRelResult[sRelResultField];
 			}, this); // each first result field
 		} else if (sReturnType == 'object') {
-			oRecord[sTableLabel] = oRelResult; // single nested object under sLabel, no array wrap, no flatten onto parent
+			oRecord[sTableLabel] = oRelResult;
 		} else if (sReturnType == 'reference') {
 			oRecord[sKeySourceField] = oRelResult;
 		} else if (sReturnType == 'hidden') {
@@ -502,16 +561,17 @@ GlobalToolsRecordReadComplex.prototype = {
 			if (bMergeToParent) {
 				this._mergeToParent(oRecord, aFlattened, oRelatedTable, sTableLabel);
 			} else if (this._gtArray.isValidArray(aFlattened)) {
-				oRecord[sTableLabel] = aFlattened; // plain hidden flat array (omit key when empty), now honors the sLabel/sTableName override
+				oRecord[sTableLabel] = aFlattened;
 			} // if merge to parent
 		} else if (bMergeToParent) {
-			this._mergeToParent(oRecord, oRelResult, oRelatedTable, sTableLabel); // non-hidden related table merged directly onto the parent (e.g. a bundle/subscription join flattened onto its root)
+			this._mergeToParent(oRecord, oRelResult, oRelatedTable, sTableLabel);
 		} else {
 			oRecord[sTableLabel] = oRelResult;
 		} // if return type
 	}, // function _assignRelatedResult
 
 	_flattenHiddenResult: function (oRelResult, bUniqueChildResultId) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var aChildRecords = [];
 		if (!this._gtArray.isValidArray(oRelResult)) {
 			return aChildRecords;
@@ -539,45 +599,44 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _flattenHiddenResult
 
 	_mergeToParent: function (oRecord, aCandidates, oRelatedTable, sLabel) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var bMergeArray = this._getValue('bMergeArray', false, oRelatedTable);
 		var bUseLast = this._getValue('bMergeToParentUseLast', false, oRelatedTable);
 		var aNonEmpty = [];
 		if (this._gtArray.isValidArray(aCandidates)) {
 			aNonEmpty = aCandidates.filter(function (oEntry) {
-				return this._hasPopulatedValue(oEntry); // keep only records that carry at least one non-empty value (a record of all-'' fields is treated as no match)
+				return this._hasPopulatedValue(oEntry);
 			}, this); // keep only populated record objects
 		} // if candidates array
 		if (aNonEmpty.length == 0) {
 			this._getMergeFieldLabels(oRelatedTable).forEach(function (sMergeLabel) {
-				oRecord[sMergeLabel] = ''; // no match found, still emit the declared merge fields so the parent schema stays consistent
+				oRecord[sMergeLabel] = '';
 			}); // each declared merge field
 			return;
 		} // if none
 		if (bMergeArray) {
-			oRecord[sLabel] = aNonEmpty; // multi-hit: array of non-empty records
+			oRecord[sLabel] = aNonEmpty;
 		} else {
 			var oWinner = (bUseLast) ? aNonEmpty[aNonEmpty.length - 1] : aNonEmpty[0];
 			Object.keys(oWinner).forEach(function (sField) {
-				oRecord[sField] = oWinner[sField]; // merge winning record's fields onto parent
+				oRecord[sField] = oWinner[sField];
 			}); // each field
 		} // if array mode
 	}, // function _mergeToParent
 
 	_hasPopulatedValue: function (oEntry) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (!this._gtObject.isObject(oEntry)) {
 			return false; // not a record object
 		} // if not object
-		var bPopulated = false;
-		Object.keys(oEntry).forEach(function (sKey) {
+		return Object.keys(oEntry).some(function (sKey) {
 			var oFieldValue = oEntry[sKey];
-			if ((oFieldValue !== '') && (oFieldValue !== null) && (oFieldValue !== undefined)) {
-				bPopulated = true; // a non-empty scalar, object (display_value/value form) or array counts as populated
-			} // if value populated
+			return ((oFieldValue !== '') && (oFieldValue !== null) && (oFieldValue !== undefined));
 		}); // each field
-		return bPopulated;
 	}, // function _hasPopulatedValue
 
 	_getMergeFieldLabels: function (oRelatedTable) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var aLabels = [];
 		this._getValue('aFields', [], oRelatedTable).forEach(function (oFieldDef) {
 			var bFieldObject = this._gtObject.isObject(oFieldDef);
@@ -597,13 +656,14 @@ GlobalToolsRecordReadComplex.prototype = {
 		var oNestedRelatedTables = this._getValue('oRelatedTables', {}, oRelatedTable);
 		Object.keys(oNestedRelatedTables).forEach(function (sNestedKey) {
 			if (this._getValue('bMergeToParent', false, oNestedRelatedTables[sNestedKey])) {
-				aLabels = aLabels.concat(this._getMergeFieldLabels(oNestedRelatedTables[sNestedKey])); // nested merge chain contributes its own labels
-			} // if nested table also merges to parent
+				aLabels = aLabels.concat(this._getMergeFieldLabels(oNestedRelatedTables[sNestedKey]));
+			} // if merge
 		}, this); // each nested related table
 		return aLabels;
 	}, // function _getMergeFieldLabels
 
 	_getHistoryWalkRecord: function (grRecord) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (!grRecord) {
 			return grRecord;
 		} // if no record
@@ -623,6 +683,7 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _getHistoryWalkRecord
 
 	_getQuestionFromVariable: function (grRecord, sField) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var oTempVariable = grRecord.variables[sField];
 		if (oTempVariable) {
 			var oGlideObject = oTempVariable.getGlideObject();
@@ -633,6 +694,7 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _getQuestionFromVariable
 
 	_getAttachmentInfo: function (sTable, sSysId, oRecord, bReturnObject) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getAttachmentInfo'); }
 		var aAttachments = this._gtAttachment.getAttachments(sTable, sSysId, '', 'object', false);
 		aAttachments = (this._gtArray.isValidArray(aAttachments)) ? aAttachments : [];
@@ -649,6 +711,7 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _getAttachmentInfo
 
 	_getAllFields: function (sTable, aFields) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_getAllFields'); }
 		var aAllFields = this._gtTable.getFields(sTable);
 		aAllFields = (this._gtArray.isValidArray(aAllFields)) ? aAllFields : [];
@@ -666,6 +729,7 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _getAllFields
 
 	_getTableLabel: function (sTable) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sIndexName = '';
 		if (String(sTable).indexOf('|') != -1) {
 			var aTablePart = String(sTable).split('|');
@@ -683,6 +747,7 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _getTableLabel
 
 	_filterRequestedFields: function (aFields) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (!this._gtArray.isValidArray(this.aRequestedFields)) {
 			return aFields;
 		} // if no requested fields
@@ -699,6 +764,7 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _filterRequestedFields
 
 	_setError: function (sErrorCode, aErrorDetailArgs) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		this.bError = true;
 		var aErrorCode = String(sErrorCode).split('_');
 		this.iResponseStatusCode = Number(aErrorCode[0]);
@@ -710,7 +776,7 @@ GlobalToolsRecordReadComplex.prototype = {
 	}, // function _setError
 
 	type: 'GlobalToolsRecordReadComplex',
-	version: '2.1.3',
+	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -720,14 +786,14 @@ GlobalToolsRecordReadComplex.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-05-31 17:55:55</sys_created_on>
         <sys_id>a253d0ccc311c7d016a2269dc001316c</sys_id>
-        <sys_mod_count>22</sys_mod_count>
+        <sys_mod_count>25</sys_mod_count>
         <sys_name>GlobalToolsRecordReadComplex</sys_name>
         <sys_package display_value="Global" source="global">global</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a253d0ccc311c7d016a2269dc001316c</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-19 17:17:14</sys_updated_on>
+        <sys_updated_on>2026-07-25 10:40:20</sys_updated_on>
     </sys_script_include>
     <sys_claim action="INSERT_OR_UPDATE">
         <claim_owner_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</claim_owner_scope>
@@ -737,11 +803,11 @@ GlobalToolsRecordReadComplex.prototype = {
         <previous_claim_name/>
         <previous_claim_scope>a39b8f3697816110b434f5f3a253af25</previous_claim_scope>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-07-19 13:32:16</sys_created_on>
+        <sys_created_on>2026-07-25 09:56:21</sys_created_on>
         <sys_id>8bd59404c351c7d016a2269dc0013106</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-19 13:32:16</sys_updated_on>
+        <sys_updated_on>2026-07-25 09:56:21</sys_updated_on>
     </sys_claim>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a253d0ccc311c7d016a2269dc001316c</id>

@@ -5,8 +5,8 @@
         <api_name>global.GlobalToolsArray</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development&#13;
-Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
+        <description>Tools to support (scoped) app development
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.
 Probably obsolete with ECMA 21</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsArray</name>
@@ -14,21 +14,22 @@ Probably obsolete with ECMA 21</description>
         <script><![CDATA[var GlobalToolsArray = Class.create();
 GlobalToolsArray.prototype = {
 	initialize: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		this._gt = new global.GlobalTools();
 	}, // function initialize
 
-	checkAccess: function (sCallerScope) {
+	_checkAccess: function (sCallerScope) {
+		if (this.oAllowedScopes) {return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));}
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-			return true;
-		} // if scope is allowed
-	}, // function checkAccess
+		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
+		this.oAllowedScopes['rhino.global'] = true;
+		return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));
+	}, // function _checkAccess
 
 	// Obsolete with ECMA 21, works fine for small arrays
 	unique: function (aArray, bRemoveEmpty) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var onlyUnique = function (value, index, array) {
 			return array.indexOf(value) === index;
 		}; // function onlyUnique
@@ -43,14 +44,14 @@ GlobalToolsArray.prototype = {
 	}, // function
 
 	isValidArray: function (aArray) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((aArray) && (Array.isArray(aArray)) && (aArray.length > 0) && (aArray[0])) {
 			return true;
 		} // if array with one value
 	}, // function validArray
 
 	mergeArray: function (aArray1, aArray2, bRemoveEmpty) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((this.isValidArray(aArray1)) && ((!this.isValidArray(aArray2)))) {
 			return aArray1;
 		} else if ((!this.isValidArray(aArray1)) && ((this.isValidArray(aArray2)))) {
@@ -63,7 +64,7 @@ GlobalToolsArray.prototype = {
 
 	// Probably obsolete with ECMA 21
 	addRemoveFromArray: function (aArray, aArrayAdd, aArrayRemove) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var aResult = this.mergeArray(aArray, aArrayAdd);
 		var iFound = 0;
 		if (this.isValidArray(aArrayRemove)) {
@@ -81,7 +82,7 @@ GlobalToolsArray.prototype = {
 	// Get add/remove arrays from two arrays
 	// Note: Not optimal for performance on very big arrays
 	getAddRemoveFromArrays: function (aArray, aArrayOld) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (!this.isValidArray(aArray)) {
 			aArray = [];
 		} // is not array
@@ -116,7 +117,7 @@ GlobalToolsArray.prototype = {
 	}, // function getAddRemoveFromArray
 
 	convertCommaSepStringToArray: function (sCommaSepString) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var aResult = [];
 		sCommaSepString = sCommaSepString.replace(/[\n\s]+/g, '');
 		if (sCommaSepString) {
@@ -126,7 +127,7 @@ GlobalToolsArray.prototype = {
 	}, // function convertCommaSepStringToArray
 
 	getCommonTypeFromArray: function (aArray, bDoNotConvertCase) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sType;
 		if (this.isValidArray(aArray)) {
 			var sTmpType = '';
@@ -144,7 +145,7 @@ GlobalToolsArray.prototype = {
 	}, // function getCommonTypeFromArray
 
 	type: 'GlobalToolsArray',
-	version: '2.1.2',
+	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -153,24 +154,24 @@ GlobalToolsArray.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 09:59:35</sys_created_on>
         <sys_id>ca9dcd641bb47150d5be777d8b4bcbd6</sys_id>
-        <sys_mod_count>29</sys_mod_count>
+        <sys_mod_count>30</sys_mod_count>
         <sys_name>GlobalToolsArray</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_ca9dcd641bb47150d5be777d8b4bcbd6</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-05-31 17:54:32</sys_updated_on>
+        <sys_updated_on>2026-07-21 07:47:28</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>ca9dcd641bb47150d5be777d8b4bcbd6</id>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2024-08-04 08:51:44</sys_created_on>
         <sys_id>0cbde5311bb78a10e50ddc61ab4bcbc6</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>1</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-08-04 08:51:44</sys_updated_on>
+        <sys_updated_on>2026-07-11 10:20:47</sys_updated_on>
         <table>sys_script_include</table>
-        <use_es_latest>false</use_es_latest>
+        <use_es_latest>true</use_es_latest>
     </sys_es_latest_script>
 </record_update>

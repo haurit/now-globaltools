@@ -5,7 +5,7 @@
         <api_name>global.GlobalToolsTable</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development&#13;
+        <description>Tools to support (scoped) app development
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsTable</name>
@@ -13,7 +13,7 @@ Functions are only available for global scope and specific scopes defined in the
         <script><![CDATA[var GlobalToolsTable = Class.create();
 GlobalToolsTable.prototype = {
 	initialize: function (gtCache, oTimer) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (gtCache instanceof GlobalToolsCache) {
 			this._gtCache = gtCache;
 		} else {
@@ -35,20 +35,21 @@ GlobalToolsTable.prototype = {
 		this._gtObject = new global.GlobalToolsObject();
 	}, // function initialize
 
-	checkAccess: function (sCallerScope) {
+	_checkAccess: function (sCallerScope) {
+		if (this.oAllowedScopes) {return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));}
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-			return true;
-		} // if scope is allowed
-	}, // function checkAccess
+		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
+		this.oAllowedScopes['rhino.global'] = true;
+		return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));
+	}, // function _checkAccess
 
 	/***********************************************************************************************************
 	*	Table Functions
 	************************************************************************************************************/
 
 	getTableId: function (oTable) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (oTable) {
 			var bArray = this._gtArray.isValidArray(oTable);
 			var aTableIds = [];
@@ -66,7 +67,7 @@ GlobalToolsTable.prototype = {
 	}, // function getTableId
 
 	getTableName: function (oTableId) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (oTableId) {
 			var bArray = this._gtArray.isValidArray(oTableId);
 			var aTables = [];
@@ -84,8 +85,8 @@ GlobalToolsTable.prototype = {
 	}, // function getTableName
 
 	getTableLabel: function (sTable) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
-		var sLabel = (this._gtCache.hasValue('gtt_gtl/' + sTable)) ? this._gtCache.getValue('gtt_gtl/' + sTable) : ''; // cached display label
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var sLabel = (this._gtCache.hasValue('gtt_gtl/' + sTable)) ? this._gtCache.getValue('gtt_gtl/' + sTable) : '';
 		if (sLabel) {
 			return sLabel;
 		} // if cached
@@ -98,14 +99,14 @@ GlobalToolsTable.prototype = {
 	}, // function getTableLabel
 
 	isValidTable: function (sTable) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sTable) && (new GlideRecord(String(sTable)).isValid())) {
 			return true;
 		} // if table is valid
 	}, // function isValidTable
 
 	isValidDBView: function (sTable) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (sTable) {
 			var grDBView = new GlideRecord('sys_db_view');
 			grDBView.addEncodedQuery('name=' + sTable);
@@ -118,7 +119,7 @@ GlobalToolsTable.prototype = {
 	}, // function isValidDBView
 
 	getRecordClass: function (grRecord) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this._gt.getType(grRecord).indexOf('gliderecord') != -1) {
 			var sClassName = grRecord.getValue('sys_class_name');
 			sClassName = (sClassName) ? sClassName : grRecord.getTableName();
@@ -129,7 +130,7 @@ GlobalToolsTable.prototype = {
 	}, // function getRecordClass
 
 	getAbsoluteBase: function (sTable) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		try {
 			if (this.isValidTable(sTable)) {
 				return String(GlideDBObjectManager.get().getAbsoluteBase(sTable));
@@ -140,7 +141,7 @@ GlobalToolsTable.prototype = {
 	}, // function getAbsoluteBase
 
 	getTableHierarchy: function (sTable) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		try {
 			if (this.isValidTable(sTable)) {
 				return j2js(GlideDBObjectManager.get().getTables(sTable));
@@ -151,7 +152,7 @@ GlobalToolsTable.prototype = {
 	}, // function getTableHierarchy
 
 	getTableExtensions: function (sTable, bAllExtensions, bDirectOnly) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		try {
 			if (this.isValidTable(sTable)) {
 				bDirectOnly = (bDirectOnly === true) ? true : false;
@@ -176,7 +177,7 @@ GlobalToolsTable.prototype = {
 	}, // function getTableExtensions
 
 	isTableUpdateSynched: function (sTable) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		try {
 			if (this.isValidTable(sTable)) {
 				var aTableHierarchy = this.getTableHierarchy(sTable);
@@ -196,7 +197,7 @@ GlobalToolsTable.prototype = {
 	}, // function isTableUpdateSynched
 
 	getTableScopeInfo: function (sTable) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (!this.isValidTable(sTable)) {
 			return;
 		} // if not valid table
@@ -227,7 +228,7 @@ GlobalToolsTable.prototype = {
 	************************************************************************************************************/
 
 	getInternalType: function (grRecord, sField) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this._gt.getType(grRecord).indexOf('gliderecord') != -1) {
 			if (grRecord.isValidField(sField)) {
 				var edElementDescriptor;
@@ -259,7 +260,7 @@ GlobalToolsTable.prototype = {
 	}, // function getInternalType
 
 	getDisplayField: function (sTable) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.isValidTable(sTable)) {
 			var grDictOrOverride = this.getDictOrOverrideValue(sTable, '', 'display_override', true, 'display=true');
 			if (grDictOrOverride) {
@@ -269,7 +270,7 @@ GlobalToolsTable.prototype = {
 	}, // function getDisplayField
 
 	getFieldLabel: function (oTableOrRecord, sField) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sType = this._gt.getType(oTableOrRecord);
 		var grRecord;
 		if ((sType == 'string') && (this.isValidTable(oTableOrRecord))) {
@@ -286,7 +287,7 @@ GlobalToolsTable.prototype = {
 	}, // function getFieldLabel
 
 	getFields: function (oTableOrRecord, bOmitSysId, bReturnDictId, bReturnArrayWithObject) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getFields'); }
 		var sType = this._gt.getType(oTableOrRecord);
 		var aResultFields = [];
@@ -374,7 +375,7 @@ GlobalToolsTable.prototype = {
 	}, // function getFields
 
 	getFieldParentTable: function (oTableOrRecord, sField) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getFieldParentTable'); }
 		var sTable = '';
 		var sType = this._gt.getType(oTableOrRecord);
@@ -413,7 +414,7 @@ GlobalToolsTable.prototype = {
 	*	Reference Field Functions
 	************************************************************************************************************/
 	getRefTable: function (sTable, sField) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getRefTable'); }
 		if ((sTable) && (this.isValidTable(sTable)) && (sField)) {
 			var aTables = this.getTableHierarchy(sTable);
@@ -432,7 +433,7 @@ GlobalToolsTable.prototype = {
 	}, // function getRefTable
 
 	getRefFieldName: function (grRecord, sRefTable, bCheckRefTableHierarchy, sReturnType) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getRefFieldName'); }
 		var sReturnField = '';
 		var aReturnFields = [];
@@ -471,7 +472,7 @@ GlobalToolsTable.prototype = {
 	************************************************************************************************************/
 
 	getDictOrOverrideValue: function (sTable, sField, sAttributeName, bReturnRecord, sAddlDictQuery) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getDictOrOverrideValue'); }
 		var oReturnValue, sPath;
 		if ((sTable) && ((sField) || (sAttributeName))) {
@@ -564,7 +565,7 @@ GlobalToolsTable.prototype = {
 	}, // function getDictOrOverrideValue
 
 	getFieldChoices: function (sTable, sField, sDependentFieldValue) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getFieldChoices'); }
 		var aChoices = [],
 			aDependentValues = [],
@@ -614,7 +615,7 @@ GlobalToolsTable.prototype = {
 	}, // function getFieldChoices
 
 	getMandatoryFields: function (sTable) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var aMandatoryFields = [];
 		if (this.isValidTable(sTable)) {
 			var grRecord = new GlideRecord(sTable);
@@ -637,7 +638,7 @@ GlobalToolsTable.prototype = {
 	************************************************************************************************************/
 
 	generateLucidChartERDInput: function (oConfig) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!oConfig) || (!this._gtObject.isObject(oConfig))) {
 			return '';
 		} // check input
@@ -701,6 +702,7 @@ GlobalToolsTable.prototype = {
 	}, // function generateLucidChartERDInput
 
 	_generateLucidChartERDDictData: function (sTable, bOnlyTableWithoutHierarchy, bOnlyReferenceFields, aExcludeTables, sTableSchema, sSchemaType, bFollowReferences, iMaxNumberOfReferencesToFollow, bFollowInboundReferences, iCurrentNumberOfReferences, bFollowReferenceCall) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this.aLucidChartERDTableCache.indexOf(sTable) == -1) {
 			this.aLucidChartERDTableCache.push(sTable);
 			if (bFollowReferenceCall) {
@@ -759,7 +761,7 @@ GlobalToolsTable.prototype = {
 	}, // function _generateLucidChartERDDictData
 
 	type: 'GlobalToolsTable',
-	version: '2.1.2',
+	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -768,24 +770,24 @@ GlobalToolsTable.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:03:21</sys_created_on>
         <sys_id>157e05681bb47150d5be777d8b4bcb77</sys_id>
-        <sys_mod_count>208</sys_mod_count>
+        <sys_mod_count>211</sys_mod_count>
         <sys_name>GlobalToolsTable</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_157e05681bb47150d5be777d8b4bcb77</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-06-01 06:05:44</sys_updated_on>
+        <sys_updated_on>2026-07-21 18:46:45</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>157e05681bb47150d5be777d8b4bcb77</id>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2024-08-15 19:08:13</sys_created_on>
         <sys_id>fd44acad1bc41a10e50ddc61ab4bcbe4</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>1</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-08-15 19:08:13</sys_updated_on>
+        <sys_updated_on>2026-07-11 10:20:40</sys_updated_on>
         <table>sys_script_include</table>
-        <use_es_latest>false</use_es_latest>
+        <use_es_latest>true</use_es_latest>
     </sys_es_latest_script>
 </record_update>

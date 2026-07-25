@@ -5,7 +5,7 @@
         <api_name>global.GlobalToolsRESTAPI</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development&#13;
+        <description>Tools to support (scoped) app development
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsRESTAPI</name>
@@ -13,13 +13,14 @@ Functions are only available for global scope and specific scopes defined in the
         <script><![CDATA[var GlobalToolsRESTAPI = Class.create();
 GlobalToolsRESTAPI.prototype = {
 	initialize: function (oConnectionAlias, bLog, bQueryNoDomain, sLogLevel) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		this.bLog = (bLog) ? bLog : false;
 		this.sLogLevel = ((sLogLevel) && (['basic', 'elevated', 'all'].indexOf(sLogLevel) != -1)) ? sLogLevel : '';
 		this.bValidConnectionConfig = false;
 		this.sQueryNoDomain = (bQueryNoDomain === true) ? '&sysparm_query_no_domain=true' : '';
 		this.iHttpTimeout = 0;
 		this.sLimit = '1000';
+		this.sConnectionAliasId = 'undefined';
 		this._gt = new global.GlobalTools();
 		this._gtTable = new global.GlobalToolsTable();
 		this._gtArray = new global.GlobalToolsArray();
@@ -29,16 +30,17 @@ GlobalToolsRESTAPI.prototype = {
 		} // if alias
 	}, // function initialize
 
-	checkAccess: function (sCallerScope) {
+	_checkAccess: function (sCallerScope) {
+		if (this.oAllowedScopes) { return this.oAllowedScopes.hasOwnProperty(String(sCallerScope)); }
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-			return true;
-		} // if scope is allowed
-	}, // function checkAccess
+		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
+		this.oAllowedScopes['rhino.global'] = true;
+		return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));
+	}, // function _checkAccess
 
 	_setConnectionFromAlias: function (oConnectionAlias) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		this.sRemoteUrl = '';
 		this.sHostName = '';
 		var sConnectionAliasId = '';
@@ -56,6 +58,7 @@ GlobalToolsRESTAPI.prototype = {
 			} // if sys_id or name
 		} // if glide record
 		if (sConnectionAliasId) {
+			this.sConnectionAliasId = sConnectionAliasId;
 			var _ConnectionInfoProvider = new sn_cc.ConnectionInfoProvider();
 			var ccConnectionInfo = _ConnectionInfoProvider.getConnectionInfo(sConnectionAliasId);
 			if (ccConnectionInfo) {
@@ -77,7 +80,7 @@ GlobalToolsRESTAPI.prototype = {
 						this.sCredentialPw = ccConnectionInfo.getCredentialAttribute('password');
 					} else if (this.sCredentialType == 'oauth_2_0') {
 						this.sCredentialType = 'oauth2';
-						this.sCredentialId = ccConnectionInfo.getCredentialAttribute('oauth_entity_profile');
+						this.sCredentialId = ccConnectionInfo.getCredentialAttribute('sys_id');
 					} // if basic				
 					this.sMutualAuthProfile = '';
 					if (ccConnectionInfo.getAttribute('mutual_auth') == 'true') {
@@ -123,12 +126,16 @@ GlobalToolsRESTAPI.prototype = {
 						} // if mid server
 					} // if mid server
 				} // if valid url
+			} else {
+				this.sConnectionAliasId = 'invalid';
 			} // if connection info
-		} // if valid alias
+		} else {
+			this.sConnectionAliasId = 'not found';
+		} // if connection alias id
 	}, // function _setConnectionFromAlias
 
 	getConnectionConfig: function (bStringify) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var oConfig = {
 			'bLog': this.bLog,
 			'sLogLevel': this.sLogLevel,
@@ -150,207 +157,226 @@ GlobalToolsRESTAPI.prototype = {
 	}, // function getConnectionConfig
 
 	testNOWConnection: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		return this.doRESTRequest('api/now/table/task?sysparm_limit=1' + this.sQueryNoDomain, 'get', '', '', '', true);
 	}, // function testNOWConnection
 
 	getRemoteRecord: function (sTable, sQuery) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
-		var oRemoteResult = this.doNOWRESTQuery(sTable, sQuery, 0, 1);
-		if (this._gtArray.isValidArray(oRemoteResult)) {
-			var grRecord = new GlideRecord(sTable);
-			grRecord.initialize();
-			var sRecordFieldType = '';
-			var sRemoteType = '';
-			Object.keys(oRemoteResult[0]).forEach(function (sRemoteField) {
-				sRemoteType = this._gt.getType(oRemoteResult[0][sRemoteField]);
-				sRecordFieldType = this._gtTable.getInternalType(grRecord, sRemoteField);
-				if (sRemoteField == 'sys_id') {
-					grRecord.setNewGuidValue(oRemoteResult[0][sRemoteField]);
-				} else if ((sRemoteType == 'object') && (oRemoteResult[0][sRemoteField].hasOwnProperty('value'))) {
-					grRecord.setValue(sRemoteField, oRemoteResult[0][sRemoteField]['value']);
-				} else if (sRecordFieldType == 'boolean') {
-					grRecord.setValue(sRemoteField, '0');
-					if (oRemoteResult[0][sRemoteField]['value'] == 'true') {
-						grRecord.setValue(sRemoteField, '1');
-					} // if bool
-				} else {
-					grRecord.setValue(sRemoteField, oRemoteResult[0][sRemoteField]);
-				} // if obj
-			}, this); // each remote field
-			return grRecord;
-		} else if ((this._gt.getType(oRemoteResult) == 'object') && (oRemoteResult.hasOwnProperty('message'))) {
-			return oRemoteResult['message'];
-		} // if valid response
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bValidConnectionConfig) {
+			var oRemoteResult = this.doNOWRESTQuery(sTable, sQuery, 0, 1);
+			if (this._gtArray.isValidArray(oRemoteResult)) {
+				var grRecord = new GlideRecord(sTable);
+				grRecord.initialize();
+				var sRecordFieldType = '';
+				var sRemoteType = '';
+				Object.keys(oRemoteResult[0]).forEach(function (sRemoteField) {
+					sRemoteType = this._gt.getType(oRemoteResult[0][sRemoteField]);
+					sRecordFieldType = this._gtTable.getInternalType(grRecord, sRemoteField);
+					if (sRemoteField == 'sys_id') {
+						grRecord.setNewGuidValue(oRemoteResult[0][sRemoteField]);
+					} else if ((sRemoteType == 'object') && (oRemoteResult[0][sRemoteField].hasOwnProperty('value'))) {
+						grRecord.setValue(sRemoteField, oRemoteResult[0][sRemoteField]['value']);
+					} else if (sRecordFieldType == 'boolean') {
+						grRecord.setValue(sRemoteField, '0');
+						if (oRemoteResult[0][sRemoteField]['value'] == 'true') {
+							grRecord.setValue(sRemoteField, '1');
+						} // if bool
+					} else {
+						grRecord.setValue(sRemoteField, oRemoteResult[0][sRemoteField]);
+					} // if obj
+				}, this); // each remote field
+				return grRecord;
+			} else if ((this._gt.getType(oRemoteResult) == 'object') && (oRemoteResult.hasOwnProperty('message'))) {
+				return oRemoteResult['message'];
+			} // if valid response
+		} else {
+			gs.error('global.GlobalToolsRESTAPI.getRemoteRecord connection is not valid: ' + this.sConnectionAliasId);
+			return 'Connection & Credential Alias Error: ' + this.sConnectionAliasId;
+		} // if valid connection
 	}, // function getRemoteRecord
 
 	doNOWRESTQuery: function (sTable, sQuery, sOffset, sLimit, aFields, sDisplayValue, oRequestBodyOrAttachmentInfo, bIncludeRefLink) {
-		if ((this.bValidConnectionConfig) && (!this.checkAccess(gs.getCallerScopeName()))) { return; }
-		if (!sTable) {
-			return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_400_001_ErrorMessage'), 'error_code': '400' };
-		} // if no table
-		var sExcludeRefLink = (bIncludeRefLink) ? '' : 'sysparm_exclude_reference_link=true&';
-		sOffset = (sOffset) ? '&sysparm_offset=' + sOffset : '';
-		sQuery = (sQuery) ? '&sysparm_query=' + encodeURIComponent(sQuery) : '';
-		sDisplayValue = String(sDisplayValue);
-		sDisplayValue = ((sDisplayValue == 'true') || (sDisplayValue == 'all')) ? '&sysparm_display_value=' + sDisplayValue : '';
-		sLimit = (sLimit) ? sLimit : this.sLimit;
-		var sUrl = 'api/now/table/' + sTable + '?' + sExcludeRefLink + 'sysparm_limit=' + sLimit + this.sQueryNoDomain + sOffset + sQuery + sDisplayValue;
-		if (this._gtArray.isValidArray(aFields)) {
-			var sFields = '&sysparm_fields=' + encodeURIComponent(aFields.join(','));
-			if (String(this.sRemoteUrl + sUrl + sFields).length < 8000) {
-				sUrl += sFields;
-			} else {
-				gs.error('global.GlobalToolsRESTAPI.doNOWRESTQuery Cannot add fields parameter because URL length would exceed 8k characters (see KB0817506).');
-			} // url length > 2k
-		} // if valid fields
-		return this.doRESTRequest(sUrl, 'GET', oRequestBodyOrAttachmentInfo);
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bValidConnectionConfig) {
+			if (!sTable) {
+				return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_400_001_ErrorMessage'), 'error_code': '400' };
+			} // if no table
+			var sExcludeRefLink = (bIncludeRefLink) ? '' : 'sysparm_exclude_reference_link=true&';
+			sOffset = (sOffset) ? '&sysparm_offset=' + sOffset : '';
+			sQuery = (sQuery) ? '&sysparm_query=' + encodeURIComponent(sQuery) : '';
+			sDisplayValue = String(sDisplayValue);
+			sDisplayValue = ((sDisplayValue == 'true') || (sDisplayValue == 'all')) ? '&sysparm_display_value=' + sDisplayValue : '';
+			sLimit = (sLimit) ? sLimit : this.sLimit;
+			var sUrl = 'api/now/table/' + sTable + '?' + sExcludeRefLink + 'sysparm_limit=' + sLimit + this.sQueryNoDomain + sOffset + sQuery + sDisplayValue;
+			if (this._gtArray.isValidArray(aFields)) {
+				var sFields = '&sysparm_fields=' + encodeURIComponent(aFields.join(','));
+				if (String(this.sRemoteUrl + sUrl + sFields).length < 8000) {
+					sUrl += sFields;
+				} else {
+					gs.error('global.GlobalToolsRESTAPI.doNOWRESTQuery Cannot add fields parameter because URL length would exceed 8k characters (see KB0817506).');
+				} // url length > 2k
+			} // if valid fields
+			return this.doRESTRequest(sUrl, 'GET', oRequestBodyOrAttachmentInfo);
+		} else {
+			gs.error('global.GlobalToolsRESTAPI.doNOWRESTQuery connection is not valid: ' + this.sConnectionAliasId);
+			return 'Connection & Credential Alias Error: ' + this.sConnectionAliasId;
+		} // if valid connection
 	}, // function doNOWRESTQuery
 
 	doNOWRESTCount: function (sTable, sQuery, sGroupByField, bOrderByCount, sDisplayValue, bOmitEmptyValue) {
-		if ((this.bValidConnectionConfig) && (!this.checkAccess(gs.getCallerScopeName()))) { return; }
-		if (!sTable) {
-			return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_400_001_ErrorMessage'), 'error_code': '400' };
-		} // if no table
-		sQuery = (sQuery) ? '&sysparm_query=' + encodeURIComponent(sQuery) : '';
-		sGroupByField = (sGroupByField) ? '&sysparm_group_by=' + encodeURIComponent(sGroupByField) : '';
-		var sOrderBy = ((bOrderByCount) && (sGroupByField)) ? '&sysparm_order_by=' + encodeURIComponent('COUNT^DESC') : '';
-		sDisplayValue = ((String(sDisplayValue) == 'true') || (sDisplayValue == 'all')) ? '&sysparm_display_value=' + sDisplayValue : '';
-		bOmitEmptyValue = (bOmitEmptyValue === true) ? true : false;
-		var sUrl = 'api/now/stats/' + sTable + '?sysparm_count=true' + sQuery + sGroupByField + sOrderBy + sDisplayValue;
-		var oRESTResults = this.doRESTRequest(sUrl);
-		if ((typeof oRESTResults == 'object') && (oRESTResults.hasOwnProperty('error_code'))) {
-			return oRESTResults;
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bValidConnectionConfig) {
+			if (!sTable) {
+				return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_400_001_ErrorMessage'), 'error_code': '400' };
+			} // if no table
+			sQuery = (sQuery) ? '&sysparm_query=' + encodeURIComponent(sQuery) : '';
+			sGroupByField = (sGroupByField) ? '&sysparm_group_by=' + encodeURIComponent(sGroupByField) : '';
+			var sOrderBy = ((bOrderByCount) && (sGroupByField)) ? '&sysparm_order_by=' + encodeURIComponent('COUNT^DESC') : '';
+			sDisplayValue = ((String(sDisplayValue) == 'true') || (sDisplayValue == 'all')) ? '&sysparm_display_value=' + sDisplayValue : '';
+			bOmitEmptyValue = (bOmitEmptyValue === true) ? true : false;
+			var sUrl = 'api/now/stats/' + sTable + '?sysparm_count=true' + sQuery + sGroupByField + sOrderBy + sDisplayValue;
+			var oRESTResults = this.doRESTRequest(sUrl);
+			if ((typeof oRESTResults == 'object') && (oRESTResults.hasOwnProperty('error_code'))) {
+				return oRESTResults;
+			} else {
+				if ((oRESTResults) && (!Array.isArray(oRESTResults)) && (oRESTResults.hasOwnProperty('stats')) && (oRESTResults['stats'].hasOwnProperty('count'))) {
+					var sResult = oRESTResults['stats']['count'];
+					if ((sResult) && (isNaN(sResult) === false)) {
+						return Number(sResult);
+					} // if result is number
+				} else if ((oRESTResults) && (Array.isArray(oRESTResults))) {
+					var oResult = {};
+					oRESTResults.forEach(function (oRESTResult) {
+						if ((oRESTResult) && (oRESTResult.hasOwnProperty('stats')) && (oRESTResult['stats'].hasOwnProperty('count')) && (oRESTResult.hasOwnProperty('groupby_fields')) && ((bOmitEmptyValue === false) || (oRESTResult['groupby_fields'][0].hasOwnProperty('value')))) {
+							var sResult = oRESTResult['stats']['count'];
+							var sValue = oRESTResult['groupby_fields'][0]['value'];
+							if ((sResult) && (isNaN(sResult) === false) && ((bOmitEmptyValue === false) || (sValue))) {
+								oResult[sValue] = Number(sResult);
+							} // if result is number
+						} // if rest result has properties
+					}, this); // each result
+					return oResult;
+				} // if result
+			} // if success
 		} else {
-			if ((oRESTResults) && (!Array.isArray(oRESTResults)) && (oRESTResults.hasOwnProperty('stats')) && (oRESTResults['stats'].hasOwnProperty('count'))) {
-				var sResult = oRESTResults['stats']['count'];
-				if ((sResult) && (isNaN(sResult) === false)) {
-					return Number(sResult);
-				} // if result is number
-			} else if ((oRESTResults) && (Array.isArray(oRESTResults))) {
-				var oResult = {};
-				oRESTResults.forEach(function (oRESTResult) {
-					if ((oRESTResult) && (oRESTResult.hasOwnProperty('stats')) && (oRESTResult['stats'].hasOwnProperty('count')) && (oRESTResult.hasOwnProperty('groupby_fields')) && ((bOmitEmptyValue === false) || (oRESTResult['groupby_fields'][0].hasOwnProperty('value')))) {
-						var sResult = oRESTResult['stats']['count'];
-						var sValue = oRESTResult['groupby_fields'][0]['value'];
-						if ((sResult) && (isNaN(sResult) === false) && ((bOmitEmptyValue === false) || (sValue))) {
-							oResult[sValue] = Number(sResult);
-						} // if result is number
-					} // if rest result has properties
-				}, this); // each result
-				return oResult;
-			} // if result
-		} // if success
+			gs.error('global.GlobalToolsRESTAPI.doRESTCount connection is not valid: ' + this.sConnectionAliasId);
+			return 'Connection & Credential Alias Error: ' + this.sConnectionAliasId;
+		} // if valid connection
 	}, // function doRESTCount
 
 	doRESTRequest: function (sUrl, sMethod, oRequestBodyOrAttachmentInfo, oHeader, sLogLevel, bTestConnection, bRunAsynch, iWaitForResponseSeconds) {
-		if ((this.bValidConnectionConfig) && (!this.checkAccess(gs.getCallerScopeName()))) { return; }
-		sMethod = ((sMethod) && (['put', 'post', 'patch'].indexOf(sMethod.toLowerCase()) != -1)) ? sMethod : 'get';
-		var bSaveResponseBodyAsAttachment = false;
-		var oRequest = new sn_ws.RESTMessageV2();
-		oRequest.setHttpMethod(sMethod);
-		sUrl = sUrl.replace(/^\//gi, '');
-		sUrl = (sUrl.charAt(0) == '?') ? sUrl : '/' + sUrl;
-		oRequest.setEndpoint(this.sRemoteUrl + sUrl);
-		if (this.iHttpTimeout > 0) {
-			oRequest.setHttpTimeout(this.iHttpTimeout);
-		} // if time out
-		if ((sLogLevel) && (['basic', 'elevated', 'all'].indexOf(sLogLevel) != -1)) {
-			oRequest.setLogLevel(sLogLevel);
-		} else if (this.sLogLevel) {
-			oRequest.setLogLevel(this.sLogLevel);
-		} // if log level
-		if ((sMethod == 'get') && (oRequestBodyOrAttachmentInfo)) {
-			var sAttachmentRecordTable = (oRequestBodyOrAttachmentInfo.hasOwnProperty('sTable')) ? oRequestBodyOrAttachmentInfo['sTable'] : '';
-			var sAttachmentRecordSysId = (oRequestBodyOrAttachmentInfo.hasOwnProperty('sSysId')) ? oRequestBodyOrAttachmentInfo['sSysId'] : '';
-			var sAttachmentFilename = (oRequestBodyOrAttachmentInfo.hasOwnProperty('sFilename')) ? oRequestBodyOrAttachmentInfo['sFilename'] : '';
-			if ((sAttachmentRecordTable) && (sAttachmentRecordSysId) && (sAttachmentFilename)) {
-				oRequest.saveResponseBodyAsAttachment(sAttachmentRecordTable, sAttachmentRecordSysId, sAttachmentFilename);
-				bSaveResponseBodyAsAttachment = true;
-			} // if valid attachment info
-		} else if ((sMethod != 'get') && (oRequestBodyOrAttachmentInfo)) {
-			var sRequestBodyType = this._gt.getType(oRequestBodyOrAttachmentInfo);
-			var grAttachment = new GlideRecord('sys_attachment');
-			if (sRequestBodyType == 'object') {
-				oRequest.setRequestBody(JSON.stringify(oRequestBodyOrAttachmentInfo));
-			} else if ((sRequestBodyType == 'string') && (oRequestBodyOrAttachmentInfo.length == 32) && (grAttachment.get(oRequestBodyOrAttachmentInfo))) {
-				oRequest.setRequestBodyFromAttachment(oRequestBodyOrAttachmentInfo);
-			} else {
-				oRequest.setRequestBody(String(oRequestBodyOrAttachmentInfo));
-			} // if obj or attachment
-		} // if body or attachment
-		oRequest.setRequestHeader('Accept', 'application/json');
-		oRequest.setRequestHeader('User-Agent', 'servicenow');
-		if (oHeader) {
-			if (this._gtArray.isValidArray(oHeader)) {
-				oHeader.forEach(function (oHeaderTmp) {
-					if (this._gtArray.isValidArray(oHeaderTmp)) {
-						oRequest.setRequestHeader(oHeaderTmp[0], oHeaderTmp[1]);
-					} else if (this._gt.getType(oHeaderTmp) == 'object') {
-						var sHeaderKey = Object.keys(oHeaderTmp)[0];
-						if (sHeaderKey) {
-							oRequest.setRequestHeader(sHeaderKey, oHeaderTmp[sHeaderKey]);
-						} // if header key
-					} // if obj
-				}, this); // each header
-			} else if (this._gt.getType(oHeader) == 'object') {
-				Object.keys(oHeader).forEach(function (sHeaderKey) {
-					oRequest.setRequestHeader(sHeaderKey, oHeader[sHeaderKey]);
-				}, this); // each header key
-			} // if header is array
-		} // if header
-		if (this.sMIDServerName) {
-			oRequest.setMIDServer(this.sMIDServerName);
-		} // if mid server
-		if (this.sCredentialType == 'basic_auth') {
-			oRequest.setBasicAuth(this.sCredentialId, this.sCredentialPw);
-		} else if ((this.sCredentialType) && (this.sCredentialId)) {
-			oRequest.setAuthenticationProfile(this.sCredentialType, this.sCredentialId);
-			oRequest.setRequestorProfile('oauth_entity_profile', this.sCredentialId);
-		} // if credential
-		if (this.sMutualAuthProfile) {
-			oRequest.setMutualAuth(this.sMutualAuthProfile);
-		} // if protocol profile
-		var oResponse;
-		if (bRunAsynch) {
-			iWaitForResponseSeconds = (iWaitForResponseSeconds) ? parseInt(iWaitForResponseSeconds) : 5;
-			oResponse = oRequest.executeAsync();
-		} else {
-			oResponse = oRequest.execute();
-		} // if asynch
-		if (oResponse) {
-			var sStatus = String(oResponse.getStatusCode());
-			var sErrorCode = this._gtObject.parseJSON(oResponse.getErrorCode());
-			var sErrorMsg = oResponse.getErrorMessage();
-			if (sStatus.startsWith('20')) {
-				if (bSaveResponseBodyAsAttachment) {
-					return oResponse.getResponseAttachmentSysid();
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bValidConnectionConfig) {
+			sMethod = ((sMethod) && (['put', 'post', 'patch'].indexOf(sMethod.toLowerCase()) != -1)) ? sMethod : 'get';
+			var bSaveResponseBodyAsAttachment = false;
+			var oRequest = new sn_ws.RESTMessageV2();
+			oRequest.setHttpMethod(sMethod);
+			sUrl = sUrl.replace(/^\//gi, '');
+			sUrl = (sUrl.charAt(0) == '?') ? sUrl : '/' + sUrl;
+			oRequest.setEndpoint(this.sRemoteUrl + sUrl);
+			if (this.iHttpTimeout > 0) {
+				oRequest.setHttpTimeout(this.iHttpTimeout);
+			} // if time out
+			if ((sLogLevel) && (['basic', 'elevated', 'all'].indexOf(sLogLevel) != -1)) {
+				oRequest.setLogLevel(sLogLevel);
+			} else if (this.sLogLevel) {
+				oRequest.setLogLevel(this.sLogLevel);
+			} // if log level
+			if ((sMethod == 'get') && (oRequestBodyOrAttachmentInfo)) {
+				var sAttachmentRecordTable = (oRequestBodyOrAttachmentInfo.hasOwnProperty('sTable')) ? oRequestBodyOrAttachmentInfo['sTable'] : '';
+				var sAttachmentRecordSysId = (oRequestBodyOrAttachmentInfo.hasOwnProperty('sSysId')) ? oRequestBodyOrAttachmentInfo['sSysId'] : '';
+				var sAttachmentFilename = (oRequestBodyOrAttachmentInfo.hasOwnProperty('sFilename')) ? oRequestBodyOrAttachmentInfo['sFilename'] : '';
+				if ((sAttachmentRecordTable) && (sAttachmentRecordSysId) && (sAttachmentFilename)) {
+					oRequest.saveResponseBodyAsAttachment(sAttachmentRecordTable, sAttachmentRecordSysId, sAttachmentFilename);
+					bSaveResponseBodyAsAttachment = true;
+				} // if valid attachment info
+			} else if ((sMethod != 'get') && (oRequestBodyOrAttachmentInfo)) {
+				var sRequestBodyType = this._gt.getType(oRequestBodyOrAttachmentInfo);
+				var grAttachment = new GlideRecord('sys_attachment');
+				if (sRequestBodyType == 'object') {
+					oRequest.setRequestBody(JSON.stringify(oRequestBodyOrAttachmentInfo));
+				} else if ((sRequestBodyType == 'string') && (oRequestBodyOrAttachmentInfo.length == 32) && (grAttachment.get(oRequestBodyOrAttachmentInfo))) {
+					oRequest.setRequestBodyFromAttachment(oRequestBodyOrAttachmentInfo);
 				} else {
-					var sResponseBody = oResponse.getBody();
-					if (sResponseBody.indexOf('currently in a suspended state') != -1) {
-						return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_404_001_ErrorMessage'), 'error_code': '404' };
-					} // if instance suspended
-					try {
-						var oResponseBody = JSON.parse(sResponseBody);
-						if (bTestConnection) {
-							return { 'success': true, 'message': '' };
-						} else {
-							return oResponseBody['result'];
-						} // if test connection
-					} catch (oEx) {
-						gs.error('global.GlobalToolsRESTAPI.doRESTRequest error parsing response for sUrl: ' + this.sRemoteUrl + sUrl + ' sError: "' + String(oEx) + '" sResponseBody: ' + sResponseBody);
-						return { 'success': false, 'message': String(oEx), 'error_code': '-99' };
-					} // if response cannot be parsed
-				} // if get response as attachment
+					oRequest.setRequestBody(String(oRequestBodyOrAttachmentInfo));
+				} // if obj or attachment
+			} // if body or attachment
+			oRequest.setRequestHeader('Accept', 'application/json');
+			oRequest.setRequestHeader('User-Agent', 'servicenow');
+			if (oHeader) {
+				if (this._gtArray.isValidArray(oHeader)) {
+					oHeader.forEach(function (oHeaderTmp) {
+						if (this._gtArray.isValidArray(oHeaderTmp)) {
+							oRequest.setRequestHeader(oHeaderTmp[0], oHeaderTmp[1]);
+						} else if (this._gt.getType(oHeaderTmp) == 'object') {
+							var sHeaderKey = Object.keys(oHeaderTmp)[0];
+							if (sHeaderKey) {
+								oRequest.setRequestHeader(sHeaderKey, oHeaderTmp[sHeaderKey]);
+							} // if header key
+						} // if obj
+					}, this); // each header
+				} else if (this._gt.getType(oHeader) == 'object') {
+					Object.keys(oHeader).forEach(function (sHeaderKey) {
+						oRequest.setRequestHeader(sHeaderKey, oHeader[sHeaderKey]);
+					}, this); // each header key
+				} // if header is array
+			} // if header
+			if (this.sMIDServerName) {
+				oRequest.setMIDServer(this.sMIDServerName);
+			} // if mid server
+			if (this.sCredentialType == 'basic_auth') {
+				oRequest.setBasicAuth(this.sCredentialId, this.sCredentialPw);
+			} else if ((this.sCredentialType) && (this.sCredentialId)) {
+				oRequest.setAuthenticationProfile(this.sCredentialType, this.sCredentialId);
+			} // if credential
+			if (this.sMutualAuthProfile) {
+				oRequest.setMutualAuth(this.sMutualAuthProfile);
+			} // if protocol profile
+			var oResponse;
+			if (bRunAsynch) {
+				iWaitForResponseSeconds = (iWaitForResponseSeconds) ? parseInt(iWaitForResponseSeconds) : 5;
+				oResponse = oRequest.executeAsync();
 			} else {
-				gs.error('global.GlobalToolsRESTAPI.doRESTRequest sUrl: ' + this.sRemoteUrl + sUrl + ' sErrorCode: ' + sErrorCode + ' sErrorMsg: ' + sErrorMsg);
-				return { 'success': false, 'message': sErrorMsg, 'error_code': sStatus };
-			} // if status 20
-		} // if response
+				oResponse = oRequest.execute();
+			} // if asynch
+			if (oResponse) {
+				var sStatus = String(oResponse.getStatusCode());
+				var sErrorCode = this._gtObject.parseJSON(oResponse.getErrorCode());
+				var sErrorMsg = oResponse.getErrorMessage();
+				if (sStatus.startsWith('20')) {
+					if (bSaveResponseBodyAsAttachment) {
+						return oResponse.getResponseAttachmentSysid();
+					} else {
+						var sResponseBody = oResponse.getBody();
+						if (sResponseBody.indexOf('currently in a suspended state') != -1) {
+							return { 'success': false, 'message': gs.getMessage('GlobalToolsRESTAPI_404_001_ErrorMessage'), 'error_code': '404' };
+						} // if instance suspended
+						try {
+							var oResponseBody = JSON.parse(sResponseBody);
+							if (bTestConnection) {
+								return { 'success': true, 'message': '' };
+							} else {
+								return oResponseBody['result'];
+							} // if test connection
+						} catch (oEx) {
+							gs.error('global.GlobalToolsRESTAPI.doRESTRequest error parsing response for sUrl: ' + this.sRemoteUrl + sUrl + ' sError: "' + String(oEx) + '" sResponseBody: ' + sResponseBody);
+							return { 'success': false, 'message': String(oEx), 'error_code': '-99' };
+						} // if response cannot be parsed
+					} // if get response as attachment
+				} else {
+					gs.error('global.GlobalToolsRESTAPI.doRESTRequest sUrl: ' + this.sRemoteUrl + sUrl + ' sErrorCode: ' + sErrorCode + ' sErrorMsg: ' + sErrorMsg);
+					return { 'success': false, 'message': sErrorMsg, 'error_code': sStatus };
+				} // if status 20
+			} // if response
+		} else {
+			gs.error('global.GlobalToolsRESTAPI.doRESTRequest connection is not valid: ' + this.sConnectionAliasId);
+			return 'Connection & Credential Alias Error: ' + this.sConnectionAliasId;
+		} // if valid connection
 	}, // function doRESTRequest
 
 	type: 'GlobalToolsRESTAPI',
-	version: '2.1.2',
+	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -358,24 +384,24 @@ GlobalToolsRESTAPI.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-14 11:42:21</sys_created_on>
         <sys_id>a95f09e21b0731105e14b8449b4bcb29</sys_id>
-        <sys_mod_count>121</sys_mod_count>
+        <sys_mod_count>123</sys_mod_count>
         <sys_name>GlobalToolsRESTAPI</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a95f09e21b0731105e14b8449b4bcb29</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-06-09 08:48:36</sys_updated_on>
+        <sys_updated_on>2026-07-21 16:28:13</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a95f09e21b0731105e14b8449b4bcb29</id>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2024-11-24 07:09:28</sys_created_on>
         <sys_id>b15802bdc34292109ebe8d8dc00131bf</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>1</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-11-24 07:09:28</sys_updated_on>
+        <sys_updated_on>2026-07-11 10:20:02</sys_updated_on>
         <table>sys_script_include</table>
-        <use_es_latest>false</use_es_latest>
+        <use_es_latest>true</use_es_latest>
     </sys_es_latest_script>
 </record_update>

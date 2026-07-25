@@ -7,21 +7,21 @@
         <display_name>Run Server Side Script</display_name>
         <inputs/>
         <mugshots_cache_json/>
-        <notes>Test the GlobalToolsScriptedREST Script Include</notes>
+        <notes/>
         <order>1</order>
         <step_config display_value="Run Server Side Script">41de4a935332120028bc29cac2dc349a</step_config>
         <sys_class_name>sys_atf_step</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-06-03 08:16:20</sys_created_on>
         <sys_id>ae9b69f4c3554fd016a2269dc0013113</sys_id>
-        <sys_mod_count>26</sys_mod_count>
+        <sys_mod_count>28</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
-        <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_ae9b69f4c3554fd016a2269dc0013113</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-19 14:04:50</sys_updated_on>
+        <sys_updated_on>2026-07-23 12:39:49</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsScriptedREST Tests">5e9b69f4c3554fd016a2269dc001310c</test>
         <timeout/>
@@ -34,11 +34,11 @@
         <order>100</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-07-19 13:32:13</sys_created_on>
+        <sys_created_on>2026-07-25 09:56:18</sys_created_on>
         <sys_id>669b69f4c3554fd016a2269dc001319e</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-19 13:32:13</sys_updated_on>
+        <sys_updated_on>2026-07-25 09:56:18</sys_updated_on>
         <value>3.1</value>
         <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
     </sys_variable_value>
@@ -48,92 +48,122 @@
         <order>200</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-07-19 13:32:13</sys_created_on>
+        <sys_created_on>2026-07-25 09:56:18</sys_created_on>
         <sys_id>e29b69f4c3554fd016a2269dc001319f</sys_id>
-        <sys_mod_count>3</sys_mod_count>
+        <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-19 14:04:50</sys_updated_on>
-        <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
-&#13;
-	var bLog = false;&#13;
-	var _gt = new global.GlobalTools();&#13;
-	var _gtSREST = new global.GlobalToolsScriptedREST();&#13;
-	var _gtATF = new global.GlobalToolsATF('GlobalToolsScriptedREST', _gtSREST, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
-&#13;
-	var fnRequest = function (oQueryParams, oBodyData, sUri) {&#13;
-		return { queryParams: (oQueryParams || {}), pathParams: {}, body: { data: (oBodyData || {}) }, uri: (sUri || '/api/now/globaltools/atf') };&#13;
-&#13;
-	}; // function fnRequest mocks a scripted REST request&#13;
-	var fnResponse = function () {&#13;
-		return { _status: '', _body: null, _error: null, _contentType: '', setContentType: function (s) { this['_contentType'] = s; }, setStatus: function (i) { this['_status'] = i; }, setBody: function (o) { this['_body'] = o; }, setError: function (e) { this['_error'] = e; } };&#13;
-	}; // function fnResponse mocks a scripted REST response and records calls&#13;
-&#13;
-	var sCompanyId = '10000000000000000000000000000001';&#13;
-	var sEmployeeId = '20000000000000000000000000000002';&#13;
-	_gtATF.generateTestData({&#13;
-		core_company: [&#13;
-			{ sys_id: sCompanyId, name: 'GTRRC Test Company' }&#13;
-		],&#13;
-		sys_user: [&#13;
-			{ sys_id: sEmployeeId, user_name: 'gtrrc.employee', first_name: 'GTRRC', last_name: 'Employee', name: 'GTRRC Employee', company: sCompanyId }&#13;
-		],&#13;
-	}, true); // create fixture, log errors&#13;
-&#13;
-	// getData (read) is exercised in JSON mode so no real response is required&#13;
-	_gtATF.runATF('getData', /"incident":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} } }, true); // basic keyed result&#13;
-	_gtATF.runATF('getData', /"iNumberOfRecordsReturned":/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, bReturnNumberOfRecords: true }, true); // record count requested&#13;
-	_gtATF.runATF('getData', /"Incident":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, bUseTableLabel: true }, true); // table label key&#13;
-	_gtATF.runATF('getData', /"sysUser":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { sys_user: {} }, bUseTableCamelCaseLabel: true }, true); // camel case table label key&#13;
-	_gtATF.runATF('getData', /"myIncidents":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: { sLabel: 'myIncidents' } } }, true); // sLabel overrides the table response key&#13;
-	_gtATF.runATF('getData', /"myIncidentsLegacy":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: { sTableName: 'myIncidentsLegacy' } } }, true); // sTableName still works as a legacy alias for sLabel&#13;
-	_gtATF.runATF('getData', {}, fnRequest(), fnResponse(), { sAction: 'insert', oTables: { incident: {} } }, true); // non read action rejected (405_002)&#13;
-	_gtATF.runATF('getData', {}, fnRequest(), fnResponse(), 'notanobject', true); // missing config object (405_001)&#13;
-	_gtATF.runATF('getData', {}, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, aMandatoryQueryParams: 'company' }, true); // mandatory query param missing (400_001)&#13;
-	_gtATF.runATF('getData', {}, fnRequest({ encoded_query: ['zzz_not_a_field_xyz=1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, sCheckEncodedQueryParam: 'encoded_query' }, true); // invalid encoded query (400_007)&#13;
-	_gtATF.runATF('getData', /"incident":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, oLogHandling: { bLogToTable: true, sLogTable: 'syslog' } }, true); // logRequest path via getData logging (oLogHandling)&#13;
-	_gtATF.runATF('getData', /"user_name":"gtrrc.employee"/, fnRequest(), fnResponse(), { sAction: 'read', oTables: { sys_user: { sQuery: 'sys_id=[employeeId]', aFields: ['user_name'] } } }, true, { employeeId: sEmployeeId }); // oDynamicValues resolves the [employeeId] placeholder token in sQuery without mutating oConfig via GlobalToolsObjects.setValue&#13;
-	_gtATF.runATF('getData', /^\{"user_name":"gtrrc.employee","incident":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { sys_user: { sQuery: 'sys_id=' + sEmployeeId, sReturnType: 'first', bMergeToParent: true, aFields: ['user_name'] }, incident: {} } }, true); // top-level bMergeToParent merges the single-object sys_user result onto the response root (anchored regex proves user_name is a root key, not nested under a sys_user wrapper); incident (still an array) stays nested under its own key&#13;
-&#13;
-	var sLogMarkerUri = '/api/now/globaltools/atf/logdefault_' + Math.floor(Math.random() * 1000).toString();&#13;
-	var oRespLogDefault = fnResponse();&#13;
-	_gtSREST.getData(fnRequest({ max_return_items: ['1'] }, null, sLogMarkerUri), oRespLogDefault, { sAction: 'read', oTables: { incident: {} }, oLogHandling: { bLogToTable: true } }, true);&#13;
-	_gt.sleep(2000);&#13;
-	var grDefaultLog = _gtATF.getRecord('syslog', 'sys_created_onONLast 15 minutes@javascript:gs.beginningOfLast15Minutes()@javascript:gs.endOfLast15Minutes()^level=0^source=' + sLogMarkerUri);&#13;
-	if (!grDefaultLog) {&#13;
-		_gtATF.addError('getData', 'default log handling (bLogToTable only, sLogTable defaulting to syslog) did not create a syslog entry.');&#13;
-	} else if (String(grDefaultLog.getValue('message')).indexOf('Action: read') == -1) {&#13;
-		_gtATF.addError('getData', 'default log handling syslog entry message missing expected content, got: ' + grDefaultLog.getValue('message'));&#13;
-	} // if message mismatch&#13;
-	// default log handling: bLogToTable only, sLogTable left unset so it defaults to 'syslog' - must work without any custom table&#13;
-	// the custom table flavor (sLogTable pointing at a non-syslog table) is NOT covered here since it needs a pre-existing custom table in the instance; skipped by design&#13;
-&#13;
-&#13;
-	// setData (write) returns nothing, so assert against the mock response it populates&#13;
-	var oRespBadAction = fnResponse();&#13;
-	_gtSREST.setData(fnRequest(null, { incident: {} }), oRespBadAction, { sAction: 'badaction', oTables: { incident: {} } });&#13;
-	if (!oRespBadAction['_error']) { _gtATF.addError('setData', 'invalid action did not set a response error.'); } // if no error&#13;
-	var oRespNoBody = fnResponse();&#13;
-	_gtSREST.setData(fnRequest(null, {}), oRespNoBody, { sAction: 'insert', oTables: { incident: {} } });&#13;
-	if (!oRespNoBody['_error']) { _gtATF.addError('setData', 'empty body did not set a response error.'); } // if no error&#13;
-	var oRespNoTable = fnResponse();&#13;
-	_gtSREST.setData(fnRequest(null, { problem: {} }), oRespNoTable, { sAction: 'insert', oTables: { incident: {} } });&#13;
-	if (!oRespNoTable['_error']) { _gtATF.addError('setData', 'missing body table did not set a response error.'); } // if no error&#13;
-	var oRespNoConfig = fnResponse();&#13;
-	_gtSREST.setData(fnRequest(null, { incident: {} }), oRespNoConfig, 'notanobject');&#13;
-	if (!oRespNoConfig['_error']) { _gtATF.addError('setData', 'missing config did not set a response error.'); } // if no error&#13;
-	var oRespInsert = fnResponse();&#13;
-	var sMarker = 'GlobalToolsScriptedREST ATF ' + new GlideDateTime().getNumericValue(); // unique short description&#13;
-	_gtSREST.setData(fnRequest(null, { incident: { caller_id: sEmployeeId, short_description: sMarker } }), oRespInsert, { sAction: 'insert', oTables: { incident: {} }, bNoWorkflow: true });&#13;
-	var sNewIncidentId = (oRespInsert['_body']) ? String(oRespInsert['_body']['sys_id']) : ''; // created record id&#13;
-	if (oRespInsert['_status'] != 201) { _gtATF.addError('setData', 'insert did not return status 201, got: ' + oRespInsert['_status']); } // if not 201&#13;
-	if ((!sNewIncidentId) || (sNewIncidentId.length != 32)) { _gtATF.addError('setData', 'insert did not return a valid sys_id, got: ' + sNewIncidentId + ' oRespInsert: ' + JSON.stringify(oRespInsert)); } // if no sys_id&#13;
-	var grNewIncident = new GlideRecord('incident'); // clean up the created test record&#13;
-	if ((sNewIncidentId) &amp;&amp; (grNewIncident.get(sNewIncidentId))) { grNewIncident.deleteRecord(); } // if cleanup&#13;
-&#13;
-	//_gt.sleep(60000);&#13;
-&#13;
-	return _gtATF.endATF();&#13;
-&#13;
+        <sys_updated_on>2026-07-25 09:56:18</sys_updated_on>
+        <value>(function (outputs, steps, params, stepResult, assertEqual) {
+
+	var bLog = false;
+	var _gt = new global.GlobalTools();
+	var _gtSREST = new global.GlobalToolsScriptedREST();
+	var _gtATF = new global.GlobalToolsATF('GlobalToolsScriptedREST', _gtSREST, bLog, outputs, steps, params, stepResult, assertEqual);
+
+	var fnRequest = function (oQueryParams, oBodyData, sUri) {
+		return { queryParams: (oQueryParams || {}), pathParams: {}, body: { data: (oBodyData || {}) }, uri: (sUri || '/api/now/globaltools/atf') };
+
+	}; // function fnRequest mocks a scripted REST request
+	var fnResponse = function () {
+		return { _status: '', _body: null, _error: null, _contentType: '', setContentType: function (s) { this['_contentType'] = s; }, setStatus: function (i) { this['_status'] = i; }, setBody: function (o) { this['_body'] = o; }, setError: function (e) { this['_error'] = e; } };
+	}; // function fnResponse mocks a scripted REST response and records calls
+
+	var sCompanyId = '10000000000000000000000000000001';
+	var sEmployeeId = '20000000000000000000000000000002';
+	_gtATF.generateTestData({
+		core_company: [
+			{ sys_id: sCompanyId, name: 'GTRRC Test Company' }
+		],
+		sys_user: [
+			{ sys_id: sEmployeeId, user_name: 'gtrrc.employee', first_name: 'GTRRC', last_name: 'Employee', name: 'GTRRC Employee', company: sCompanyId }
+		],
+	}, true); // create fixture, log errors
+
+	// getData (read) is exercised in JSON mode so no real response is required
+	_gtATF.runATF('getData', /"incident":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} } }, true); // basic keyed result
+	_gtATF.runATF('getData', /"iNumberOfRecordsReturned":/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, bReturnNumberOfRecords: true }, true); // record count requested
+	_gtATF.runATF('getData', /"Incident":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, bUseTableLabel: true }, true); // table label key
+	_gtATF.runATF('getData', /"sysUser":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { sys_user: {} }, bUseTableCamelCaseLabel: true }, true); // camel case table label key
+	_gtATF.runATF('getData', /"myIncidents":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: { sLabel: 'myIncidents' } } }, true); // sLabel overrides the table response key
+	_gtATF.runATF('getData', /"myIncidentsLegacy":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: { sTableName: 'myIncidentsLegacy' } } }, true); // sTableName still works as a legacy alias for sLabel
+	_gtATF.runATF('getData', {}, fnRequest(), fnResponse(), { sAction: 'insert', oTables: { incident: {} } }, true); // non read action rejected (405_002)
+	_gtATF.runATF('getData', {}, fnRequest(), fnResponse(), 'notanobject', true); // missing config object (405_001)
+	_gtATF.runATF('getData', {}, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, aMandatoryQueryParams: 'company' }, true); // mandatory query param missing (400_001)
+	_gtATF.runATF('getData', {}, fnRequest({ encoded_query: ['zzz_not_a_field_xyz=1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, sCheckEncodedQueryParam: 'encoded_query' }, true); // invalid encoded query (400_007)
+	_gtATF.runATF('getData', /"incident":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { incident: {} }, oLogHandling: { bLogToTable: true, sLogTable: 'syslog' } }, true); // logRequest path via getData logging (oLogHandling)
+	_gtATF.runATF('getData', /"user_name":"gtrrc.employee"/, fnRequest(), fnResponse(), { sAction: 'read', oTables: { sys_user: { sQuery: 'sys_id=[employeeId]', aFields: ['user_name'] } } }, true, { employeeId: sEmployeeId }); // oDynamicValues resolves the [employeeId] placeholder token in sQuery without mutating oConfig via GlobalToolsObjects.setValue
+	_gtATF.runATF('getData', /^\{"user_name":"gtrrc.employee","incident":\[/, fnRequest({ max_return_items: ['1'] }), fnResponse(), { sAction: 'read', oTables: { sys_user: { sQuery: 'sys_id=' + sEmployeeId, sReturnType: 'first', bMergeToParent: true, aFields: ['user_name'] }, incident: {} } }, true); // top-level bMergeToParent merges the single-object sys_user result onto the response root (anchored regex proves user_name is a root key, not nested under a sys_user wrapper); incident (still an array) stays nested under its own key
+
+	// gs.info() is the default logging path (source is then the caller script, the uri only shows up inside the packed
+	// message) - a real syslog insert (source field set to the request uri) only happens once a legacy dedicated-column
+	// option (sLogSourceField / sLogMessageField / oLogFieldMap) is configured, and even then only if the Protected
+	// Tables plugin is not active - so look the entry up either way instead of assuming which path fired
+	var fnGetLogRecord = function (sMarkerUri) {
+		var sLogFilterBase = 'sys_created_onONLast 15 minutes@javascript:gs.beginningOfLast15Minutes()@javascript:gs.endOfLast15Minutes()^level=0';
+		return _gtATF.getRecord('syslog', sLogFilterBase + '^source=' + sMarkerUri) || _gtATF.getRecord('syslog', sLogFilterBase + '^messageLIKE' + sMarkerUri);
+	}; // function fnGetLogRecord
+
+	var sLogMarkerUri = '/api/now/globaltools/atf/logdefault_' + Math.floor(Math.random() * 1000).toString();
+	var oRespLogDefault = fnResponse();
+	_gtSREST.getData(fnRequest({ max_return_items: ['1'] }, null, sLogMarkerUri), oRespLogDefault, { sAction: 'read', oTables: { incident: {} }, oLogHandling: { bLogToTable: true } }, true);
+	_gt.sleep(2000);
+	var grDefaultLog = fnGetLogRecord(sLogMarkerUri);
+	if (!grDefaultLog) {
+		_gtATF.addError('getData', 'default log handling (bLogToTable only, sLogTable defaulting to syslog) did not create a syslog entry.');
+	} else if (String(grDefaultLog.getValue('message')).indexOf('Action: read') == -1) {
+		_gtATF.addError('getData', 'default log handling syslog entry message missing expected content, got: ' + grDefaultLog.getValue('message'));
+	} // if message mismatch
+	// default log handling: bLogToTable only, sLogTable left unset so it defaults to 'syslog' - must work without any custom table
+	// the custom table flavor (sLogTable pointing at a non-syslog table) is NOT covered here since it needs a pre-existing custom table in the instance; skipped by design
+
+	var sLogMarkerUriTruncated = '/api/now/globaltools/atf/logtruncated_' + Math.floor(Math.random() * 1000).toString();
+	var oRespLogTruncated = fnResponse();
+	_gtSREST.getData(fnRequest({ max_return_items: ['1'] }, null, sLogMarkerUriTruncated), oRespLogTruncated, { sAction: 'read', oTables: { incident: {} }, oLogHandling: { bLogToTable: true, iLogBodyMaxSizeBytes: 10 } }, true); // response body is far larger than 10 bytes, must be truncated before logging
+	_gt.sleep(2000);
+	var grTruncatedLog = fnGetLogRecord(sLogMarkerUriTruncated);
+	if (!grTruncatedLog) {
+		_gtATF.addError('getData', 'iLogBodyMaxSizeBytes test did not create a syslog entry.');
+	} else if (String(grTruncatedLog.getValue('message')).indexOf('(truncated, exceeded 10 bytes)') == -1) {
+		_gtATF.addError('getData', 'iLogBodyMaxSizeBytes did not truncate the oversized response body, got: ' + grTruncatedLog.getValue('message'));
+	} // if not truncated
+
+	var sLogMarkerUriLegacy = '/api/now/globaltools/atf/loglegacy_' + Math.floor(Math.random() * 1000).toString();
+	var oRespLogLegacy = fnResponse();
+	_gtSREST.getData(fnRequest({ max_return_items: ['1'] }, null, sLogMarkerUriLegacy), oRespLogLegacy, { sAction: 'read', oTables: { incident: {} }, oLogHandling: { bLogToTable: true, sLogSourceField: 'source' } }, true); // configuring a legacy dedicated-column option opts back into a real GlideRecord insert unless the Protected Tables plugin gates it back to gs.info
+	_gt.sleep(2000);
+	var grLegacyLog = fnGetLogRecord(sLogMarkerUriLegacy);
+	if (!grLegacyLog) {
+		_gtATF.addError('getData', 'legacy field-mapping log handling did not create a syslog entry.');
+	} else if (String(grLegacyLog.getValue('message')).indexOf('Action: read') == -1) {
+		_gtATF.addError('getData', 'legacy field-mapping syslog entry message missing expected content, got: ' + grLegacyLog.getValue('message'));
+	} // if message mismatch
+
+	// setData (write) returns nothing, so assert against the mock response it populates
+	var oRespBadAction = fnResponse();
+	_gtSREST.setData(fnRequest(null, { incident: {} }), oRespBadAction, { sAction: 'badaction', oTables: { incident: {} } });
+	if (!oRespBadAction['_error']) { _gtATF.addError('setData', 'invalid action did not set a response error.'); } // if no error
+	var oRespNoBody = fnResponse();
+	_gtSREST.setData(fnRequest(null, {}), oRespNoBody, { sAction: 'insert', oTables: { incident: {} } });
+	if (!oRespNoBody['_error']) { _gtATF.addError('setData', 'empty body did not set a response error.'); } // if no error
+	var oRespNoTable = fnResponse();
+	_gtSREST.setData(fnRequest(null, { problem: {} }), oRespNoTable, { sAction: 'insert', oTables: { incident: {} } });
+	if (!oRespNoTable['_error']) { _gtATF.addError('setData', 'missing body table did not set a response error.'); } // if no error
+	var oRespNoConfig = fnResponse();
+	_gtSREST.setData(fnRequest(null, { incident: {} }), oRespNoConfig, 'notanobject');
+	if (!oRespNoConfig['_error']) { _gtATF.addError('setData', 'missing config did not set a response error.'); } // if no error
+	var oRespInsert = fnResponse();
+	var sMarker = 'GlobalToolsScriptedREST ATF ' + new GlideDateTime().getNumericValue(); // unique short description
+	_gtSREST.setData(fnRequest(null, { incident: { caller_id: sEmployeeId, short_description: sMarker } }), oRespInsert, { sAction: 'insert', oTables: { incident: {} }, bNoWorkflow: true });
+	var sNewIncidentId = (oRespInsert['_body']) ? String(oRespInsert['_body']['sys_id']) : ''; // created record id
+	if (oRespInsert['_status'] != 201) { _gtATF.addError('setData', 'insert did not return status 201, got: ' + oRespInsert['_status']); } // if not 201
+	if ((!sNewIncidentId) || (sNewIncidentId.length != 32)) { _gtATF.addError('setData', 'insert did not return a valid sys_id, got: ' + sNewIncidentId + ' oRespInsert: ' + JSON.stringify(oRespInsert)); } // if no sys_id
+	var grNewIncident = new GlideRecord('incident'); // clean up the created test record
+	if ((sNewIncidentId) &amp;&amp; (grNewIncident.get(sNewIncidentId))) { grNewIncident.deleteRecord(); } // if cleanup
+
+	//_gt.sleep(60000);
+
+	return _gtATF.endATF();
+
 })(outputs, steps, params, stepResult, assertEqual);</value>
         <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
     </sys_variable_value>

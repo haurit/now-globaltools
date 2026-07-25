@@ -5,9 +5,9 @@
         <api_name>global.GlobalToolsATF</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development&#13;
-Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
-&#13;
+        <description>Tools to support (scoped) app development
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.
+
 For some check JASMINE would be a good option too!</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsATF</name>
@@ -15,7 +15,7 @@ For some check JASMINE would be a good option too!</description>
         <script><![CDATA[var GlobalToolsATF = Class.create();
 GlobalToolsATF.prototype = {
 	initialize: function (sScriptIncludeName, _ScriptIncludeRef, bLog, outputs, steps, params, stepResult, assertEqual) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		this._bLog = bLog;
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
@@ -38,16 +38,18 @@ GlobalToolsATF.prototype = {
 		} // validate input
 	}, // function initialize
 
-	checkAccess: function (sCallerScope) {
+	_checkAccess: function (sCallerScope) {
+		if (this.oAllowedScopes) { return this.oAllowedScopes.hasOwnProperty(String(sCallerScope)); }
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-			return true;
-		} // if scope is allowed
-	}, // function checkAccess
+		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
+		this.oAllowedScopes['rhino.global'] = true;
+		return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));
+	}, // function _checkAccess
 
 	runATF: function (sFunction, oExpectedResult) {
-		if ((this._bContinue === false) || (!this.checkAccess(gs.getCallerScopeName()))) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (this._bContinue === false) { return; }
 		this._iTestCount++;
 		if ((sFunction) && (this._getType(sFunction) == 'string')) {
 			var aArguments = [];
@@ -128,7 +130,7 @@ GlobalToolsATF.prototype = {
 	}, // function runATF
 
 	_stringifyArgs: function (aArgs) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var aStringArgs = [];
 		aArgs.forEach(function (sArg) {
 			if (this._gt.getType(sArg) == 'object') {
@@ -141,7 +143,7 @@ GlobalToolsATF.prototype = {
 	}, // function _stringifyArgs
 
 	getRecord: function (sTable, sQuery) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var grRecord = this._gtRead.getRecords(sTable, sQuery, null, null, 1);
 		if (grRecord.next()) {
 			return grRecord;
@@ -149,7 +151,7 @@ GlobalToolsATF.prototype = {
 	}, // function getRecord
 
 	generateTestData: function (oTestDataConfig, bError) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((oTestDataConfig) && (this._getType(oTestDataConfig) == 'object')) {
 			Object.keys(oTestDataConfig).forEach(function (sTable) {
 				var aTestDataTableConfigs = oTestDataConfig[sTable];
@@ -175,12 +177,12 @@ GlobalToolsATF.prototype = {
 	}, // function generateTestData
 
 	addError: function (sFunction, sError) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' ' + sError);
 	}, // function addError
 
 	endATF: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this._aErrors.length > 0) {
 			this._stepResult.setOutputMessage(this._aErrors.join('\n'));
 			return false;
@@ -190,7 +192,7 @@ GlobalToolsATF.prototype = {
 	}, // function endATF
 
 	type: 'GlobalToolsATF',
-	version: '2.1.2',
+	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -198,13 +200,24 @@ GlobalToolsATF.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 04:35:34</sys_created_on>
         <sys_id>087310061ba17510c1ecdc61ab4bcb55</sys_id>
-        <sys_mod_count>79</sys_mod_count>
+        <sys_mod_count>83</sys_mod_count>
         <sys_name>GlobalToolsATF</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_087310061ba17510c1ecdc61ab4bcb55</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-06-04 18:30:28</sys_updated_on>
+        <sys_updated_on>2026-07-21 13:47:43</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>087310061ba17510c1ecdc61ab4bcb55</id>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2026-07-11 10:19:57</sys_created_on>
+        <sys_id>2b44fd8dc386071016a2269dc0013194</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2026-07-11 10:19:57</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>
