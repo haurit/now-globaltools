@@ -6,8 +6,8 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description>Tools to support (scoped) app development&#13;
-Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
-Probably obsolete with ECMA 21 </description>
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons. &#13;
+Probably obsolete with ECMA 21</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsScriptedREST</name>
         <sandbox_callable>false</sandbox_callable>
@@ -83,10 +83,10 @@ GlobalToolsScriptedREST.prototype = {
 		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'getData'); }
 		this._setRequestGlobals(oRequest, oResponse, oConfig, bJSON, oDynamicValues);
 		try {
-			this._startImpersonation(); // request-scoped impersonation so security applies to reads
-			this._validateEncodedQueryParam(); // optional encoded query validation
+			this._startImpersonation();
+			this._validateEncodedQueryParam();
 			if ((!this.bError) && (this._parseRequestParams())) {
-				var oReadResult = {}; // accumulated read body
+				var oReadResult = {};
 				Object.keys(this._getValue('oTables', {}, this.oConfig)).forEach(function (sTable) {
 					if (!this.bError) {
 						var oTableConfig = this._getValue('oTables/' + sTable, {}, this.oConfig);
@@ -95,7 +95,7 @@ GlobalToolsScriptedREST.prototype = {
 						var oTableResult = this._getReadEngine().getData(oReadConfig);
 						var oTableData = this._getValue('data', '', oTableResult);
 						if ((this._getValue('bMergeToParent', false, oTableConfig)) && (this._gtObject.isObject(oTableData))) {
-							this._gtObject.deepMerge(oReadResult, oTableData); 
+							this._gtObject.deepMerge(oReadResult, oTableData);
 						} else {
 							oReadResult[sTableLabel] = oTableData;
 						} // flatten this table's single-object result onto the response root instead of nesting it under sTableLabel
@@ -180,7 +180,7 @@ GlobalToolsScriptedREST.prototype = {
 		} catch (oException) {
 			this._setError('500_002', [], [String(oException)]);
 		} finally {
-			this._endImpersonation(); // always end impersonation
+			this._endImpersonation();
 		} // try write
 		if (this.bTimer) {
 			this._gtDateTime.stopTimer(this._sTimerPrefix + 'setData');
@@ -421,8 +421,8 @@ GlobalToolsScriptedREST.prototype = {
 		aChecks = (this._gtArray.isValidArray(aChecks)) ? aChecks : [aChecks];
 		aChecks.forEach(function (oCheck) {
 			if (this._gtObject.isObject(oCheck)) {
-				this._renameKey(oCheck, 'sFieldName', 'sField'); // field reference
-				this._renameKey(oCheck, 'sErrorMsg', 'sErrorMessage'); // error text
+				this._renameKey(oCheck, 'sFieldName', 'sField');
+				this._renameKey(oCheck, 'sErrorMsg', 'sErrorMessage');
 				delete oCheck['sCheckType']; // new engine infers regex vs script from sRegExpPattern / sScript
 			} // if check object
 		}, this); // each legacy check
@@ -452,6 +452,7 @@ GlobalToolsScriptedREST.prototype = {
 		oReadConfig['iRequestReturnOffset'] = this.iQueryParamsReturnOffset;
 		oReadConfig['dHistoryWalk'] = this.dHistoryWalk;
 		oReadConfig['oQueryParams'] = this.oRequestQueryParams;
+		oReadConfig['oDynamicValues'] = this.oDynamicValues; // resolved by GlobalToolsRecordReadComplex itself, top-level and every related-table query
 		this._applyGlobalFlags(oReadConfig);
 		this._applyReadLabelFlags(oReadConfig);
 		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_buildReadConfig'); }
@@ -461,11 +462,10 @@ GlobalToolsScriptedREST.prototype = {
 	_buildReadQuery: function (sTable, oTableConfig) {
 		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sConfigQuery = this._getValue('sQuery', '', oTableConfig);
-		sConfigQuery = this._gt.replacePlaceholders(sConfigQuery, this.oDynamicValues); // [placeholder] tokens resolved from runtime values passed into getData/setData, so config never needs script-side mutation
 		var sRequestQuery = (this._getValue('bPreventQueryParams', false, oTableConfig)) ? '' : this.sQueryParamsQuery;
 		var sParameterQuery = this._getValue('sParameterQuery', '', oTableConfig);
 		if ((!sRequestQuery) && (sParameterQuery)) {
-			sParameterQuery = this._gt.replacePlaceholders(sParameterQuery, this.oDynamicValues); // dynamic values resolve first
+			sParameterQuery = this._gt.replacePlaceholders(sParameterQuery, this.oDynamicValues);
 			sRequestQuery = this._gt.replacePlaceholders(sParameterQuery, this.oRequestQueryParams);
 		} // if parameter query template
 		return this._gtRead.combineQueries(sConfigQuery, sRequestQuery);
@@ -501,7 +501,7 @@ GlobalToolsScriptedREST.prototype = {
 				var aDetails = []; // human readable detail parts
 				aErrorMessages.forEach(function (oErrorMessage) {
 					if (this._gtObject.isObject(oErrorMessage)) {
-						iCode = Number(String(this._getValue('sCode', '', oErrorMessage)).split('_')[0]); // status prefix of this error's code
+						iCode = Number(String(this._getValue('sCode', '', oErrorMessage)).split('_')[0]);
 						aDetails.push(String(this._getValue('sMessageDetail', this._getValue('sMessage', '', oErrorMessage), oErrorMessage)).replace(/"/g, "'"));
 					} else {
 						iCode = Number(String(oErrorMessage).split('_')[0]); // 'code' return type: oErrorMessage is the raw code string
@@ -771,14 +771,14 @@ GlobalToolsScriptedREST.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-05-31 18:18:23</sys_created_on>
         <sys_id>42881448c351c7d016a2269dc0013175</sys_id>
-        <sys_mod_count>25</sys_mod_count>
+        <sys_mod_count>28</sys_mod_count>
         <sys_name>GlobalToolsScriptedREST</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_42881448c351c7d016a2269dc0013175</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-25 10:35:43</sys_updated_on>
+        <sys_updated_on>2026-07-26 10:45:22</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>42881448c351c7d016a2269dc0013175</id>

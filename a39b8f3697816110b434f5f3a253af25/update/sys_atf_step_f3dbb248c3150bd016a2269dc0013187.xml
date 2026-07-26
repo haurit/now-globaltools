@@ -14,14 +14,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2026-06-01 06:11:36</sys_created_on>
         <sys_id>f3dbb248c3150bd016a2269dc0013187</sys_id>
-        <sys_mod_count>51</sys_mod_count>
+        <sys_mod_count>52</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_f3dbb248c3150bd016a2269dc0013187</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-23 11:12:59</sys_updated_on>
+        <sys_updated_on>2026-07-26 10:39:29</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRecordReadComplex Tests">b7db3248c3150bd016a2269dc001318d</test>
         <timeout/>
@@ -34,225 +34,231 @@
         <order>200</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-07-25 09:56:19</sys_created_on>
+        <sys_created_on>2026-07-26 10:31:12</sys_created_on>
         <sys_id>73dbb248c3150bd016a2269dc001318b</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>1</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-25 09:56:19</sys_updated_on>
-        <value>(function (outputs, steps, params, stepResult, assertEqual) {
-
-	var bLog = false;
-
-	var _gt = new global.GlobalTools();
-	var _gtReadComplex = new global.GlobalToolsRecordReadComplex();
-	var _gtRecordWrite = new global.GlobalToolsRecordWrite();
-	var _gtATF = new global.GlobalToolsATF('GlobalToolsRecordReadComplex', _gtReadComplex, bLog, outputs, steps, params, stepResult, assertEqual);
-
-	// 1 basic value read of a single known record
-	_gtATF.runATF('getData', /"user_name":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'] });
-
-	// 2 total record count is reported
-	_gtATF.runATF('getData', /"iNumberOfRecordsReturned":1/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'] });
-
-	// 3 camel case field label
-	_gtATF.runATF('getData', /"userName":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], bUseFieldCamelCaseLabel: true });
-
-	// 4 pascal case field label
-	_gtATF.runATF('getData', /"UserName":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], bUseFieldPascalCaseLabel: true });
-
-	// 5 display field returns the display_value / value object form
-	_gtATF.runATF('getData', /"user_name":\{"display_value"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aDisplayFields: ['user_name'] });
-
-	// 6 allfields read includes the field
-	_gtATF.runATF('getData', /"user_name":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['allfields'] });
-
-	// 7 requested fields narrow an allfields config to the requested set
-	_gtATF.runATF('getData', /"user_name":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['allfields'], aRequestedFields: ['user_name'] });
-
-	// 8 reference field dot walk produces the concatenated key (company is core on sys_user)
-	_gtATF.runATF('getData', /"company_name"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], oReferenceFields: { company: { aFields: ['name'] } } });
-
-	// 9 attachment info object is always added under the attachments key
-	_gtATF.runATF('getData', /"attachments":\{/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], bReturnAttachmentInfoObject: true });
-
-	// 10 sReturnType first returns a single object instead of an array
-	_gtATF.runATF('getData', /"data":\{"user_name":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], sReturnType: 'first' });
-
-	// 11 empty result sets the 204 no content status
-	_gtATF.runATF('getData', /"iResponseStatusCode":204/, { sTable: 'sys_user', sQuery: 'user_name=zzz_no_such_user_xyz', aFields: ['user_name'] });
-
-	// 12 bOnlyReturnOneRecord with more than one match raises 417
-	_gtATF.runATF('getData', /"iResponseStatusCode":417/, { sTable: 'sys_user', sQuery: '', bOnlyReturnOneRecord: true });
-
-	// 13 bErrorMaxReturnCount over the configured maximum raises 413
-	_gtATF.runATF('getData', /"iResponseStatusCode":413/, { sTable: 'sys_user', sQuery: '', bErrorMaxReturnCount: true, iMaxReturnCount: 1 });
-
-	// Generate test data
-	// Hierarchy: incident (parent) -&gt; incident_task (child, linked by the 'incident' field) -&gt; core_company (grandchild, linked by the child's 'company' field).
-	// incident_task.company is a soft reference, so a child can carry a sys_id that points at no company record. That dangling child ("phantom") is what
-	// exercises the all-empty nested-read paths (tests 46, 47) and the ordering/cap paths (tests 43, 44, 52, 53). We deliberately avoid sys_user_has_role
-	// here because sys_user_has_role hard-validates its user/role references and refuses to persist a dangling role.
-	var sCompanyMainId = '10000000000000000000000000000001'; // the queried incident's own company, drives the reference-field / display-value tests
-	var sBogusCompanyId = '30000000000000000000000000000000'; // non-existent company: the phantom task points here so its nested company read is all-empty
-	var sCompanyAId = '30000000000000000000000000000001'; // grandchild company A (carries a name)
-	var sCompanyBId = '30000000000000000000000000000002'; // grandchild company B
-	var sTaskPhantomId = '40000000000000000000000000000000'; // child task, sorts first by sys_id; points at the non-existent company above
-	var sTaskAId = '40000000000000000000000000000001'; // child task -&gt; company A
-	var sTaskDupId = '40000000000000000000000000000002'; // child task -&gt; company A as well (duplicate grandchild so the bUniqueChildResultId collapse in tests 20/21 is really exercised)
-	var sTaskBId = '40000000000000000000000000000003'; // child task -&gt; company B (kept last by sys_id so the merge-last test 44 still resolves to company B)
-	var sIncOtherId = '50000000000000000000000000000001'; // second incident: sorts first by sys_id, last by short_description
-	var sIncMainId = '50000000000000000000000000000002'; // main queried incident: sorts last by sys_id, first by short_description
-	_gtATF.generateTestData({
-		core_company: [
-			{ sys_id: sCompanyMainId, name: 'GTRRC Test Company' },
-			{ sys_id: sCompanyAId, name: 'gtrrc_company_a' },
-			{ sys_id: sCompanyBId, name: 'gtrrc_company_b' }
-		],
-		incident: [
-			{ sys_id: sIncMainId, short_description: 'GTRRCRC Main Incident' },
-			{ sys_id: sIncOtherId, short_description: 'GTRRCRC Other Incident' }
-		],
-		incident_task: [
-			{ sys_id: sTaskPhantomId, short_description: 'GTRRCRC Task Phantom', incident: sIncMainId },
-			{ sys_id: sTaskAId, short_description: 'GTRRCRC Task A', incident: sIncMainId },
-			{ sys_id: sTaskDupId, short_description: 'GTRRCRC Task A Duplicate', incident: sIncMainId },
-			{ sys_id: sTaskBId, short_description: 'GTRRCRC Task B', incident: sIncMainId }
-		]
-	}, true); // create fixture, log errors
-
-	// Set the reference fields with engines/workflow off so no field-copy or assignment business rule can rewrite them: this guarantees the phantom's company
-	// stays dangling and the two real tasks keep companies A and B (the bug this suite used to hit was a hardcoded reference validation silently discarding the value).
-	_gtRecordWrite.doRecord({ sys_id: sIncMainId, company: sCompanyMainId }, { sTargetTable: 'incident', aQueryFields: ['sys_id'], bNoEngine: true, bNoWorkflow: true }, {});
-	_gtRecordWrite.doRecord({ sys_id: sTaskPhantomId, company: sBogusCompanyId }, { sTargetTable: 'incident_task', aQueryFields: ['sys_id'], bNoEngine: true, bNoWorkflow: true }, {}); // dangling company -&gt; nested read resolves to nothing
-	_gtRecordWrite.doRecord({ sys_id: sTaskAId, company: sCompanyAId }, { sTargetTable: 'incident_task', aQueryFields: ['sys_id'], bNoEngine: true, bNoWorkflow: true }, {});
-	_gtRecordWrite.doRecord({ sys_id: sTaskDupId, company: sCompanyAId }, { sTargetTable: 'incident_task', aQueryFields: ['sys_id'], bNoEngine: true, bNoWorkflow: true }, {}); // same company as task A -&gt; a genuine duplicate grandchild for the dedup collapse
-	_gtRecordWrite.doRecord({ sys_id: sTaskBId, company: sCompanyBId }, { sTargetTable: 'incident_task', aQueryFields: ['sys_id'], bNoEngine: true, bNoWorkflow: true }, {});
-	_gtRecordWrite.doRecord({ sys_id: sIncMainId, comments: 'gtrrc journal entry 1 line one\ngtrrc journal entry 1 line two' }, { sTargetTable: 'incident', aQueryFields: ['sys_id'] }, {});
-	_gtRecordWrite.doRecord({ sys_id: sIncMainId, comments: 'gtrrc journal entry 2 line one\ngtrrc journal entry 2 line two' }, { sTargetTable: 'incident', aQueryFields: ['sys_id'] }, {});
-
-	// 14 PRIORITY 1: aDisplayValueTypes in value mode on a reference field returns the display_value/value object (regression guard for getInternalType)
-	_gtATF.runATF('getData', /"company":\{"display_value":"GTRRC Test Company","value":"[a-f0-9]{32}"\}/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['company'], aDisplayValueTypes: ['reference'] }); // reference type triggers object form
-
-	// 15 aDisplayValueTypes that does NOT include the field's internal type leaves the raw sys_id value as a string
-	_gtATF.runATF('getData', /"company":"[a-f0-9]{32}"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['company'], aDisplayValueTypes: ['date_time'] }); // type not listed keeps sys_id string
-
-	// 16 bLegacyDisplayValue with aDisplayValueTypes writes a flat &lt;field&gt;_dv key instead of the object
-	_gtATF.runATF('getData', /"company_dv":"GTRRC Test Company"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['company'], aDisplayValueTypes: ['reference'], bLegacyDisplayValue: true }); // legacy postfix form
-
-	// 17 custom legacy postfix is honoured
-	_gtATF.runATF('getData', /"company__disp":"GTRRC Test Company"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['company'], aDisplayValueTypes: ['reference'], bLegacyDisplayValue: true, sLegacyDisplayValuePostfix: '__disp' }); // custom postfix
-
-	// 18 PRIORITY 2: oRelatedTables join produces a child array keyed under the related table name (the incident has task records, incl. one phantom fixture link)
-	_gtATF.runATF('getData', /"incident_task":\[\{/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aFields: ['company'] } } }); // child join array
-
-	// 19 related table sReturnType reference keys the child result under the source field name
-	_gtATF.runATF('getData', /"sys_id":\{/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sReturnType: 'reference', aFields: ['company'] } } }); // reference keyed by source field
-
-	// 20 related table hidden return type flattens children into a flat array under the table key; bUniqueChildResultId collapses the two company-A tasks (task A + its duplicate) into a single grandchild entry
-	_gtATF.runATF('getData', /"incident_task":\[\{"sys_id"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sReturnType: 'hidden', bUniqueChildResultId: true, oRelatedTables: { core_company: { sKeySourceField: 'company', sKeyTargetField: 'sys_id', aFields: ['sys_id', 'name'] } } } } }); // hidden flatten with unique ids (duplicate company-A grandchild collapsed to one)
-
-	// 21 hidden return type honours the sLabel override on the flat array key
-	_gtATF.runATF('getData', /"taskCompaniesHidden":\[\{"sys_id"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sReturnType: 'hidden', sLabel: 'taskCompaniesHidden', bUniqueChildResultId: true, oRelatedTables: { core_company: { sKeySourceField: 'company', sKeyTargetField: 'sys_id', aFields: ['sys_id', 'name'] } } } } }); // hidden flatten with sLabel override
-
-	// 22 iRelatedTablesMandatoryTarget keeps only top records meeting the mandatory related count (the incident has tasks so it is kept)
-	_gtATF.runATF('getData', /"iNumberOfRecordsReturned":1/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], iRelatedTablesMandatoryTarget: 1, oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', bValidParentObject: true, aFields: ['company'] } } }); // mandatory related target met
-
-	// 23 LABELS: bUseFieldLabel uses the human readable dictionary label as the key
-	_gtATF.runATF('getData', /"Short description":"GTRRCRC Main Incident"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bUseFieldLabel: true }); // field label key
-
-	// 24 bUseTableCamelCaseLabel converts the related table key to camel case
-	_gtATF.runATF('getData', /"incidentTask":\[/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bUseTableCamelCaseLabel: true, oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aFields: ['company'] } } }); // camel case related table label
-
-	// 25 bUseTablePascalCaseLabel converts the related table key to pascal case
-	_gtATF.runATF('getData', /"IncidentTask":\[/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bUseTablePascalCaseLabel: true, oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aFields: ['company'] } } }); // pascal case related table label
-
-	// 26 sTableName overrides the related result key with an explicit label (legacy alias, still supported)
-	_gtATF.runATF('getData', /"tasks":\[/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sTableName: 'tasks', aFields: ['company'] } } }); // explicit related table label
-
-	// 27 sLabel is the preferred name for the same related result key override
-	_gtATF.runATF('getData', /"incidentTasks":\[/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sLabel: 'incidentTasks', aFields: ['company'] } } }); // explicit related table label via sLabel
-
-	// 28 sRefFieldConcatChar customises the join character for reference field keys (company populated on the fixture incident)
-	_gtATF.runATF('getData', /"company\.name":"GTRRC Test Company"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], sRefFieldConcatChar: '.', oReferenceFields: { company: { aFields: ['name'] } } }); // custom concat char
-
-	// 29 ORDERING: aOrderByDesc path runs and returns the fixture rows (short_description desc -&gt; 'Other' before 'Main')
-	_gtATF.runATF('getData', /"short_description":"GTRRCRC Other Incident"/, { sTable: 'incident', sQuery: 'short_descriptionSTARTSWITHGTRRCRC', aFields: ['short_description'], aOrderByDesc: ['short_description'], iMaxReturnCount: 1 }); // order by desc returns the 'Other' incident first
-
-	// 30 aQueryParamsOrderByFields (request override) takes precedence over aOrderBy and still returns rows (sys_id order would return 'Other' first, the request order returns 'Main')
-	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident"/, { sTable: 'incident', sQuery: 'short_descriptionSTARTSWITHGTRRCRC', aFields: ['short_description'], aOrderBy: ['sys_id'], aQueryParamsOrderByFields: ['short_description'], iMaxReturnCount: 1 }); // request order override ('Main' sorts before 'Other')
-
-	// 31 PAGING: iRequestReturnOffset with iMaxReturnCount pages the window and still reports the full matched count (2 fixture incidents)
-	_gtATF.runATF('getData', /"iNumberOfRecordsReturned":2/, { sTable: 'incident', sQuery: 'short_descriptionSTARTSWITHGTRRCRC', aFields: ['short_description'], iMaxReturnCount: 1, iRequestReturnOffset: 1 }); // offset paging keeps full count
-
-	// 32 iRequestMaxReturnCount overrides the configured iMaxReturnCount default and returns the data envelope
-	_gtATF.runATF('getData', /"data":\[\{/, { sTable: 'incident', sQuery: 'short_descriptionSTARTSWITHGTRRCRC', aFields: ['short_description'], iMaxReturnCount: 100, iRequestMaxReturnCount: 1 }); // request max overrides config
-
-	// 33 GR FLAGS: bNoWorkflow read path still returns the record
-	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bNoWorkflow: true }); // no workflow read
-
-	// 34 bUseGlideRecordSecure read path returns the record for an admin caller
-	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bUseGlideRecordSecure: true }); // GlideRecordSecure read
-
-	// 35 bNoDomain read path returns the record
-	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bNoDomain: true }); // no domain read
-
-	// 36 ATTACHMENTS: bReturnAttachmentInfoArray adds the attachments key as an array form
-	_gtATF.runATF('getData', /"attachments":\[/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bReturnAttachmentInfoArray: true }); // attachment array form
-
-	// 37 JOURNAL: oJournalFields reads the last comments journal entry into the comments key
-	_gtATF.runATF('getData', /comments":"/, { sTable: 'incident', sQuery: 'sys_id=' + sIncMainId, aFields: ['short_description'], oJournalFields: { comments: { iNumber: 1 } } }); // journal field last entry
-
-	// 38 oJournalFields with sReturnType array returns the journal entries as an array
-	_gtATF.runATF('getData', /comments":\["/, { sTable: 'incident', sQuery: 'sys_id=' + sIncMainId, aFields: ['short_description'], oJournalFields: { comments: { iNumber: -1, sReturnType: 'array' } } }); // journal array form
-
-	// 39 ATTRIBUTE PIVOT: oAttributeTable pivots matching rows onto the record under sFieldPrefix + name-field value (here the child tasks keyed by their company)
-	_gtATF.runATF('getData', new RegExp('"attr_' + sCompanyAId + '"'), { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oAttributeTable: { sBaseTableName: 'task', sAttributeTableName: 'incident_task', sAttributeReferenceField: 'incident', sAttributeNameField: 'company', sAttributeValueField: 'company', aCIAttributeNames: [sCompanyAId, sCompanyBId], sFieldPrefix: 'attr_' } }); // attribute pivot writes prefixed key
-
-	// 40 oAttributeTable does nothing when the configured base table does not match the record base (no attr_ key, record still returned)
-	_gtATF.runATF('getData', /"data":\[\{"short_description":"GTRRCRC Main Incident"\}\]/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oAttributeTable: { sBaseTableName: 'cmdb', sAttributeTableName: 'incident_task', sAttributeReferenceField: 'incident', sAttributeNameField: 'company', sAttributeValueField: 'company', aCIAttributeNames: [sCompanyAId], sFieldPrefix: 'attr_' } }); // base table mismatch skips pivot, only short_description present
-
-	// 41 hidden flatten drops empty junction rows (no '' placeholders): every grandchild is filtered out so the flat array is empty, not padded with empty strings
-	_gtATF.runATF('getData', /{"short_description":"GTRRCRC Main Incident"}]/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sReturnType: 'hidden', oRelatedTables: { core_company: { sKeySourceField: 'company', sKeyTargetField: 'sys_id', sQuery: 'sys_id=ffffffffffffffffffffffffffffffff', aFields: ['sys_id'] } } } } }); // hidden empties dropped
-
-	// 42 hidden bMergeToParent merges the first non-empty flattened record's fields directly onto the parent and drops the child wrapper key (company sys_id sits beside short_description)
-	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident","sys_id":"[a-f0-9]{32}"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sReturnType: 'hidden', bMergeToParent: true, oRelatedTables: { core_company: { sKeySourceField: 'company', sKeyTargetField: 'sys_id', aFields: ['sys_id'] } } } } }); // hidden merge onto parent
-
-	// 43 bMergeToParent also works on a non-hidden (plain array) related table: aFields and oReferenceFields merge straight onto the parent, dropping the array wrapper (default winner is the first match in sys_id order, the phantom task carrying the dangling company)
-	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident","company":"30000000000000000000000000000000","taskIncident":"GTRRCRC Main Incident"/i, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aOrderBy: ['sys_id'], bMergeToParent: true, aFields: ['company'], oReferenceFields: { incident: { aFields: [{ sField: 'short_description', sLabel: 'taskIncident' }] } } } } }); // non-hidden merge onto parent, first match wins
-
-	// 44 bMergeToParentUseLast picks the last non-empty match instead of the first (same fixture, ordered ascending, so the last task wins with company B)
-	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident","company":"30000000000000000000000000000002"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aOrderBy: ['sys_id'], bMergeToParent: true, bMergeToParentUseLast: true, aFields: ['company'] } } }); // non-hidden merge onto parent, last match wins
-
-	// 45 bMergeToParent with zero matches still emits the declared aFields/oReferenceFields keys defaulted to '' instead of omitting them or leaving an empty array (keeps a consistent parent schema)
-	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident","company":"","taskIncident":""/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sQuery: 'sys_id=ffffffffffffffffffffffffffffffff', bMergeToParent: true, aFields: ['company'], oReferenceFields: { incident: { aFields: [{ sField: 'short_description', sLabel: 'taskIncident' }] } } } } }); // no match defaults declared merge fields to ''
-
-	// 46 a multi-level bMergeToParent chain (task -&gt; company) still defaults to '' when the OUTER level itself has zero matches: the declared label lives on the nested merged table, not on the task directly, so it must be gathered recursively
-	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident","name":""/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sQuery: 'sys_id=ffffffffffffffffffffffffffffffff', bMergeToParent: true, oRelatedTables: { core_company: { sKeySourceField: 'company', sKeyTargetField: 'sys_id', bMergeToParent: true, aFields: ['name'] } } } } }); // recursive label gathering through a nested merge chain
-
-	// 47 bMergeToParent skips candidate records whose values are all empty and merges the first genuinely populated one: the phantom task (sorts first) points at a non-existent company, so its nested company merge resolves to {name:''}; it must be skipped so real company A wins instead of an empty name (regression guard for msisdn-style deep merges where only one sibling carries the value)
-	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident","name":"gtrrc_company_a"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aOrderBy: ['sys_id'], bMergeToParent: true, oRelatedTables: { core_company: { sKeySourceField: 'company', sKeyTargetField: 'sys_id', bMergeToParent: true, aFields: ['name'] } } } } }); // all-empty candidate skipped, first populated sibling wins
-
-	// 48 bReturnNumberOfRecords: false omits iNumberOfRecordsReturned from the result entirely (default is true, see test 2 for the default-on case)
-	_gtATF.runATF('getData', /^((?!iNumberOfRecordsReturned).)*$/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], bReturnNumberOfRecords: false });
-
-	// 49 related table sReturnType 'object' nests the single matching child record as a plain object under the table label - no array wrap (contrast test 18) and no flattening onto the parent (contrast test 'first' on a related table); scoped to company A via sQuery so it is the only surviving match
-	_gtATF.runATF('getData', /"incident_task":\{"company":"30000000000000000000000000000001"\}/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sQuery: 'company=30000000000000000000000000000001', sReturnType: 'object', aFields: ['company'] } } }); // single nested object, no array wrap
-
-	// 50 sReturnType 'first' at the TOP level now carries its oRelatedTables: the record is returned as a single object (not an array wrap) AND the child join is still populated under its key - regression guard for the engine change that previously short-circuited related-table processing for first/object before reaching _getRelTables
-	_gtATF.runATF('getData', /"data":\{"short_description":"GTRRCRC Main Incident".*"incident_task":.*"company":"3/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], sReturnType: 'first', oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aFields: ['company'] } } }); // first at top level keeps its related tables (data is an object via "data":{ and the child join key is present with a company value)
-
-	// 51 a matching 'first' query reports 200, not a false 204: first/object records now push to aTable so the empty-result "no content" check no longer fires when a single-object record was actually found (regression guard for the aTable-always-empty 204 bug)
-	_gtATF.runATF('getData', /"iResponseStatusCode":200/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], sReturnType: 'first' }); // first match -&gt; 200 not 204
-
-	// 52 a per-relation iMaxReturnCount caps only that related table's read (the incident has 3 tasks ordered by sys_id, the phantom sorts first and survives the cap of 1, carrying the dangling company ...0000)
-	_gtATF.runATF('getData', /"incident_task":\[\{"company":"30000000000000000000000000000000"\}\]/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aOrderBy: ['sys_id'], iMaxReturnCount: 1, aFields: ['company'] } } }); // per-relation cap limits to 1 row, first by sys_id is the phantom
-
-	// 53 iMaxReturnCountAllLevels set at the top read cascades down to a related table that has no iMaxReturnCount of its own, same capping effect as test 52
-	_gtATF.runATF('getData', /"incident_task":\[\{"company":"30000000000000000000000000000000"\}\]/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], iMaxReturnCountAllLevels: 1, oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aOrderBy: ['sys_id'], aFields: ['company'] } } }); // cascading cap with no explicit per-relation iMaxReturnCount
-
-	//_gt.sleep(60000);
-
-	return _gtATF.endATF();
+        <sys_updated_on>2026-07-26 10:39:29</sys_updated_on>
+        <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
+ &#13;
+	var bLog = false;&#13;
+&#13;
+	var _gt = new global.GlobalTools();&#13;
+	var _gtReadComplex = new global.GlobalToolsRecordReadComplex();&#13;
+	var _gtRecordWrite = new global.GlobalToolsRecordWrite();&#13;
+	var _gtATF = new global.GlobalToolsATF('GlobalToolsRecordReadComplex', _gtReadComplex, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
+&#13;
+	// 1 basic value read of a single known record&#13;
+	_gtATF.runATF('getData', /"user_name":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'] });&#13;
+&#13;
+	// 2 total record count is reported&#13;
+	_gtATF.runATF('getData', /"iNumberOfRecordsReturned":1/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'] });&#13;
+&#13;
+	// 3 camel case field label&#13;
+	_gtATF.runATF('getData', /"userName":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], bUseFieldCamelCaseLabel: true });&#13;
+&#13;
+	// 4 pascal case field label&#13;
+	_gtATF.runATF('getData', /"UserName":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], bUseFieldPascalCaseLabel: true });&#13;
+&#13;
+	// 5 display field returns the display_value / value object form&#13;
+	_gtATF.runATF('getData', /"user_name":\{"display_value"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aDisplayFields: ['user_name'] });&#13;
+&#13;
+	// 6 allfields read includes the field&#13;
+	_gtATF.runATF('getData', /"user_name":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['allfields'] });&#13;
+&#13;
+	// 7 requested fields narrow an allfields config to the requested set&#13;
+	_gtATF.runATF('getData', /"user_name":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['allfields'], aRequestedFields: ['user_name'] });&#13;
+&#13;
+	// 8 reference field dot walk produces the concatenated key (company is core on sys_user)&#13;
+	_gtATF.runATF('getData', /"company_name"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], oReferenceFields: { company: { aFields: ['name'] } } });&#13;
+&#13;
+	// 9 attachment info object is always added under the attachments key&#13;
+	_gtATF.runATF('getData', /"attachments":\{/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], bReturnAttachmentInfoObject: true });&#13;
+&#13;
+	// 10 sReturnType first returns a single object instead of an array&#13;
+	_gtATF.runATF('getData', /"data":\{"user_name":"admin"/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], sReturnType: 'first' });&#13;
+&#13;
+	// 11 empty result sets the 204 no content status&#13;
+	_gtATF.runATF('getData', /"iResponseStatusCode":204/, { sTable: 'sys_user', sQuery: 'user_name=zzz_no_such_user_xyz', aFields: ['user_name'] });&#13;
+&#13;
+	// 12 bOnlyReturnOneRecord with more than one match raises 417&#13;
+	_gtATF.runATF('getData', /"iResponseStatusCode":417/, { sTable: 'sys_user', sQuery: '', bOnlyReturnOneRecord: true });&#13;
+&#13;
+	// 13 bErrorMaxReturnCount over the configured maximum raises 413&#13;
+	_gtATF.runATF('getData', /"iResponseStatusCode":413/, { sTable: 'sys_user', sQuery: '', bErrorMaxReturnCount: true, iMaxReturnCount: 1 });&#13;
+&#13;
+	// Generate test data&#13;
+	// Hierarchy: incident (parent) -&gt; incident_task (child, linked by the 'incident' field) -&gt; core_company (grandchild, linked by the child's 'company' field).&#13;
+	// incident_task.company is a soft reference, so a child can carry a sys_id that points at no company record. That dangling child ("phantom") is what&#13;
+	// exercises the all-empty nested-read paths (tests 46, 47) and the ordering/cap paths (tests 43, 44, 52, 53). We deliberately avoid sys_user_has_role&#13;
+	// here because sys_user_has_role hard-validates its user/role references and refuses to persist a dangling role.&#13;
+	var sCompanyMainId = '10000000000000000000000000000001'; // the queried incident's own company, drives the reference-field / display-value tests&#13;
+	var sBogusCompanyId = '30000000000000000000000000000000'; // non-existent company: the phantom task points here so its nested company read is all-empty&#13;
+	var sCompanyAId = '30000000000000000000000000000001'; // grandchild company A (carries a name)&#13;
+	var sCompanyBId = '30000000000000000000000000000002'; // grandchild company B&#13;
+	var sTaskPhantomId = '40000000000000000000000000000000'; // child task, sorts first by sys_id; points at the non-existent company above&#13;
+	var sTaskAId = '40000000000000000000000000000001'; // child task -&gt; company A&#13;
+	var sTaskDupId = '40000000000000000000000000000002'; // child task -&gt; company A as well (duplicate grandchild so the bUniqueChildResultId collapse in tests 20/21 is really exercised)&#13;
+	var sTaskBId = '40000000000000000000000000000003'; // child task -&gt; company B (kept last by sys_id so the merge-last test 44 still resolves to company B)&#13;
+	var sIncOtherId = '50000000000000000000000000000001'; // second incident: sorts first by sys_id, last by short_description&#13;
+	var sIncMainId = '50000000000000000000000000000002'; // main queried incident: sorts last by sys_id, first by short_description&#13;
+	_gtATF.generateTestData({&#13;
+		core_company: [&#13;
+			{ sys_id: sCompanyMainId, name: 'GTRRC Test Company' },&#13;
+			{ sys_id: sCompanyAId, name: 'gtrrc_company_a' },&#13;
+			{ sys_id: sCompanyBId, name: 'gtrrc_company_b' }&#13;
+		],&#13;
+		incident: [&#13;
+			{ sys_id: sIncMainId, short_description: 'GTRRCRC Main Incident' },&#13;
+			{ sys_id: sIncOtherId, short_description: 'GTRRCRC Other Incident' }&#13;
+		],&#13;
+		incident_task: [&#13;
+			{ sys_id: sTaskPhantomId, short_description: 'GTRRCRC Task Phantom', incident: sIncMainId },&#13;
+			{ sys_id: sTaskAId, short_description: 'GTRRCRC Task A', incident: sIncMainId },&#13;
+			{ sys_id: sTaskDupId, short_description: 'GTRRCRC Task A Duplicate', incident: sIncMainId },&#13;
+			{ sys_id: sTaskBId, short_description: 'GTRRCRC Task B', incident: sIncMainId }&#13;
+		]&#13;
+	}, true); // create fixture, log errors&#13;
+&#13;
+	// Set the reference fields with engines/workflow off so no field-copy or assignment business rule can rewrite them: this guarantees the phantom's company&#13;
+	// stays dangling and the two real tasks keep companies A and B (the bug this suite used to hit was a hardcoded reference validation silently discarding the value).&#13;
+	_gtRecordWrite.doRecord({ sys_id: sIncMainId, company: sCompanyMainId }, { sTargetTable: 'incident', aQueryFields: ['sys_id'], bNoEngine: true, bNoWorkflow: true }, {});&#13;
+	_gtRecordWrite.doRecord({ sys_id: sTaskPhantomId, company: sBogusCompanyId }, { sTargetTable: 'incident_task', aQueryFields: ['sys_id'], bNoEngine: true, bNoWorkflow: true }, {}); // dangling company -&gt; nested read resolves to nothing&#13;
+	_gtRecordWrite.doRecord({ sys_id: sTaskAId, company: sCompanyAId }, { sTargetTable: 'incident_task', aQueryFields: ['sys_id'], bNoEngine: true, bNoWorkflow: true }, {});&#13;
+	_gtRecordWrite.doRecord({ sys_id: sTaskDupId, company: sCompanyAId }, { sTargetTable: 'incident_task', aQueryFields: ['sys_id'], bNoEngine: true, bNoWorkflow: true }, {}); // same company as task A -&gt; a genuine duplicate grandchild for the dedup collapse&#13;
+	_gtRecordWrite.doRecord({ sys_id: sTaskBId, company: sCompanyBId }, { sTargetTable: 'incident_task', aQueryFields: ['sys_id'], bNoEngine: true, bNoWorkflow: true }, {});&#13;
+	_gtRecordWrite.doRecord({ sys_id: sIncMainId, comments: 'gtrrc journal entry 1 line one\ngtrrc journal entry 1 line two' }, { sTargetTable: 'incident', aQueryFields: ['sys_id'] }, {});&#13;
+	_gtRecordWrite.doRecord({ sys_id: sIncMainId, comments: 'gtrrc journal entry 2 line one\ngtrrc journal entry 2 line two' }, { sTargetTable: 'incident', aQueryFields: ['sys_id'] }, {});&#13;
+&#13;
+	// 14 PRIORITY 1: aDisplayValueTypes in value mode on a reference field returns the display_value/value object (regression guard for getInternalType)&#13;
+	_gtATF.runATF('getData', /"company":\{"display_value":"GTRRC Test Company","value":"[a-f0-9]{32}"\}/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['company'], aDisplayValueTypes: ['reference'] }); // reference type triggers object form&#13;
+&#13;
+	// 15 aDisplayValueTypes that does NOT include the field's internal type leaves the raw sys_id value as a string&#13;
+	_gtATF.runATF('getData', /"company":"[a-f0-9]{32}"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['company'], aDisplayValueTypes: ['date_time'] }); // type not listed keeps sys_id string&#13;
+&#13;
+	// 16 bLegacyDisplayValue with aDisplayValueTypes writes a flat &lt;field&gt;_dv key instead of the object&#13;
+	_gtATF.runATF('getData', /"company_dv":"GTRRC Test Company"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['company'], aDisplayValueTypes: ['reference'], bLegacyDisplayValue: true }); // legacy postfix form&#13;
+&#13;
+	// 17 custom legacy postfix is honoured&#13;
+	_gtATF.runATF('getData', /"company__disp":"GTRRC Test Company"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['company'], aDisplayValueTypes: ['reference'], bLegacyDisplayValue: true, sLegacyDisplayValuePostfix: '__disp' }); // custom postfix&#13;
+&#13;
+	// 18 PRIORITY 2: oRelatedTables join produces a child array keyed under the related table name (the incident has task records, incl. one phantom fixture link)&#13;
+	_gtATF.runATF('getData', /"incident_task":\[\{/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aFields: ['company'] } } }); // child join array&#13;
+&#13;
+	// 19 related table sReturnType reference keys the child result under the source field name&#13;
+	_gtATF.runATF('getData', /"sys_id":\{/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sReturnType: 'reference', aFields: ['company'] } } }); // reference keyed by source field&#13;
+&#13;
+	// 20 related table hidden return type flattens children into a flat array under the table key; bUniqueChildResultId collapses the two company-A tasks (task A + its duplicate) into a single grandchild entry&#13;
+	_gtATF.runATF('getData', /"incident_task":\[\{"sys_id"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sReturnType: 'hidden', bUniqueChildResultId: true, oRelatedTables: { core_company: { sKeySourceField: 'company', sKeyTargetField: 'sys_id', aFields: ['sys_id', 'name'] } } } } }); // hidden flatten with unique ids (duplicate company-A grandchild collapsed to one)&#13;
+&#13;
+	// 21 hidden return type honours the sLabel override on the flat array key&#13;
+	_gtATF.runATF('getData', /"taskCompaniesHidden":\[\{"sys_id"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sReturnType: 'hidden', sLabel: 'taskCompaniesHidden', bUniqueChildResultId: true, oRelatedTables: { core_company: { sKeySourceField: 'company', sKeyTargetField: 'sys_id', aFields: ['sys_id', 'name'] } } } } }); // hidden flatten with sLabel override&#13;
+&#13;
+	// 22 iRelatedTablesMandatoryTarget keeps only top records meeting the mandatory related count (the incident has tasks so it is kept)&#13;
+	_gtATF.runATF('getData', /"iNumberOfRecordsReturned":1/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], iRelatedTablesMandatoryTarget: 1, oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', bValidParentObject: true, aFields: ['company'] } } }); // mandatory related target met&#13;
+&#13;
+	// 23 LABELS: bUseFieldLabel uses the human readable dictionary label as the key&#13;
+	_gtATF.runATF('getData', /"Short description":"GTRRCRC Main Incident"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bUseFieldLabel: true }); // field label key&#13;
+&#13;
+	// 24 bUseTableCamelCaseLabel converts the related table key to camel case&#13;
+	_gtATF.runATF('getData', /"incidentTask":\[/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bUseTableCamelCaseLabel: true, oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aFields: ['company'] } } }); // camel case related table label&#13;
+&#13;
+	// 25 bUseTablePascalCaseLabel converts the related table key to pascal case&#13;
+	_gtATF.runATF('getData', /"IncidentTask":\[/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bUseTablePascalCaseLabel: true, oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aFields: ['company'] } } }); // pascal case related table label&#13;
+&#13;
+	// 26 sTableName overrides the related result key with an explicit label (legacy alias, still supported)&#13;
+	_gtATF.runATF('getData', /"tasks":\[/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sTableName: 'tasks', aFields: ['company'] } } }); // explicit related table label&#13;
+&#13;
+	// 27 sLabel is the preferred name for the same related result key override&#13;
+	_gtATF.runATF('getData', /"incidentTasks":\[/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sLabel: 'incidentTasks', aFields: ['company'] } } }); // explicit related table label via sLabel&#13;
+&#13;
+	// 28 sRefFieldConcatChar customises the join character for reference field keys (company populated on the fixture incident)&#13;
+	_gtATF.runATF('getData', /"company\.name":"GTRRC Test Company"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], sRefFieldConcatChar: '.', oReferenceFields: { company: { aFields: ['name'] } } }); // custom concat char&#13;
+&#13;
+	// 29 ORDERING: aOrderByDesc path runs and returns the fixture rows (short_description desc -&gt; 'Other' before 'Main')&#13;
+	_gtATF.runATF('getData', /"short_description":"GTRRCRC Other Incident"/, { sTable: 'incident', sQuery: 'short_descriptionSTARTSWITHGTRRCRC', aFields: ['short_description'], aOrderByDesc: ['short_description'], iMaxReturnCount: 1 }); // order by desc returns the 'Other' incident first&#13;
+&#13;
+	// 30 aQueryParamsOrderByFields (request override) takes precedence over aOrderBy and still returns rows (sys_id order would return 'Other' first, the request order returns 'Main')&#13;
+	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident"/, { sTable: 'incident', sQuery: 'short_descriptionSTARTSWITHGTRRCRC', aFields: ['short_description'], aOrderBy: ['sys_id'], aQueryParamsOrderByFields: ['short_description'], iMaxReturnCount: 1 }); // request order override ('Main' sorts before 'Other')&#13;
+&#13;
+	// 31 PAGING: iRequestReturnOffset with iMaxReturnCount pages the window and still reports the full matched count (2 fixture incidents)&#13;
+	_gtATF.runATF('getData', /"iNumberOfRecordsReturned":2/, { sTable: 'incident', sQuery: 'short_descriptionSTARTSWITHGTRRCRC', aFields: ['short_description'], iMaxReturnCount: 1, iRequestReturnOffset: 1 }); // offset paging keeps full count&#13;
+&#13;
+	// 32 iRequestMaxReturnCount overrides the configured iMaxReturnCount default and returns the data envelope&#13;
+	_gtATF.runATF('getData', /"data":\[\{/, { sTable: 'incident', sQuery: 'short_descriptionSTARTSWITHGTRRCRC', aFields: ['short_description'], iMaxReturnCount: 100, iRequestMaxReturnCount: 1 }); // request max overrides config&#13;
+&#13;
+	// 33 GR FLAGS: bNoWorkflow read path still returns the record&#13;
+	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bNoWorkflow: true }); // no workflow read&#13;
+&#13;
+	// 34 bUseGlideRecordSecure read path returns the record for an admin caller&#13;
+	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bUseGlideRecordSecure: true }); // GlideRecordSecure read&#13;
+&#13;
+	// 35 bNoDomain read path returns the record&#13;
+	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bNoDomain: true }); // no domain read&#13;
+&#13;
+	// 36 ATTACHMENTS: bReturnAttachmentInfoArray adds the attachments key as an array form&#13;
+	_gtATF.runATF('getData', /"attachments":\[/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], bReturnAttachmentInfoArray: true }); // attachment array form&#13;
+&#13;
+	// 37 JOURNAL: oJournalFields reads the last comments journal entry into the comments key&#13;
+	_gtATF.runATF('getData', /comments":"/, { sTable: 'incident', sQuery: 'sys_id=' + sIncMainId, aFields: ['short_description'], oJournalFields: { comments: { iNumber: 1 } } }); // journal field last entry&#13;
+&#13;
+	// 38 oJournalFields with sReturnType array returns the journal entries as an array&#13;
+	_gtATF.runATF('getData', /comments":\["/, { sTable: 'incident', sQuery: 'sys_id=' + sIncMainId, aFields: ['short_description'], oJournalFields: { comments: { iNumber: -1, sReturnType: 'array' } } }); // journal array form&#13;
+&#13;
+	// 39 ATTRIBUTE PIVOT: oAttributeTable pivots matching rows onto the record under sFieldPrefix + name-field value (here the child tasks keyed by their company)&#13;
+	_gtATF.runATF('getData', new RegExp('"attr_' + sCompanyAId + '"'), { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oAttributeTable: { sBaseTableName: 'task', sAttributeTableName: 'incident_task', sAttributeReferenceField: 'incident', sAttributeNameField: 'company', sAttributeValueField: 'company', aCIAttributeNames: [sCompanyAId, sCompanyBId], sFieldPrefix: 'attr_' } }); // attribute pivot writes prefixed key&#13;
+&#13;
+	// 40 oAttributeTable does nothing when the configured base table does not match the record base (no attr_ key, record still returned)&#13;
+	_gtATF.runATF('getData', /"data":\[\{"short_description":"GTRRCRC Main Incident"\}\]/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oAttributeTable: { sBaseTableName: 'cmdb', sAttributeTableName: 'incident_task', sAttributeReferenceField: 'incident', sAttributeNameField: 'company', sAttributeValueField: 'company', aCIAttributeNames: [sCompanyAId], sFieldPrefix: 'attr_' } }); // base table mismatch skips pivot, only short_description present&#13;
+&#13;
+	// 41 hidden flatten drops empty junction rows (no '' placeholders): every grandchild is filtered out so the flat array is empty, not padded with empty strings&#13;
+	_gtATF.runATF('getData', /{"short_description":"GTRRCRC Main Incident"}]/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sReturnType: 'hidden', oRelatedTables: { core_company: { sKeySourceField: 'company', sKeyTargetField: 'sys_id', sQuery: 'sys_id=ffffffffffffffffffffffffffffffff', aFields: ['sys_id'] } } } } }); // hidden empties dropped&#13;
+&#13;
+	// 42 hidden bMergeToParent merges the first non-empty flattened record's fields directly onto the parent and drops the child wrapper key (company sys_id sits beside short_description)&#13;
+	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident","sys_id":"[a-f0-9]{32}"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sReturnType: 'hidden', bMergeToParent: true, oRelatedTables: { core_company: { sKeySourceField: 'company', sKeyTargetField: 'sys_id', aFields: ['sys_id'] } } } } }); // hidden merge onto parent&#13;
+&#13;
+	// 43 bMergeToParent also works on a non-hidden (plain array) related table: aFields and oReferenceFields merge straight onto the parent, dropping the array wrapper (default winner is the first match in sys_id order, the phantom task carrying the dangling company)&#13;
+	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident","company":"30000000000000000000000000000000","taskIncident":"GTRRCRC Main Incident"/i, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aOrderBy: ['sys_id'], bMergeToParent: true, aFields: ['company'], oReferenceFields: { incident: { aFields: [{ sField: 'short_description', sLabel: 'taskIncident' }] } } } } }); // non-hidden merge onto parent, first match wins&#13;
+&#13;
+	// 44 bMergeToParentUseLast picks the last non-empty match instead of the first (same fixture, ordered ascending, so the last task wins with company B)&#13;
+	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident","company":"30000000000000000000000000000002"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aOrderBy: ['sys_id'], bMergeToParent: true, bMergeToParentUseLast: true, aFields: ['company'] } } }); // non-hidden merge onto parent, last match wins&#13;
+&#13;
+	// 45 bMergeToParent with zero matches still emits the declared aFields/oReferenceFields keys defaulted to '' instead of omitting them or leaving an empty array (keeps a consistent parent schema)&#13;
+	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident","company":"","taskIncident":""/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sQuery: 'sys_id=ffffffffffffffffffffffffffffffff', bMergeToParent: true, aFields: ['company'], oReferenceFields: { incident: { aFields: [{ sField: 'short_description', sLabel: 'taskIncident' }] } } } } }); // no match defaults declared merge fields to ''&#13;
+&#13;
+	// 46 a multi-level bMergeToParent chain (task -&gt; company) still defaults to '' when the OUTER level itself has zero matches: the declared label lives on the nested merged table, not on the task directly, so it must be gathered recursively&#13;
+	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident","name":""/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sQuery: 'sys_id=ffffffffffffffffffffffffffffffff', bMergeToParent: true, oRelatedTables: { core_company: { sKeySourceField: 'company', sKeyTargetField: 'sys_id', bMergeToParent: true, aFields: ['name'] } } } } }); // recursive label gathering through a nested merge chain&#13;
+&#13;
+	// 47 bMergeToParent skips candidate records whose values are all empty and merges the first genuinely populated one: the phantom task (sorts first) points at a non-existent company, so its nested company merge resolves to {name:''}; it must be skipped so real company A wins instead of an empty name (regression guard for msisdn-style deep merges where only one sibling carries the value)&#13;
+	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident","name":"gtrrc_company_a"/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aOrderBy: ['sys_id'], bMergeToParent: true, oRelatedTables: { core_company: { sKeySourceField: 'company', sKeyTargetField: 'sys_id', bMergeToParent: true, aFields: ['name'] } } } } }); // all-empty candidate skipped, first populated sibling wins&#13;
+&#13;
+	// 48 bReturnNumberOfRecords: false omits iNumberOfRecordsReturned from the result entirely (default is true, see test 2 for the default-on case)&#13;
+	_gtATF.runATF('getData', /^((?!iNumberOfRecordsReturned).)*$/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], bReturnNumberOfRecords: false });&#13;
+&#13;
+	// 49 related table sReturnType 'object' nests the single matching child record as a plain object under the table label - no array wrap (contrast test 18) and no flattening onto the parent (contrast test 'first' on a related table); scoped to company A via sQuery so it is the only surviving match&#13;
+	_gtATF.runATF('getData', /"incident_task":\{"company":"30000000000000000000000000000001"\}/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sQuery: 'company=30000000000000000000000000000001', sReturnType: 'object', aFields: ['company'] } } }); // single nested object, no array wrap&#13;
+&#13;
+	// 50 sReturnType 'first' at the TOP level now carries its oRelatedTables: the record is returned as a single object (not an array wrap) AND the child join is still populated under its key - regression guard for the engine change that previously short-circuited related-table processing for first/object before reaching _getRelTables&#13;
+	_gtATF.runATF('getData', /"data":\{"short_description":"GTRRCRC Main Incident".*"incident_task":.*"company":"3/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], sReturnType: 'first', oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aFields: ['company'] } } }); // first at top level keeps its related tables (data is an object via "data":{ and the child join key is present with a company value)&#13;
+&#13;
+	// 51 a matching 'first' query reports 200, not a false 204: first/object records now push to aTable so the empty-result "no content" check no longer fires when a single-object record was actually found (regression guard for the aTable-always-empty 204 bug)&#13;
+	_gtATF.runATF('getData', /"iResponseStatusCode":200/, { sTable: 'sys_user', sQuery: 'user_name=admin', aFields: ['user_name'], sReturnType: 'first' }); // first match -&gt; 200 not 204&#13;
+&#13;
+	// 52 a per-relation iMaxReturnCount caps only that related table's read (the incident has 3 tasks ordered by sys_id, the phantom sorts first and survives the cap of 1, carrying the dangling company ...0000)&#13;
+	_gtATF.runATF('getData', /"incident_task":\[\{"company":"30000000000000000000000000000000"\}\]/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aOrderBy: ['sys_id'], iMaxReturnCount: 1, aFields: ['company'] } } }); // per-relation cap limits to 1 row, first by sys_id is the phantom&#13;
+&#13;
+	// 53 iMaxReturnCountAllLevels set at the top read cascades down to a related table that has no iMaxReturnCount of its own, same capping effect as test 52&#13;
+	_gtATF.runATF('getData', /"incident_task":\[\{"company":"30000000000000000000000000000000"\}\]/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], iMaxReturnCountAllLevels: 1, oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', aOrderBy: ['sys_id'], aFields: ['company'] } } }); // cascading cap with no explicit per-relation iMaxReturnCount&#13;
+&#13;
+	// 54 oDynamicValues resolves a [placeholder] token in the top-level sQuery&#13;
+	_gtATF.runATF('getData', /"short_description":"GTRRCRC Main Incident"/, { sTable: 'incident', sQuery: 'sys_id=[incidentId]', aFields: ['short_description'], oDynamicValues: { incidentId: sIncMainId } }); // top-level dynamic value&#13;
+&#13;
+	// 55 oDynamicValues ALSO resolves a [placeholder] token inside a related table's sQuery, not just the top-level query - narrows the join to only the company-B task; without this the literal '[companyId]' would match nothing and the array would come back empty&#13;
+	_gtATF.runATF('getData', /"incident_task":\[\{"company":"30000000000000000000000000000002"\}\]/, { sTable: 'incident', sQuery: 'short_description=GTRRCRC Main Incident', aFields: ['short_description'], oDynamicValues: { companyId: sCompanyBId }, oRelatedTables: { incident_task: { sKeySourceField: 'sys_id', sKeyTargetField: 'incident', sQuery: 'company=[companyId]', aFields: ['company'] } } }); // related-table dynamic value&#13;
+&#13;
+	//_gt.sleep(60000);&#13;
+&#13;
+	return _gtATF.endATF();&#13;
 })(outputs, steps, params, stepResult, assertEqual);</value>
         <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
     </sys_variable_value>
@@ -262,11 +268,11 @@
         <order>100</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-07-25 09:56:19</sys_created_on>
+        <sys_created_on>2026-07-26 10:31:12</sys_created_on>
         <sys_id>f3dbb248c3150bd016a2269dc001318a</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-25 09:56:19</sys_updated_on>
+        <sys_updated_on>2026-07-26 10:31:12</sys_updated_on>
         <value>3.1</value>
         <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
     </sys_variable_value>
