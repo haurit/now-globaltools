@@ -10,7 +10,7 @@ Functions are only available for global scope and specific scopes defined in the
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsRecordRead</name>
         <sandbox_callable>false</sandbox_callable>
-        <script><![CDATA[var GlobalToolsRecordRead = Class.create();
+        <script><![CDATA[var GlobalToolsRecordRead = Class.create(); 
 GlobalToolsRecordRead.prototype = {
 	initialize: function () {
 		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
@@ -22,7 +22,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function initialize
 
 	_checkAccess: function (sCallerScope) {
-		if (this.oAllowedScopes) {return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));}
+		if (this.oAllowedScopes) { return this.oAllowedScopes.hasOwnProperty(String(sCallerScope)); }
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
 		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
@@ -505,7 +505,14 @@ GlobalToolsRecordRead.prototype = {
 					if ((sValue == 'NULL') || ((!sValue) && (bQueryEmptyFields))) {
 						aQuery.push(sTargetField + 'ISEMPTY' + sAddlQuery);
 					} else if (sValue) {
-						aQuery.push(sTargetField + '=' + sValue + sAddlQuery);
+						if (String(sValue).indexOf('^') != -1) {
+							aError.push('Field \'' + sKeyField + '\' contains an invalid character');
+							if (bLog) {
+								gs.warn(sLogPrefix + 'Key sKeyField \'' + sKeyField + '\' rejected: value contains an encoded query metacharacter (^). (oRecordConfig: ' + JSON.stringify(oRecordConfig) + ')');
+							} // if log
+						} else {
+							aQuery.push(sTargetField + '=' + sValue + sAddlQuery);
+						} // if value contains query metacharacter
 					} else {
 						aError.push('Field \'' + sKeyField + '\' is empty and parameter bQueryEmptyFields is not set');
 						if (bLog) {
@@ -624,7 +631,7 @@ GlobalToolsRecordRead.prototype = {
 			return aQuery.join('^');
 		} // if params
 	}, // function makeQueryADotWalkQuery
-	
+
 	combineQueries: function (sFirstQuery, sSecondQuery) {
 		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sFirstQuery) && (sSecondQuery)) {
@@ -655,19 +662,19 @@ GlobalToolsRecordRead.prototype = {
 	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
-};]]></script>
+}; ]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>132</sys_mod_count>
+        <sys_mod_count>134</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-21 20:12:38</sys_updated_on>
+        <sys_updated_on>2026-07-28 11:12:55</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>2a51d52c1bb47150d5be777d8b4bcb25</id>
