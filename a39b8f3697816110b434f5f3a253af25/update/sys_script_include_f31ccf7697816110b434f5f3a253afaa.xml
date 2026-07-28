@@ -11,21 +11,22 @@ Functions are only available for global scope and specific scopes defined in the
         <name>GlobalTools</name>
         <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var GlobalTools = Class.create();
-GlobalTools.prototype = {
+GlobalTools.prototype = { 
 	initialize: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 	}, // function initialize
-
-	checkAccess: function (sCallerScope) {
+	
+	_checkAccess: function (sCallerScope) {
+		if (this.oAllowedScopes) {return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));}
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-			return true;
-		} // if scope is allowed
-	}, // function checkAccess
-
+		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
+		this.oAllowedScopes['rhino.global'] = true;
+		return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));
+	}, // function _checkAccess
+	
 	getType: function (oValue, bDoNotConvertCase) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (oValue === null) {
 			return 'null';
 		}
@@ -48,7 +49,7 @@ GlobalTools.prototype = {
 	}, // function getType
 
 	isEqual: function (oValue1, oValue2) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (((oValue1) && (!oValue2)) || ((!oValue1) && (oValue2))) {
 			return false;
 		} else if ((!oValue1) && (!oValue2)) {
@@ -62,10 +63,8 @@ GlobalTools.prototype = {
 			if (oValue1.length !== oValue2.length) {
 				return false;
 			} // if not same length
-			//oValue1.sort();
-			//oValue2.sort();
-			oValue1 = this.deepSort(oValue1);
-			oValue2 = this.deepSort(oValue2);
+			oValue1 = this.deepSort(oValue1); //oValue1.sort();
+			oValue2 = this.deepSort(oValue2); //oValue2.sort();
 			return (String(oValue1) == String(oValue2));
 		} else if (sValue1Type == 'object') {
 			var aKeys1 = Object.keys(oValue1);
@@ -97,7 +96,7 @@ GlobalTools.prototype = {
 
 	// Not to be used with more than 2 levels of nested structures and works fine for small arrays objects only. 
 	deepSort: function (oValue) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sValueType = this.getType(oValue);
 		if (sValueType == 'array') {
 			var sCommonType = new global.GlobalToolsArray().getCommonTypeFromArray(oValue);
@@ -129,23 +128,20 @@ GlobalTools.prototype = {
 		return oValue;
 	}, // function deepSort
 
-	// Encode new line to tag
 	encodeNewLineToTag: function (sValue) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sResult = (sValue) ? String(sValue).replace(/\n/g, '!^br^!') : '';
 		return sResult;
 	}, // function encodeNewLineToTag
 
-	// Decode tag to new line
 	decodeTagToNewLine: function (sValue) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sResult = String(sValue).replace(/!\^br\^!/g, '\n');
 		return sResult;
 	}, // function decodeTagToNewLine
 
-	// Pad number
 	padNumber: function (iNumber, iDigits) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((iNumber) || (iNumber === 0)) {
 			iDigits = ((iDigits) && (!isNaN(iDigits))) ? iDigits : 8;
 			var sNumber = String(iNumber);
@@ -155,9 +151,8 @@ GlobalTools.prototype = {
 		} // if number
 	}, // function padNumber
 
-	// Format bytes user friendly
 	formatBytes: function (iNumber, sNotation, iDecimals) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((this.getType(iNumber) != 'number') && (this.getType(iNumber) != 'integer')) {
 			iNumber = parseInt(iNumber);
 			if (isNaN(iNumber)) {
@@ -180,9 +175,8 @@ GlobalTools.prototype = {
 		return String(iResult).replace('.' + this.padNumber(0, iDecimals), '') + ' ' + aPrefixes[sNotation][iExponent];
 	}, // function formatBytes
 
-	// Function to replace placeholders
 	replacePlaceholders: function (sInputValue, oRecord, sValue, bJSON) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sInputValue) && (oRecord)) {
 			var bIsRecord = (this.getType(oRecord).indexOf('gliderecord') != -1);
 			var reGetFields = /(\[[A-Za-z_0-9]*\])(?!.*")/gi;
@@ -219,7 +213,7 @@ GlobalTools.prototype = {
 	}, // function replacePlaceholders
 
 	convertUnderscoretoCamelCase: function (sInputValue) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (sInputValue) {
 			var sPascalCase = this.convertUnderscoretoPascalCase(sInputValue);
 			return sPascalCase.charAt(0).toLowerCase() + sPascalCase.substr(1); // lower first char for camelCase
@@ -228,7 +222,7 @@ GlobalTools.prototype = {
 	}, // function convertUnderscoretoCamelCase
 
 	convertUnderscoretoPascalCase: function (sInputValue) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (sInputValue) {
 			var aResult = [];
 			sInputValue.split('_').forEach(function (sWord) {
@@ -241,7 +235,7 @@ GlobalTools.prototype = {
 	}, // function convertUnderscoretoPascalCase
 
 	getHTMLDiffFromXML: function (sXMLLeft, sXMLRight, sHeaderLeft, sHeaderRight) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sXMLLeft) && (sXMLRight)) {
 			var _DiffHelper = new global.DiffHelper();
 			var oDiff = _DiffHelper.diffXMLString(sXMLLeft, sXMLRight);
@@ -253,18 +247,17 @@ GlobalTools.prototype = {
 		} // if xmls
 	}, // function getHTMLDiffFromXML
 
-	// Schedule ScriptInclude Function
 	scheduleScript: function (sScriptInclude, sFunction, iSeconds, aFunctionArgs, aClassArgs, sScheduleName, sDocument, sDocumentKey) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		function parseArgs(aArgs) {
 			var aReturn = [];
 			if (!aArgs) {
 				return '';
 			} // if no args
-			for (iIndex = 0; iIndex < aArgs.length; iIndex++) {
-				oItem = aArgs[iIndex];
+			for (var iIndex = 0; iIndex < aArgs.length; iIndex++) {
+				var oItem = aArgs[iIndex];
 				var sType = typeof oItem;
-				if ((!oItem) && (sType != 'boolean') && (!oItem === 0)) {
+				if ((!oItem) && (sType != 'boolean') && (oItem !== 0)) {
 					return '';
 				} // if empty
 				if (JSUtil.instance_of(oItem, GlideRecord)) {
@@ -319,9 +312,8 @@ GlobalTools.prototype = {
 		return grTrigger.insert();
 	}, // function scheduleScript
 
-	// Convenience function to handle scheduler
 	scheduleHandler: function (sEvent, sDelaySeconds, sAction, sAddlQuery, grRecord, oParam1, oParam2, sQueue) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		try {
 			if (!sEvent) {
 				gs.warn('global.GlobalTools.scheduleHandler called without an event.');
@@ -359,7 +351,7 @@ GlobalTools.prototype = {
 
 	// Overcome scopeing issue
 	executeScheduledScriptExecution: function (sScheduledJobName) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (sScheduledJobName) {
 			var grScheduledJob = new GlideRecord('sysauto_script');
 			grScheduledJob.addEncodedQuery('name=' + sScheduledJobName);
@@ -376,13 +368,13 @@ GlobalTools.prototype = {
 
 	// Overcome scopeing issue
 	sleep: function (iMilliseconds) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		gs.sleep(iMilliseconds);
 	}, // function sleep
 
 	// Overcome scopeing issue with workaround for workspaces getGlideURI issue (CS7215882)
 	getUrl: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sUrl = '';
 		try {
 			sUrl = String(gs.action.getGlideURI());
@@ -410,15 +402,14 @@ GlobalTools.prototype = {
 
 	// Overcome scopeing issue
 	getExecutionTrackerbyId: function (sId) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (sId) {
 			return SNC.GlideExecutionTracker.getBySysID(sId);
 		} // if id
 	}, // function getExecutionTrackerbyId
 
-	// Run function in a same scope
 	runFunction: function (sFunction) { // function is a <script_include>.<function>.toString(), 2nd... args will be evaluated in function call
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var gsEvaluator = new GlideScopedEvaluator();
 		gsEvaluator.putVariable('result', null);
 		var aArguments = [];
@@ -443,7 +434,7 @@ GlobalTools.prototype = {
 
 	// Run function in a specific scope (please note the function may only use valid scoped features)
 	runFunctionInScope: function (sFunction, sScopeId) { // function is a <script_include>.<function>.toString(), 3rd... args will be evaluated in function call
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (gs.getProperty('glide.record.legacy_cross_scope_access_policy_in_script') == 'true') {
 			gs.warn('GlobalTools.runFunctionInScope is allowed, please validate your instance security settings!');
 			var gsEvaluator = new GlideScopedEvaluator();
@@ -473,7 +464,7 @@ GlobalTools.prototype = {
 	}, // function runFunctionInScope
 
 	isPluginActive: function (sPluginId) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (sPluginId) {
 			var grPluginView = new GlideRecord('v_plugin');
 			grPluginView.addEncodedQuery('id=' + sPluginId + '^active=active');
@@ -486,7 +477,7 @@ GlobalTools.prototype = {
 	}, // function isPluginActive
 
 	installPlugins: function (aPlugin, bLoadDemoData, bLog, bScheduled) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		bLoadDemoData = (bLoadDemoData === false) ? false : true; // default true
 		bLog = (bLog === true) ? true : false; // default false
 		if ((gs.isInteractive()) || (bScheduled === true)) {
@@ -536,9 +527,8 @@ GlobalTools.prototype = {
 		} // if scheduled
 	}, // function installPlugins
 
-	// Updates one or more plugins in the background
 	updatePlugins: function (sQuery, bScheduled) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((gs.isInteractive()) || (bScheduled === true)) {
 			this.scheduleScript('GlobalTools', 'updatePlugins', '0', [sQuery], [], 'GlobalToolsupdatePlugins');
 		} else {
@@ -567,7 +557,7 @@ GlobalTools.prototype = {
 
 	// Overcome scopeing issue
 	useTagUtil: function (sFunction) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (!this._TagUtil) {
 			this._TagUtil = new global.TagUtil();
 		} // if no tag util
@@ -582,7 +572,7 @@ GlobalTools.prototype = {
 
 	// Overcome scopeing issue
 	setProperty: function (sName, oValue, sDescription) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sName) && ((oValue) || (oValue === ''))) {
 			var sValue = String(oValue);
 			if (sDescription) {
@@ -593,22 +583,18 @@ GlobalTools.prototype = {
 		} // if name and value (or empty string)
 	}, // function setProperty
 
-	// Validate that a value has the format of a ServiceNow sys_id (32 hexadecimal characters)
 	isValidSysId: function (sSysId) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		return ((sSysId) && (/^[0-9a-f]{32}$/.test(String(sSysId)))) ? true : false;
 	}, // function isValidSysId
 
-	// Check if the current session is impersonating another user
 	isImpersonating: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		return new GlideImpersonate().isImpersonating();
 	}, // function isImpersonating
 
-	// Impersonate a user by sys_id (idempotent). Validates the sys_id format only, then impersonates. Returns the
-	// user id current before the call so it can be restored, '' if no/same/invalid user or impersonation did not take.
 	impersonateUser: function (sImpersonateUserId) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sCurrentUserId = gs.getUserID();
 		if ((!sImpersonateUserId) || (sImpersonateUserId == sCurrentUserId) || (!this.isValidSysId(sImpersonateUserId))) {
 			return ''; // no user, same user or not a valid sys_id
@@ -621,9 +607,8 @@ GlobalTools.prototype = {
 		return '';
 	}, // function impersonateUser
 
-	// Restore the session to a previous user id, only when currently impersonating. No-op on empty id or when not impersonating
 	endImpersonation: function (sOriginalUserId) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sOriginalUserId) && (new GlideImpersonate().isImpersonating()) && (sOriginalUserId != gs.getUserID())) {
 			gs.getSession().impersonate(sOriginalUserId);
 			return true;
@@ -632,7 +617,7 @@ GlobalTools.prototype = {
 	}, // function endImpersonation
 
 	type: 'GlobalTools',
-	version: '2.1.3',
+	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 
@@ -641,23 +626,23 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>222</sys_mod_count>
+        <sys_mod_count>240</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
-        <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-18 13:35:00</sys_updated_on>
+        <sys_updated_on>2026-07-25 10:46:48</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>f31ccf7697816110b434f5f3a253afaa</id>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2024-08-03 08:57:16</sys_created_on>
         <sys_id>5355e0e11b3b0a10e50ddc61ab4bcb90</sys_id>
-        <sys_mod_count>3</sys_mod_count>
+        <sys_mod_count>5</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-11 10:19:51</sys_updated_on>
+        <sys_updated_on>2026-07-21 07:19:46</sys_updated_on>
         <table>sys_script_include</table>
         <use_es_latest>true</use_es_latest>
     </sys_es_latest_script>

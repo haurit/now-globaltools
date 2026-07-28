@@ -5,7 +5,7 @@
         <api_name>global.GlobalToolsDateTime</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development&#13;
+        <description>Tools to support (scoped) app development
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsDateTime</name>
@@ -13,7 +13,7 @@ Functions are only available for global scope and specific scopes defined in the
         <script><![CDATA[var GlobalToolsDateTime = Class.create();
 GlobalToolsDateTime.prototype = {
 	initialize: function (sClass, gtCache) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		this.sClass = (sClass) ? sClass : '_gtdt_';
 		if ((gtCache) && (gtCache instanceof GlobalToolsCache)) {
 			this._gtCache = gtCache;
@@ -23,16 +23,17 @@ GlobalToolsDateTime.prototype = {
 		this.aRestricedWords = ['_w_', '_s_', '_i_', '_m_', '_e_', '_stk_', '_stkmaxdepth_'];
 	}, // function initialize
 
-	checkAccess: function (sCallerScope) {
+	_checkAccess: function (sCallerScope) {
+		if (this.oAllowedScopes) {return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));}
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-			return true;
-		} // if scope is allowed
-	}, // function checkAccess
+		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
+		this.oAllowedScopes['rhino.global'] = true;
+		return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));
+	}, // function _checkAccess
 
 	formatMS: function (iMilliseconds) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sResult = '';
 		var sPostfix = ' ms';
 		if (iMilliseconds > 999) {
@@ -77,7 +78,7 @@ GlobalToolsDateTime.prototype = {
 	}, // function formatMS
 
 	startTimer: function (sName, bInternal) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sName) || (this.aRestricedWords.indexOf(sName) != -1)) { return; } // if no or invalid name return
 		var sCurrent = '';
 		var oTimer = this._gtCache.getValue(this.sClass + '/' + sName);
@@ -133,7 +134,7 @@ GlobalToolsDateTime.prototype = {
 	}, // function startTimer
 
 	stopTimer: function (sName, bInternal) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sName) || (this.aRestricedWords.indexOf(sName) != -1)) { return; } // if no or invalid name return
 		var sCurrent = '';
 		var oTimer = this._gtCache.getValue(this.sClass + '/' + sName);
@@ -182,7 +183,7 @@ GlobalToolsDateTime.prototype = {
 	}, // function stopTimer
 
 	getTimer: function (sType) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sInput = JSON.stringify(this._gtCache.getValue(this.sClass));
 		if (sType == 'debug') {
 			return JSON.stringify(this._gtCache.getValue(this.sClass));
@@ -220,6 +221,7 @@ GlobalToolsDateTime.prototype = {
 	}, // function getTimer
 
 	_evaluateTimer: function (sType, oCacheNode, oResult, sName, iTotal) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var iAvg = 0, iExec = 0, iSum = 0, iMin = 0, iMax = 0, oSubNode = {}, oResultNode = {};
 		oResult[sName] = {};
 		Object.keys(oCacheNode).forEach(function (sProp) {
@@ -253,7 +255,7 @@ GlobalToolsDateTime.prototype = {
 	}, // function _evaluateTimer
 
 	type: 'GlobalToolsDateTime',
-	version: '2.1.2',
+	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -261,14 +263,14 @@ GlobalToolsDateTime.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2024-12-17 08:37:47</sys_created_on>
         <sys_id>acc8bcd5c36ade109ebe8d8dc00131df</sys_id>
-        <sys_mod_count>69</sys_mod_count>
+        <sys_mod_count>71</sys_mod_count>
         <sys_name>GlobalToolsDateTime</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_acc8bcd5c36ade109ebe8d8dc00131df</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-06-03 15:58:59</sys_updated_on>
+        <sys_updated_on>2026-07-21 16:12:20</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>acc8bcd5c36ade109ebe8d8dc00131df</id>

@@ -5,7 +5,7 @@
         <api_name>global.GlobalToolsSecurity</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development&#13;
+        <description>Tools to support (scoped) app development
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsSecurity</name>
@@ -13,7 +13,7 @@ Functions are only available for global scope and specific scopes defined in the
         <script><![CDATA[var GlobalToolsSecurity = Class.create();
 GlobalToolsSecurity.prototype = {
 	initialize: function (bCompareGlideRecordSecureCanCRUD, sDebugAccessAnalyzerOutputForTable) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
 		this._gtObject = new global.GlobalToolsObject();
@@ -42,16 +42,51 @@ GlobalToolsSecurity.prototype = {
 		}; // operation map
 	}, // function initialize
 
-	checkAccess: function (sCallerScope) {
+	_checkAccess: function (sCallerScope) {
+		if (this.oAllowedScopes) {return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));}
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-			return true;
-		} // if scope is allowed
-	}, // function checkAccess
+		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
+		this.oAllowedScopes['rhino.global'] = true;
+		return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));
+	}, // function _checkAccess
+
+	generatePassword: function(iPasswordLength, bLowerChars, bUpperChars, bNumberChars, bSpecialChars, sSpecialChars) {
+        if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		iPasswordLength = ((iPasswordLength) && (iPasswordLength >= 12) && (iPasswordLength <= 100)) ? iPasswordLength : 20; // As of Z/A recommended lengths
+		var sLowerChars = 'abcdefghijklmnopqrstuvwxyz';
+        var sUpperChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        var sNumberChars = '0123456789';
+        sSpecialChars = (sSpecialChars) ? sSpecialChars : '!?=#|$.,-_';
+        var fnGetRandomCharacter = function(sCharPool) {
+            var iRandomIndex = GlideSecureRandomUtil.getSecureRandomIntBound(sCharPool.length);
+            return sCharPool.charAt(iRandomIndex);
+        }; // fnGetRandomCharacter
+        var aEnabledPools = [];
+        if ((bLowerChars !== false)) { aEnabledPools.push(sLowerChars); }
+        if ((bUpperChars !== false)) { aEnabledPools.push(sUpperChars); }
+        if ((bNumberChars !== false)) { aEnabledPools.push(sNumberChars); }
+        if ((bSpecialChars !== false)) { aEnabledPools.push(sSpecialChars); }
+        var sAllChars = aEnabledPools.join('');
+        if ((sAllChars === '')) { return ''; }
+        var aPasswordChars = [];
+        for (var iPoolIndex = 0; (iPoolIndex < aEnabledPools.length); iPoolIndex++) {
+            aPasswordChars.push(fnGetRandomCharacter(aEnabledPools[iPoolIndex]));
+        } // for guarantee one char from each enabled pool
+        for (var iFillIndex = aPasswordChars.length; (iFillIndex < iPasswordLength); iFillIndex++) {
+            aPasswordChars.push(fnGetRandomCharacter(sAllChars));
+        } // for fill remaining slots
+        for (var iShuffleIndex = aPasswordChars.length - 1; (iShuffleIndex > 0); iShuffleIndex--) {
+            var iSwapIndex = GlideSecureRandomUtil.getSecureRandomIntBound(iShuffleIndex + 1);
+            var sTemporary = aPasswordChars[iShuffleIndex];
+            aPasswordChars[iShuffleIndex] = aPasswordChars[iSwapIndex];
+            aPasswordChars[iSwapIndex] = sTemporary;
+        } // for Fisher-Yates so the guaranteed chars are not fixed at the front
+        return aPasswordChars.join('');
+    }, // generatePassword
 
 	getUsersRoles: function (oUserOrId, sReturnType, bDirectAssignment, bExcludeSNCInternal) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var aRoles = [];
 		sReturnType = ((sReturnType == 'id') || (sReturnType == 'boolean')) ? sReturnType : 'name';
 		bDirectAssignment = (bDirectAssignment === true) ? true : false;
@@ -103,7 +138,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function getUsersRoles
 
 	getRoleIdFromName: function (sRole) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (sRole) {
 			var grUserRole = new GlideRecord('sys_user_role');
 			if (grUserRole.get('name', sRole)) {
@@ -111,10 +146,10 @@ GlobalToolsSecurity.prototype = {
 			} // if role
 		} // if role
 		return false;
-	}, // function isValidRole
+	}, // function getRoleIdFromName
 
 	isValidRole: function (sRoleOrId) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (sRoleOrId) {
 			if (this._gtRecordRead.checkRecordByQuery('sys_user_role', 'sys_id=' + sRoleOrId + '^ORname=' + sRoleOrId)) {
 				return true;
@@ -124,7 +159,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function isValidRole
 
 	generateAccessReport: function (sRole, sTableQuery, bExtendTables, sOutputType, bValidateWithAccessAnalyzer) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var oResult = {}, sError = '';
 		bExtendTables = (bExtendTables === false) ? false : true; // default is true
 		sOutputType = ((sOutputType == 'csv') || (sOutputType == 'string') || (sOutputType == 'both')) ? sOutputType : 'json'; // default is json
@@ -213,7 +248,7 @@ GlobalToolsSecurity.prototype = {
 	}, // generateAccessReport
 
 	_getAccessByRoleByTable: function (sRoleId, sRole, sTable, bExtendTables, bOmitEmpty, bOmitSameExtendedClass, oRoleAccessResult) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var bCanRead = false, bCanWrite = false, bCanCreate = false, bCanDelete = false;
 		var fnAddWarning = function (sTable, sOperation, oException, oWarnings) {
 			if (!oWarnings.hasOwnProperty(sTable)) {
@@ -262,7 +297,7 @@ GlobalToolsSecurity.prototype = {
 			if (bCanWrite) { aAccessString.push('U'); }
 			if (bCanDelete) { aAccessString.push('D'); }
 			var sAccessString = aAccessString.join('');
-			if ((!bOmitSameExtendedClass) || (!this.checkParentAccessResult(sTable, sAccessString, oRoleAccessResult))) {
+			if ((!bOmitSameExtendedClass) || (!this._checkParentAccessResult(sTable, sAccessString, oRoleAccessResult))) {
 				this._gtObject.setValue(sTable + '/CRUD', sAccessString, oRoleAccessResult);
 			} // if not omit extentended or not same and not delete only (omited because if you can't read, you can't delete)
 		} // if not omit empty or not empty
@@ -274,8 +309,8 @@ GlobalToolsSecurity.prototype = {
 		} // if run extended tables
 	}, // function _getAccessByRoleByTable
 
-	checkParentAccessResult: function (sTable, sAccessString, oRoleAccessResult) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+	_checkParentAccessResult: function (sTable, sAccessString, oRoleAccessResult) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var bFound = false;
 		var aHierarchy = this._gtTable.getTableHierarchy(sTable);
 		aHierarchy.some(function (sTmpTable) {
@@ -286,10 +321,10 @@ GlobalToolsSecurity.prototype = {
 			} // if found quit
 		}, this); // find parent access string
 		return bFound;
-	}, // function checkParentAccessResult
+	}, // function _checkParentAccessResult
 
 	_analyzeACL: function (oRoleAccessResult, sParentTable, sChildTable, aOperation) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var aUserRoles = this.getUsersRoles(this.sUserId, 'id');
 		aOperation = (aOperation) ? aOperation : ['read', 'write', 'create', 'delete'];
 		var bSNCInternal = this.isValidRole('snc_internal');
@@ -360,7 +395,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _analyzeACL
 
 	generateAccessAnalyzerReport: function (sRole, sTableQuery, bExtendTables, sOutputType, bAllowCreateUser) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var oResult = {}, sError = '';
 		bExtendTables = (bExtendTables === false) ? false : true; // default is true
 		sOutputType = ((sOutputType == 'csv') || (sOutputType == 'string') || (sOutputType == 'both')) ? sOutputType : 'json'; // default is json
@@ -419,7 +454,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function generateAccessAnalyzerReport
 
 	_simulateAccessAnalyzerAssignRole: function (sRoleId, oAccessSimulatorResult) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var oPayloadAccesSimulatorChanges = {
 			userSysId: this.sUserId,
 			rolesToAssign: [sRoleId],
@@ -435,7 +470,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _simulateAccessAnalyzerAssignRole
 
 	_getAccessAnalyzerRoleObjectById: function (sRoleId) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var aRoles = this.aAccessSimulatorResult.filter(oRole => {
 			return oRole['accessEntity']['id'] === sRoleId;
 		}); // get initial role
@@ -443,7 +478,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _getAccessAnalyzerRoleObjectById
 
 	_parseAccessAnalyzerRoleObject: function (oRole, oAccessSimulatorResult, sPath) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sId = this._gtObject.getValue('accessEntity/id', '', oRole);
 		var sName = this._gtObject.getValue('accessEntity/name', '', oRole);
 		var sNewPath = (sPath) ? sPath + '/' : '';
@@ -461,7 +496,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _parseAccessAnalyzerRoleObject
 
 	_simulateAccessAnalyzerRoleByTable: function (sRoleId, sRole, sTable, bExtendTables, bOmitEmpty, bOmitSameExtendedClass, oRoleAccessResult) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var oPayloadSimulatedResults = {
 			entitySysId: this.sUserId,
 			entityType: 'USER',
@@ -522,7 +557,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _simulateAccessAnalyzerRoleByTable
 
 	_findOrCreateUserIdWithNoRole: function (bAllowCreateUser) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var aQuery = ['user_nameISNOTEMPTY', 'active=true'];
 		var bSNCInternal = this.isValidRole('snc_internal');
 		if (bSNCInternal) {
@@ -552,12 +587,12 @@ GlobalToolsSecurity.prototype = {
 				last_name: 'accesstestuser',
 			}; // test user
 			this.sUserId = this._gtRecordWrite.doRecord(oValues, oConfig);
-			this.sCreatedUserId = sUserId;
+			this.sCreatedUserId = this.sUserId;
 		} // if userid
 	}, // function _findOrCreateUserIdWithNoRole
 
 	_createUserIdWithRole: function (sRoleId) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var oErrorUser = {};
 		var oConfig = {
 			sTargetTable: 'sys_user',
@@ -596,7 +631,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _createUserIdWithRole
 
 	_deleteCreatedUser: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var grUser = new GlideRecord('sys_user');
 		if ((this.sCreatedUserId) && (grUser.get('sys_id', this.sCreatedUserId))) {
 			if (grUser.deleteRecord()) {
@@ -607,7 +642,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _deleteCreatedUser
 
 	_deleteCreatedRoleMap: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var grRoleMapUser = new GlideRecord('sys_user_has_role');
 		if ((this.sRoleMapId) && (grRoleMapUser.get('sys_id', this.sRoleMapId))) {
 			if (grRoleMapUser.deleteRecord()) {
@@ -617,7 +652,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _deleteCreatedRoleMap
 
 	_parseAccessAnalyzerToCSV: function (oResult, bValidateWithAccessAnalyzer) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var aCSV = [], sAccessString = '', sRead = '', sUpdate = '', sCreate = '', sDelete = '', sCreateConditions = '', sReadConditions = '', sUpdateConditions = '', sDeleteConditions = '', sCreateScripts = '', sReadScripts = '', sUpdateScripts = '', sDeleteScripts = '', oComplexACL = {};
 		if (oResult.hasOwnProperty('tables')) {
 			var fnParseFinalValue = function (sValue) {
@@ -641,6 +676,7 @@ GlobalToolsSecurity.prototype = {
 			aCSV.push(sCSVLine);
 			Object.keys(oResult['tables']).forEach(function (sTable) {
 				sAccessString = oResult['tables'][sTable]['CRUD'];
+				var sAccessAnalyzerString = ''; // reset per row, was a global leak that kept the previous row's value
 				if (bValidateWithAccessAnalyzer) {
 					sAccessAnalyzerString = (oResult['tables'][sTable].hasOwnProperty('AA_CRUD')) ? ';' + oResult['tables'][sTable]['AA_CRUD'] : ';';
 				} // if access analyzer
@@ -721,7 +757,7 @@ GlobalToolsSecurity.prototype = {
 	}, // function _parseAccessAnalyzerToCSV
 
 	type: 'GlobalToolsSecurity',
-	version: '2.1.2',
+	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -729,14 +765,14 @@ GlobalToolsSecurity.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2025-04-30 06:56:22</sys_created_on>
         <sys_id>0f562614c395e61016a2269dc0013163</sys_id>
-        <sys_mod_count>231</sys_mod_count>
+        <sys_mod_count>237</sys_mod_count>
         <sys_name>GlobalToolsSecurity</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_0f562614c395e61016a2269dc0013163</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-06-03 16:01:28</sys_updated_on>
+        <sys_updated_on>2026-07-21 19:08:47</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>0f562614c395e61016a2269dc0013163</id>

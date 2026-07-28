@@ -5,15 +5,15 @@
         <api_name>global.GlobalToolsRecordRead</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development&#13;
+        <description>Tools to support (scoped) app development
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsRecordRead</name>
         <sandbox_callable>false</sandbox_callable>
-        <script><![CDATA[var GlobalToolsRecordRead = Class.create();
+        <script><![CDATA[var GlobalToolsRecordRead = Class.create(); 
 GlobalToolsRecordRead.prototype = {
 	initialize: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
 		this._gtObject = new global.GlobalToolsObject();
@@ -21,17 +21,17 @@ GlobalToolsRecordRead.prototype = {
 		this._gtTable = new global.GlobalToolsTable();
 	}, // function initialize
 
-	checkAccess: function (sCallerScope) {
+	_checkAccess: function (sCallerScope) {
+		if (this.oAllowedScopes) { return this.oAllowedScopes.hasOwnProperty(String(sCallerScope)); }
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-			return true;
-		} // if scope is allowed
-	}, // function checkAccess
+		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
+		this.oAllowedScopes['rhino.global'] = true;
+		return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));
+	}, // function _checkAccess
 
-	// Convenience function to check if the query is valid (if you have already a GlideRecord, use isValidEncodedQuery directly)
 	isValidQuery: function (sTable, sQuery) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
 			gs.warn('GlobalToolsRecordRead.isValidQuery called with invalid table: ' + sTable);
 			return false;
@@ -45,9 +45,8 @@ GlobalToolsRecordRead.prototype = {
 		return false;
 	}, // function isValidQuery
 
-	// Convenience function to get count of records, returns number or Array in Array with value, displayvalue (optional) and count per field
 	countRecords: function (sTable, sQuery, sField, bDisplayValue, bDisplayValueOnly, bQueryNoDomain) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
 			gs.warn('GlobalToolsRecordRead.countRecords called with invalid table: ' + sTable);
 			return;
@@ -117,9 +116,8 @@ GlobalToolsRecordRead.prototype = {
 		} // try
 	}, // function countRecords
 
-	// Convenience function to get sum of a field in records, returns number in bytes
 	sumRecordsField: function (sTable, sField, sQuery, bQueryNoDomain) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
 			gs.warn('GlobalToolsRecordRead.sumRecordsField called with invalid table ' + sTable + '!');
 			return;
@@ -155,9 +153,8 @@ GlobalToolsRecordRead.prototype = {
 		} // try
 	}, // function sumRecordsField
 
-	// Function for scoped apps to query one gliderecord with the options (ensures the real record class)
 	getRecord: function (sTable, sQueryOrSysId, bWorkflow, bAutoSysFields, bQueryNoDomain, bNoEngines) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sQueryOrSysId)) {
 			gs.warn('GlobalToolsRecordRead.getRecord called with invalid table ' + sTable + ' or query is empty!');
 			return;
@@ -196,9 +193,8 @@ GlobalToolsRecordRead.prototype = {
 		} // if next
 	}, // function getRecord
 
-	// Function for scoped apps to query a gliderecord with the options
 	getRecords: function (sTable, sQuery, aOrderBy, aOrderByDesc, iLimit, bWorkflow, bAutoSysFields, bQueryNoDomain, bNoEngines, bNoCount, aExtraFields) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable))) {
 			gs.warn('GlobalToolsRecordRead.getRecords called with invalid table: ' + sTable);
 			return;
@@ -254,7 +250,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function getRecords
 
 	getRecordsFields: function (sTable, sQuery, aFields, aOrderBy, bQueryNoDomain) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!this._gtArray.isValidArray(aFields))) {
 			gs.warn('GlobalToolsRecordRead.getRecordsFields table ' + sTable + ' or field array is empty!');
 			return;
@@ -306,7 +302,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function getRecordsFields
 
 	checkRecordByField: function (sTable, sField, sValue) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sField) || (!sValue)) {
 			gs.warn('GlobalToolsRecordRead.checkRecordByField table ' + sTable + ' or field or value is empty!');
 			return;
@@ -322,7 +318,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function checkRecordByField
 
 	getSysIdByQuery: function (sTable, sQuery, bUniqueOnly) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sQuery)) {
 			gs.warn('GlobalToolsRecordRead.getSysIdByQuery table or query is empty!');
 			return;
@@ -351,7 +347,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function getSysIdByQuery
 
 	checkRecordByQuery: function (sTable, sQuery) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sQuery)) {
 			gs.warn('GlobalToolsRecordRead.checkRecordByQuery table or query is empty!');
 			return;
@@ -373,7 +369,7 @@ GlobalToolsRecordRead.prototype = {
 	}, // function checkRecordByQuery
 
 	getRelatedRecordByKeys: function (oRecordConfig, oRecordValues, aError, oField, sRefTable, iArrayField) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var bLog = this._getValue('bLog', false, oRecordConfig);
 		var sLogPrefix = (bLog) ? this._getValue('sLogPrefix', 'GlobalToolsRecordRead.getRelatedRecordByKeys ', oRecordConfig) : '';
 		if (!oField) {
@@ -443,7 +439,7 @@ GlobalToolsRecordRead.prototype = {
 		3. oRecordConfig['bQueryEmptyFields'] // generic setting to query empty fields with ISEMPTY instead of returning an error for all empty fields
 	*/
 	getRecordByKeys: function (oRecordConfig, oRecordValues, aError, bRecordLookupUseBaseTable, sTableOverride) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var sTable = (sTableOverride) ? sTableOverride : this._getValue('sTargetTable', '', oRecordConfig);
 		var bNoWorkflow = (this._getValue('bNoWorkflow', false, oRecordConfig) == true);
 		var bNoAutoSysFields = (this._getValue('bNoAutoSysFields', false, oRecordConfig) == true);
@@ -509,7 +505,14 @@ GlobalToolsRecordRead.prototype = {
 					if ((sValue == 'NULL') || ((!sValue) && (bQueryEmptyFields))) {
 						aQuery.push(sTargetField + 'ISEMPTY' + sAddlQuery);
 					} else if (sValue) {
-						aQuery.push(sTargetField + '=' + sValue + sAddlQuery);
+						if (String(sValue).indexOf('^') != -1) {
+							aError.push('Field \'' + sKeyField + '\' contains an invalid character');
+							if (bLog) {
+								gs.warn(sLogPrefix + 'Key sKeyField \'' + sKeyField + '\' rejected: value contains an encoded query metacharacter (^). (oRecordConfig: ' + JSON.stringify(oRecordConfig) + ')');
+							} // if log
+						} else {
+							aQuery.push(sTargetField + '=' + sValue + sAddlQuery);
+						} // if value contains query metacharacter
 					} else {
 						aError.push('Field \'' + sKeyField + '\' is empty and parameter bQueryEmptyFields is not set');
 						if (bLog) {
@@ -563,7 +566,7 @@ GlobalToolsRecordRead.prototype = {
 	// bDisplayValueOwnField: get Display Value in own field with postfix "_dv" (default: false), otherwise return as: "value (display)"
 	// Returns: JSON or String
 	convertGRtoJSON: function (grRecord, bStringify, bDisplayValue, bDisplayValueOwnField) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this._gt.getType(grRecord).indexOf('gliderecord') == -1) {
 			return;
 		} // if not valid record
@@ -596,7 +599,7 @@ GlobalToolsRecordRead.prototype = {
 
 	// Convert a glide record to XML string
 	convertGRtoXML: function (grRecord) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this._gt.getType(grRecord).indexOf('gliderecord') == -1) {
 			return;
 		} // if not valid record
@@ -606,7 +609,7 @@ GlobalToolsRecordRead.prototype = {
 
 	// Add dot walking field to a query
 	makeQueryADotWalkQuery: function (sQuery, sDotWalkField) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sQuery) && (sDotWalkField)) {
 			var aQuery = [];
 			var gqsQuery = new GlideQueryString('cmdb_ci', sQuery);
@@ -629,13 +632,12 @@ GlobalToolsRecordRead.prototype = {
 		} // if params
 	}, // function makeQueryADotWalkQuery
 
-	// Combine Queries where the one of the queries can contain big or statements (^NQ)
 	combineQueries: function (sFirstQuery, sSecondQuery) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sFirstQuery) && (sSecondQuery)) {
 			var bNQFirstQuery = (sFirstQuery.indexOf('^NQ') != -1);
 			var bNQSecondQuery = (sSecondQuery.indexOf('^NQ') != -1);
-			if ((bNQFirstQuery) && (bNQSecondQuery)) {
+			if ((bNQFirstQuery) && (bNQSecondQuery)) { // Combine Queries where the one of the queries can contain big or statements (^NQ)
 				gs.warn('GlobalToolsRecordRead.combineQueries is used with two big or statements in both queries! Return false! sFirstQuery: ' + sFirstQuery + ' sSecondQuery: ' + sSecondQuery);
 				return 'false';
 			} // if both queries contain big or
@@ -657,32 +659,32 @@ GlobalToolsRecordRead.prototype = {
 	}, // function combineQueries
 
 	type: 'GlobalToolsRecordRead',
-	version: '2.1.2',
+	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
-};]]></script>
+}; ]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:16:00</sys_created_on>
         <sys_id>2a51d52c1bb47150d5be777d8b4bcb25</sys_id>
-        <sys_mod_count>130</sys_mod_count>
+        <sys_mod_count>134</sys_mod_count>
         <sys_name>GlobalToolsRecordRead</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_2a51d52c1bb47150d5be777d8b4bcb25</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-06-03 15:59:53</sys_updated_on>
+        <sys_updated_on>2026-07-28 11:12:55</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>2a51d52c1bb47150d5be777d8b4bcb25</id>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2024-08-07 08:50:13</sys_created_on>
         <sys_id>be1a05fe1bfbc250e50ddc61ab4bcb2c</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>1</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-08-07 08:50:13</sys_updated_on>
+        <sys_updated_on>2026-07-11 10:20:31</sys_updated_on>
         <table>sys_script_include</table>
-        <use_es_latest>false</use_es_latest>
+        <use_es_latest>true</use_es_latest>
     </sys_es_latest_script>
 </record_update>

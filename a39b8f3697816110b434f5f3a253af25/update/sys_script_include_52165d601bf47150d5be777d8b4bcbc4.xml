@@ -5,11 +5,11 @@
         <api_name>global.GlobalToolsObject</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development&#13;
-Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
-From Vancouver release onwards you can use GlideJsonPathAPI instead of getValue function.&#13;
-https://docs.servicenow.com/en-US/bundle/vancouver-api-reference/page/app-store/dev_portal/API_reference/GlideJsonPath/concept/GlideJsonPathAPI.html&#13;
-&#13;
+        <description>Tools to support (scoped) app development
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.
+From Vancouver release onwards you can use GlideJsonPathAPI instead of getValue function.
+https://docs.servicenow.com/en-US/bundle/vancouver-api-reference/page/app-store/dev_portal/API_reference/GlideJsonPath/concept/GlideJsonPathAPI.html
+
 If your script is in ECMA 6 mode use Object.assign instead of ObjectAssign function.</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsObject</name>
@@ -17,30 +17,29 @@ If your script is in ECMA 6 mode use Object.assign instead of ObjectAssign funct
         <script><![CDATA[var GlobalToolsObject = Class.create();
 GlobalToolsObject.prototype = {
 	initialize: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
 	}, // function initialize
 
-	checkAccess: function (sCallerScope) {
+	_checkAccess: function (sCallerScope) {
+		if (this.oAllowedScopes) {return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));}
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-			return true;
-		} // if scope is allowed
-	}, // function checkAccess
+		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
+		this.oAllowedScopes['rhino.global'] = true;
+		return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));
+	}, // function _checkAccess
 
-	// Function to check if it is an object, use GlobalTools.getType to distinuish different object types
 	isObject: function (oObj) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((oObj) && (typeof oObj === 'object') && (!Array.isArray(oObj))) {
 			return true;
 		} // if obj
 	}, // function isObject
 
-	// Function to retrieve value from object via config path with replace
 	getValue: function (sConfigPath, sReplace, oConfig) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sConfigPath) || (!oConfig)) {
 			return sReplace;
 		} // if no path or object
@@ -60,9 +59,8 @@ GlobalToolsObject.prototype = {
 		return oCurrent;
 	}, // function getValue
 
-	// Function to set value in object via config path
 	setValue: function (sConfigPath, oValue, oConfig) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sConfigPath) || (!oConfig)) {
 			return false;
 		} // if no path or object
@@ -87,9 +85,8 @@ GlobalToolsObject.prototype = {
 		return false;
 	}, // function setValue
 
-	// Function to evaluate if value in object via config path
 	hasValue: function (sConfigPath, oConfig) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sConfigPath) || (!oConfig)) {
 			return false;
 		} // if no path or object
@@ -109,9 +106,8 @@ GlobalToolsObject.prototype = {
 		return true;
 	}, // function hasValue
 
-	// Function to delete value in object via config path
 	deleteValue: function (sConfigPath, oConfig) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sConfigPath) || (!oConfig)) {
 			return false;
 		} // if no path or object
@@ -138,7 +134,7 @@ GlobalToolsObject.prototype = {
 
 	// Simple deep merge without recursion protection etc, using ECMA 5 because running in global
 	deepMerge: function (oSource, oMerge, bMergeArrays, bDeleteOnNULL) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((this.isObject(oSource)) && ((!this.isObject(oMerge)))) {
 			return oSource;
 		} else if ((!this.isObject(oSource)) && ((this.isObject(oMerge)))) {
@@ -162,7 +158,7 @@ GlobalToolsObject.prototype = {
 
 	// Simple object depth calc (does not check for cyclic objects as this is handled by Rhino: Cyclic {0} value not allowed.)
 	getDepth: function (oObj) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (!this.isObject(oObj)) {
 			return -1;
 		} else if (Object.keys(oObj).length == 0) {
@@ -187,7 +183,7 @@ GlobalToolsObject.prototype = {
 	}, // function getDepth
 
 	parseJSON: function (sJSON) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((sJSON) && (this._gt.getType(sJSON) == 'string')) {
 			try {
 				return JSON.parse(sJSON);
@@ -198,7 +194,7 @@ GlobalToolsObject.prototype = {
 	}, // function parseJSON
 
 	getJSONPath: function (oConfig) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		try {
 			if ((this.isObject(oConfig)) && (JSON.stringify(oConfig) != '{}')) {
 				return new GlideJsonPath(JSON.stringify(oConfig));
@@ -209,7 +205,7 @@ GlobalToolsObject.prototype = {
 	}, // function getJSONPath
 
 	type: 'GlobalToolsObject',
-	version: '2.1.2',
+	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -217,24 +213,24 @@ GlobalToolsObject.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:36:44</sys_created_on>
         <sys_id>52165d601bf47150d5be777d8b4bcbc4</sys_id>
-        <sys_mod_count>70</sys_mod_count>
+        <sys_mod_count>78</sys_mod_count>
         <sys_name>GlobalToolsObject</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_52165d601bf47150d5be777d8b4bcbc4</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-05-31 17:53:38</sys_updated_on>
+        <sys_updated_on>2026-07-28 07:13:47</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>52165d601bf47150d5be777d8b4bcbc4</id>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2024-11-23 15:07:34</sys_created_on>
         <sys_id>6f2c6221c3c252109ebe8d8dc001311c</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>1</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-11-23 15:07:34</sys_updated_on>
+        <sys_updated_on>2026-07-11 10:20:54</sys_updated_on>
         <table>sys_script_include</table>
-        <use_es_latest>false</use_es_latest>
+        <use_es_latest>true</use_es_latest>
     </sys_es_latest_script>
 </record_update>

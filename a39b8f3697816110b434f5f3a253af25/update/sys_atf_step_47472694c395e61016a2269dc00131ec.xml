@@ -14,14 +14,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2025-04-30 06:57:53</sys_created_on>
         <sys_id>47472694c395e61016a2269dc00131ec</sys_id>
-        <sys_mod_count>15</sys_mod_count>
+        <sys_mod_count>21</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_47472694c395e61016a2269dc00131ec</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-06-03 07:35:13</sys_updated_on>
+        <sys_updated_on>2026-07-21 19:13:34</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsSecurity Tests">0f472694c395e61016a2269dc00131e6</test>
         <timeout/>
@@ -34,11 +34,11 @@
         <order>100</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2025-04-30 06:57:53</sys_created_on>
+        <sys_created_on>2026-07-25 09:56:18</sys_created_on>
         <sys_id>4f476694c395e61016a2269dc001312c</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2025-04-30 06:57:53</sys_updated_on>
+        <sys_updated_on>2026-07-25 09:56:18</sys_updated_on>
         <value>3.1</value>
         <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
     </sys_variable_value>
@@ -48,53 +48,59 @@
         <order>200</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2025-04-30 06:57:53</sys_created_on>
+        <sys_created_on>2026-07-25 09:56:18</sys_created_on>
         <sys_id>c7476694c395e61016a2269dc001312d</sys_id>
-        <sys_mod_count>15</sys_mod_count>
+        <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-06-03 07:35:13</sys_updated_on>
-        <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
-&#13;
-	var bLog = false;&#13;
-	var _gtSecurity = new global.GlobalToolsSecurity();&#13;
-	var _gtATF = new global.GlobalToolsATF('GlobalToolsSecurity', _gtSecurity, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
-	var grAdmin = _gtATF.getRecord('sys_user', 'user_name=admin'); // known demo user&#13;
-	var sAdminRoleId = _gtSecurity.getRoleIdFromName('admin'); // known role sys_id&#13;
-&#13;
-	// getRoleIdFromName&#13;
-	_gtATF.runATF('getRoleIdFromName', /^[a-f0-9]{32}$/, 'admin'); // valid name returns a 32 char sys_id&#13;
-	_gtATF.runATF('getRoleIdFromName', false, 'this_role_does_not_exist_xyz'); // invalid name returns false&#13;
-	_gtATF.runATF('getRoleIdFromName', false); // missing name returns false&#13;
-&#13;
-	// isValidRole&#13;
-	_gtATF.runATF('isValidRole', true, 'admin'); // valid by name&#13;
-	_gtATF.runATF('isValidRole', true, sAdminRoleId); // valid by sys_id&#13;
-	_gtATF.runATF('isValidRole', false, 'na'); // invalid role&#13;
-	_gtATF.runATF('isValidRole', false); // missing role&#13;
-&#13;
-	// getUsersRoles&#13;
-	_gtATF.runATF('getUsersRoles', true, grAdmin, 'boolean'); // admin has at least one role&#13;
-	_gtATF.runATF('getUsersRoles', '&gt;0', grAdmin, 'name'); // name array is not empty&#13;
-	_gtATF.runATF('getUsersRoles', '&gt;0', grAdmin, 'id'); // id array is not empty&#13;
-	_gtATF.runATF('getUsersRoles', 0, '00000000000000000000000000000000', 'name'); // unknown user returns empty array&#13;
-	_gtATF.runATF('getUsersRoles', false, '00000000000000000000000000000000', 'boolean'); // unknown user is false in boolean mode&#13;
-&#13;
-	// checkParentAccessResult - hierarchy of incident always contains task&#13;
-	_gtATF.runATF('checkParentAccessResult', true, 'incident', 'CRUD', { task: { CRUD: 'CRUD' } }); // parent with same access is covered&#13;
-	_gtATF.runATF('checkParentAccessResult', false, 'incident', 'CRUD', { task: { CRUD: 'R' } }); // parent with different access is not covered&#13;
-	_gtATF.runATF('checkParentAccessResult', false, 'incident', 'CRUD', {}); // no parent access stored is not covered&#13;
-	// generateAccessReport - error paths only (happy path needs Access Analyzer impersonation, not available in ATF)&#13;
-&#13;
-	_gtATF.runATF('generateAccessReport', { sError: 'Role is invalid: na' }, 'na'); // invalid role&#13;
-	_gtATF.runATF('generateAccessReport', { sError: 'Table Query is invalid: na' }, 'admin', 'na'); // invalid table query&#13;
-	&#13;
-	// generateAccessAnalyzerReport - deterministic validation error paths only&#13;
-	_gtATF.runATF('generateAccessAnalyzerReport', { sError: 'Role is invalid: na' }, 'na'); // invalid role&#13;
-	_gtATF.runATF('generateAccessAnalyzerReport', { sError: 'Table Query is invalid: na' }, 'admin', 'na'); // invalid table query&#13;
-	return _gtATF.endATF();&#13;
-&#13;
-})(outputs, steps, params, stepResult, assertEqual);&#13;
-</value>
+        <sys_updated_on>2026-07-25 09:56:18</sys_updated_on>
+        <value>(function (outputs, steps, params, stepResult, assertEqual) {
+
+	var bLog = false;
+	var _gtSecurity = new global.GlobalToolsSecurity();
+	var _gtATF = new global.GlobalToolsATF('GlobalToolsSecurity', _gtSecurity, bLog, outputs, steps, params, stepResult, assertEqual);
+	var grAdmin = _gtATF.getRecord('sys_user', 'user_name=admin'); // known demo user
+	var sAdminRoleId = _gtSecurity.getRoleIdFromName('admin'); // known role sys_id
+
+	// generatePassword iPasswordLength, bLowerChars, bUpperChars, bNumberChars, bSpecialChars, sSpecialChars
+	_gtATF.runATF('generatePassword', /^[a-z0-9]{20}$/, 11, true, false, true, false); // 10 chars, lower case and numbers
+	_gtATF.runATF('generatePassword', /^[a-z!?=#|$.,-_]{20}$/i, 101, true, true, false, true); // 100 chars and spec chars
+	_gtATF.runATF('generatePassword', /^[a-z0-9!?=#|$.,-_]{20}$/i); // default values
+	_gtATF.runATF('generatePassword', /^[a-z0-9@]{12}$/i, 12, true, true, true, true, '@'); // special chars
+	_gtATF.runATF('generatePassword', '', 12, false, false, false, false); // special chars
+
+	// getRoleIdFromName
+	_gtATF.runATF('getRoleIdFromName', /^[a-f0-9]{32}$/, 'admin'); // valid name returns a 32 char sys_id
+	_gtATF.runATF('getRoleIdFromName', false, 'this_role_does_not_exist_xyz'); // invalid name returns false
+	_gtATF.runATF('getRoleIdFromName', false); // missing name returns false
+
+	// isValidRole
+	_gtATF.runATF('isValidRole', true, 'admin'); // valid by name
+	_gtATF.runATF('isValidRole', true, sAdminRoleId); // valid by sys_id
+	_gtATF.runATF('isValidRole', false, 'na'); // invalid role
+	_gtATF.runATF('isValidRole', false); // missing role
+
+	// getUsersRoles
+	_gtATF.runATF('getUsersRoles', true, grAdmin, 'boolean'); // admin has at least one role
+	_gtATF.runATF('getUsersRoles', '&gt;0', grAdmin, 'name'); // name array is not empty
+	_gtATF.runATF('getUsersRoles', '&gt;0', grAdmin, 'id'); // id array is not empty
+	_gtATF.runATF('getUsersRoles', 0, '00000000000000000000000000000000', 'name'); // unknown user returns empty array
+	_gtATF.runATF('getUsersRoles', false, '00000000000000000000000000000000', 'boolean'); // unknown user is false in boolean mode
+
+	// _checkParentAccessResult - hierarchy of incident always contains task
+	_gtATF.runATF('_checkParentAccessResult', true, 'incident', 'CRUD', { task: { CRUD: 'CRUD' } }); // parent with same access is covered
+	_gtATF.runATF('_checkParentAccessResult', false, 'incident', 'CRUD', { task: { CRUD: 'R' } }); // parent with different access is not covered
+	_gtATF.runATF('_checkParentAccessResult', false, 'incident', 'CRUD', {}); // no parent access stored is not covered
+	// generateAccessReport - error paths only (happy path needs Access Analyzer impersonation, not available in ATF)
+
+	_gtATF.runATF('generateAccessReport', { sError: 'Role is invalid: na' }, 'na'); // invalid role
+	_gtATF.runATF('generateAccessReport', { sError: 'Table Query is invalid: na' }, 'admin', 'na'); // invalid table query
+	
+	// generateAccessAnalyzerReport - deterministic validation error paths only
+	_gtATF.runATF('generateAccessAnalyzerReport', { sError: 'Role is invalid: na' }, 'na'); // invalid role
+	_gtATF.runATF('generateAccessAnalyzerReport', { sError: 'Table Query is invalid: na' }, 'admin', 'na'); // invalid table query
+	return _gtATF.endATF();
+
+})(outputs, steps, params, stepResult, assertEqual);</value>
         <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
     </sys_variable_value>
 </record_update>

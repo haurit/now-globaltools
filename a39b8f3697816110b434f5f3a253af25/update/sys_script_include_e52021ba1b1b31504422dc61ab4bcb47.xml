@@ -5,13 +5,15 @@
         <api_name>global.GlobalToolsAttachment</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development&#13;
+        <description>Tools to support (scoped) app development
 Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
+        <mobile_callable>false</mobile_callable>
         <name>GlobalToolsAttachment</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var GlobalToolsAttachment = Class.create();
 GlobalToolsAttachment.prototype = {
 	initialize: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		this._gt = new global.GlobalTools();
 		this._gtArray = new global.GlobalToolsArray();
 		this._gtObject = new global.GlobalToolsObject();
@@ -20,16 +22,17 @@ GlobalToolsAttachment.prototype = {
 		this._gtRecordWrite = new global.GlobalToolsRecordWrite();
 	}, // function initialize
 
-	checkAccess: function (sCallerScope) {
+	_checkAccess: function (sCallerScope) {
+		if (this.oAllowedScopes) {return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));}
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-			return true;
-		} // if scope is allowed
-	}, // function checkAccess
+		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
+		this.oAllowedScopes['rhino.global'] = true;
+		return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));
+	}, // function _checkAccess
 
 	getAttachmentsByRecord: function (grRecord, sQuery, sReturnType, bHidden) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((this._gt.getType(grRecord).indexOf('gliderecord') == -1) || (!grRecord.isValidRecord())) {
 			gs.warn('GlobalToolsAttachment.getAttachmentsByRecord called with invalid record');
 			return;
@@ -47,7 +50,7 @@ GlobalToolsAttachment.prototype = {
 	}, // function getAttachmentsByRecord
 
 	getAttachmentsStartWithFilename: function (sTable, sId, sFilename, sReturnType, bHidden) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId) || (!sFilename)) {
 			gs.warn('GlobalToolsAttachment.getAttachmentsStartWithFilename called with invalid table ' + sTable + ' or id or filename is empty');
 			return;
@@ -56,7 +59,7 @@ GlobalToolsAttachment.prototype = {
 	}, // function getAttachmentsStartWithFilename
 
 	getAttachments: function (sTable, sId, sQuery, sReturnType, bHidden) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		sReturnType = ((sReturnType) && (['record', 'filename', 'object'].indexOf(sReturnType) != -1)) ? sReturnType : 'id';
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId)) {
 			gs.warn('GlobalToolsAttachment.getAttachments called with invalid table ' + sTable + ' or id is empty');
@@ -103,7 +106,7 @@ GlobalToolsAttachment.prototype = {
 	}, // function getAttachments
 
 	readAttachmentStream: function (sTable, sId, sFileName, bHidden) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var aAttachmentIds = this.getAttachments(sTable, sId, 'file_name=' + sFileName, 'id', bHidden);
 		if (this._gtArray.isValidArray(aAttachmentIds)) {
 			return this.readAttachmentStreamFromId(aAttachmentIds[0]);
@@ -111,7 +114,7 @@ GlobalToolsAttachment.prototype = {
 	}, // function readAttachmentStream
 
 	readAttachmentStreamFromId: function (sId) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (sId) {
 			var aLines = [];
 			var gsAttachment = new GlideSysAttachment();
@@ -128,7 +131,7 @@ GlobalToolsAttachment.prototype = {
 	}, // function readAttachmentStreamFromId
 
 	combineAttachments: function (sTable, sId, sFilename, bReturnJSON, bDeleteAfterRead, bHidden) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var aAttachmentIds = this.getAttachmentsStartWithFilename(sTable, sId, sFilename, 'id', bHidden);
 		if (this._gtArray.isValidArray(aAttachmentIds)) {
 			var aLines = [];
@@ -153,7 +156,7 @@ GlobalToolsAttachment.prototype = {
 	}, // function combineAttachments
 
 	getAttachmentSizePerRecord: function (sTable, sId, sQuery, sReturnType, sNotation, bHidden) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId)) {
 			gs.warn('GlobalToolsAttachment.getAttachmentSizePerRecord called with invalid table ' + sTable + ' or id is empty');
 			return;
@@ -166,7 +169,7 @@ GlobalToolsAttachment.prototype = {
 	}, // function getAttachmentSizePerRecord
 
 	getAttachmentSize: function (sQuery, sReturnType, sNotation) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		var grAttachment = new GlideRecord('sys_attachment');
 		if (sQuery) {
 			if (!grAttachment.isValidEncodedQuery(sQuery)) {
@@ -208,7 +211,7 @@ GlobalToolsAttachment.prototype = {
 	}, // function getRecordAttachmentSize
 
 	writeAttachment: function (grRecord, sFilename, sContent, sContentType, bBase64, bHidden) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((this._gt.getType(grRecord).indexOf('gliderecord') == -1) || (!grRecord.isValidRecord()) || (!sFilename) || (!sContent)) {
 			gs.warn('GlobalToolsAttachment.writeAttachment called with invalid record or filename or content is empty');
 			return;
@@ -236,7 +239,7 @@ GlobalToolsAttachment.prototype = {
 	}, // function writeAttachment
 
 	writeAttachmentByTableId: function (sTable, sId, sFilename, sContent, sContentType, bBase64, bHidden) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId) || (!sFilename) || (!sContent)) {
 			gs.warn('GlobalToolsAttachment.writeAttachmentByTableId called with invalid table ' + sTable + ' or id, filename or content is empty');
 			return;
@@ -248,7 +251,7 @@ GlobalToolsAttachment.prototype = {
 	}, // function writeAttachmentByTableId
 
 	deleteAttachment: function (sTable, sId, sFilename, bHidden) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId) || (!sFilename)) {
 			gs.warn('GlobalToolsAttachment.deleteAttachment called with invalid table ' + sTable + ' or id or filename is empty');
 			return;
@@ -257,7 +260,7 @@ GlobalToolsAttachment.prototype = {
 	}, // function deleteAttachment
 
 	deleteAttachmentsStartWithFilename: function (sTable, sId, sFilename, bHidden) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId) || (!sFilename)) {
 			gs.warn('GlobalToolsAttachment.deleteAttachmentsStartWithFilename called with invalid table ' + sTable + ' or id or filename is empty');
 			return;
@@ -266,7 +269,7 @@ GlobalToolsAttachment.prototype = {
 	}, // function deleteAttachmentsStartWithFilename
 
 	deleteAttachments: function (sTable, sId, sQuery, bHidden) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if ((!sTable) || (!this._gtTable.isValidTable(sTable)) || (!sId)) {
 			gs.warn('GlobalToolsAttachment.deleteAttachments called with invalid table ' + sTable + ' or id is empty');
 			return;
@@ -288,7 +291,7 @@ GlobalToolsAttachment.prototype = {
 	}, // function deleteAttachments
 
 	type: 'GlobalToolsAttachment',
-	version: '1.0.2',
+	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -296,13 +299,24 @@ GlobalToolsAttachment.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-12-27 17:45:07</sys_created_on>
         <sys_id>e52021ba1b1b31504422dc61ab4bcb47</sys_id>
-        <sys_mod_count>36</sys_mod_count>
+        <sys_mod_count>37</sys_mod_count>
         <sys_name>GlobalToolsAttachment</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_e52021ba1b1b31504422dc61ab4bcb47</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2023-12-31 08:05:54</sys_updated_on>
+        <sys_updated_on>2026-07-21 08:44:04</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>e52021ba1b1b31504422dc61ab4bcb47</id>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2026-07-11 10:21:07</sys_created_on>
+        <sys_id>f094f9cdc386071016a2269dc0013171</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2026-07-11 10:21:07</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>

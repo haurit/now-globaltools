@@ -5,9 +5,9 @@
         <api_name>global.GlobalToolsCache</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development&#13;
-Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.&#13;
-&#13;
+        <description>Tools to support (scoped) app development
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.
+
 Please note that GlideController is not an offically supported API and thus use should be restricted.</description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsCache</name>
@@ -16,20 +16,21 @@ Please note that GlideController is not an offically supported API and thus use 
 var gtCache = {};
 GlobalToolsCache.prototype = {
 	initialize: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		this._gtObject = new GlobalToolsObject();
 	}, // function initialize
 
-	checkAccess: function (sCallerScope) {
+	_checkAccess: function (sCallerScope) {
+		if (this.oAllowedScopes) {return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));}
 		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
 		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
-		if ((sCallerScope) && ((sCallerScope == 'rhino.global') || (aScopes.indexOf(sCallerScope) != -1) || (aCustomScopes.indexOf(sCallerScope) != -1))) {
-			return true;
-		} // if scope is allowed
-	}, // function checkAccess
+		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
+		this.oAllowedScopes['rhino.global'] = true;
+		return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));
+	}, // function _checkAccess
 
 	setValue: function (sCachePath, sCacheValue, sCacheType) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		sCacheType = (sCacheType) ? sCacheType : 'transaction';
 		if ((sCachePath) && (sCacheValue)) {
 			if (sCacheType == 'transaction') {
@@ -43,7 +44,7 @@ GlobalToolsCache.prototype = {
 	}, // function setValue
 
 	getValue: function (sCachePath, sCacheType) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		sCacheType = (sCacheType) ? sCacheType : 'transaction';
 		if (sCachePath) {
 			if (sCacheType == 'transaction') {
@@ -59,7 +60,7 @@ GlobalToolsCache.prototype = {
 	}, // function getValue
 
 	checkValue: function (sCachePath, sCacheType) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		sCacheType = (sCacheType) ? sCacheType : 'transaction';
 		var oData;
 		if (sCachePath) {
@@ -77,7 +78,7 @@ GlobalToolsCache.prototype = {
 	}, // function checkValue
 
 	clearValue: function (sCachePath, sCacheType) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		sCacheType = (sCacheType) ? sCacheType : 'transaction';
 		if (sCachePath) {
 			if (sCacheType == 'transaction') {
@@ -91,12 +92,12 @@ GlobalToolsCache.prototype = {
 	}, // function clearValue
 
 	resetCache: function () {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		gtCache = {};
 	}, // function resetCache
 
 	getCache: function (bString) {
-		if (!this.checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (bString) {
 			return JSON.stringify(gtCache);
 		} // if string
@@ -104,7 +105,7 @@ GlobalToolsCache.prototype = {
 	}, // function resetCache
 
 	type: 'GlobalToolsCache',
-	version: '2.1.2',
+	version: '2.1.4',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -112,24 +113,24 @@ GlobalToolsCache.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2024-11-23 14:24:40</sys_created_on>
         <sys_id>bc02e6adc34252109ebe8d8dc0013152</sys_id>
-        <sys_mod_count>23</sys_mod_count>
+        <sys_mod_count>24</sys_mod_count>
         <sys_name>GlobalToolsCache</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_bc02e6adc34252109ebe8d8dc0013152</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-06-03 16:02:00</sys_updated_on>
+        <sys_updated_on>2026-07-21 08:45:01</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>bc02e6adc34252109ebe8d8dc0013152</id>
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2024-11-23 14:24:39</sys_created_on>
         <sys_id>c75222edc34252109ebe8d8dc0013177</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>1</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2024-11-23 14:24:39</sys_updated_on>
+        <sys_updated_on>2026-07-11 10:19:45</sys_updated_on>
         <table>sys_script_include</table>
-        <use_es_latest>false</use_es_latest>
+        <use_es_latest>true</use_es_latest>
     </sys_es_latest_script>
 </record_update>
