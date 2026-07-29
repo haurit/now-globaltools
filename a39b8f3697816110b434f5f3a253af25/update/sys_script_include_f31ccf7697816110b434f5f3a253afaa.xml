@@ -5,8 +5,8 @@
         <api_name>global.GlobalTools</api_name>
         <caller_access/>
         <client_callable>false</client_callable>
-        <description>Tools to support (scoped) app development
-Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
+        <description>Tools to support (scoped) app development&#13;
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons. </description>
         <mobile_callable>false</mobile_callable>
         <name>GlobalTools</name>
         <sandbox_callable>false</sandbox_callable>
@@ -532,17 +532,17 @@ GlobalTools.prototype = {
 		if ((gs.isInteractive()) || (bScheduled === true)) {
 			this.scheduleScript('GlobalTools', 'updatePlugins', '0', [sQuery], [], 'GlobalToolsupdatePlugins');
 		} else {
-			var oResult = {}, oWorkerResult = {}, sSource = '';
+			var oResult = {}, oWorkerResult = {}, sSource = '', iAppCount = 0;
 			var grStoreApps = new GlideRecord('sys_store_app');
 			sQuery = new global.GlobalToolsRecordRead().combineQueries('hide_on_ui=false^update_available=true', sQuery);
 			grStoreApps.addEncodedQuery(sQuery);
 			grStoreApps.query();
-			oResult['iStoreAppsFound'] = grStoreApps.getRowCount();
 			oResult['sStoreAppsQuery'] = grStoreApps.getEncodedQuery();
 			oResult['aStoreAppsUpgraded'] = {};
 			if (grStoreApps.hasNext()) {
 				var bgWorker = new sn_appclient.AppUpgrader();
 				while (grStoreApps.next()) {
+					iAppCount++;
 					sSource = grStoreApps.getValue('source');
 					oResult['aStoreAppsUpgraded'][sSource] = {};
 					oResult['aStoreAppsUpgraded'][sSource]['sOldVersion'] = grStoreApps.getValue('version');
@@ -551,6 +551,7 @@ GlobalTools.prototype = {
 					oResult['aStoreAppsUpgraded'][sSource]['sWorkerResult'] = JSON.stringify(oWorkerResult);
 				} // while store apps
 			} // if store apps to update
+			oResult['iStoreAppsFound'] = iAppCount;
 			gs.warn('GlobalTools.updatePlugins result: ' + JSON.stringify(oResult));
 		} // if scheduled
 	}, // updatePlugins
@@ -626,14 +627,14 @@ GlobalTools.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:05:58</sys_created_on>
         <sys_id>f31ccf7697816110b434f5f3a253afaa</sys_id>
-        <sys_mod_count>240</sys_mod_count>
+        <sys_mod_count>242</sys_mod_count>
         <sys_name>GlobalTools</sys_name>
         <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_f31ccf7697816110b434f5f3a253afaa</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-25 10:46:48</sys_updated_on>
+        <sys_updated_on>2026-07-29 13:40:01</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>f31ccf7697816110b434f5f3a253afaa</id>
