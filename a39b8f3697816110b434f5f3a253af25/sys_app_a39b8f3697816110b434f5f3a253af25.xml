@@ -13,19 +13,19 @@
         <license_category>none</license_category>
         <license_definition/>
         <license_model>none</license_model>
-        <logo>739b8f3697816110b434f5f3a253af2a</logo>
+        <logo/>
         <menu/>
         <name>Global Tools</name>
-        <package_json display_value="/global/global-tools/2.1.3/package.json" path="/global/global-tools/2.1.3/package.json">/global/global-tools/2.1.3/package.json</package_json>
-        <package_resolver_version>1.0.0</package_resolver_version>
+        <package_json display_value="/global/global_tools/2.1.3/package.json" path="/global/global_tools/2.1.3/package.json">/global/global_tools/2.1.3/package.json</package_json>
+        <package_resolver_version>2.0.0</package_resolver_version>
         <private>false</private>
         <restrict_table_access>false</restrict_table_access>
         <runtime_access_tracking>permissive</runtime_access_tracking>
         <scope>global</scope>
         <scoped_administration>false</scoped_administration>
-        <short_description>Tools to support (scoped) app development</short_description>
+        <short_description/>
         <sn_managed>false</sn_managed>
-        <source>a39b8f3697816110b434f5f3a253af25</source>
+        <source>global</source>
         <store_correlation_id/>
         <store_url/>
         <subscription_entitlement/>
@@ -34,9 +34,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:01:05</sys_created_on>
         <sys_id>a39b8f3697816110b434f5f3a253af25</sys_id>
-        <sys_mod_count>34</sys_mod_count>
+        <sys_mod_count>35</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-25 10:40:54</sys_updated_on>
+        <sys_updated_on>2026-08-19 16:16:08</sys_updated_on>
         <template/>
         <trackable>true</trackable>
         <uninstall_blocked>false</uninstall_blocked>

@@ -43,6 +43,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 		this._setValue = this._gtObject.setValue;
 		this._gtRead = new global.GlobalToolsRecordRead();
 		this._gtWrite = new global.GlobalToolsRecordWrite();
+		this._gtAttachment = new global.GlobalToolsAttachment();
 		this._mappingCfgMgr = '';
 		var bMappingCfgMgrInstalled = false;
 		if (this._gtCache.checkValue('gtrwv_mapping_cm_installed')) {
@@ -99,6 +100,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 					} else {
 						this._writeRecord();
 					} // if IRE
+					this._moveAttachmentsOnClassChange();
 					if (this._canContinue()) {
 						this._runCustomScripts();
 					} // if can continue
@@ -368,7 +370,9 @@ GlobalToolsRecordWriteValidate.prototype = {
 			} // if error
 			this.bIsValidRecord = ((grRecord) && (this._gt.getType(grRecord).indexOf('gliderecord') != -1) && (grRecord.isValidRecord()) && (grRecord.getValue('sys_id') != -1)) ? true : false;
 			if (this.bIsValidRecord) {
-				if ((bAllowClassChange) && (this._gtTable.getRecordClass(grRecord) != this.sTargetTable) && (grRecord.isValidField('sys_class_name')) && (this._getValue('bUseIRE', false, this.oRecordConfig)) && (this._getValue('bKeepSysId', false, this.oRecordConfig)) && (this._getValue('sys_id', '', this.oRecordValues))) {
+				this.sRecordClassOld = this._gtTable.getRecordClass(grRecord);
+				this.bClassHasChanged = ((grRecord.isValidField('sys_class_name')) && (this.sRecordClassOld != this.sTargetTable)) ? true : false; // detected once here so both branches below can rely on it
+				if ((bAllowClassChange) && (this.bClassHasChanged) && (this._getValue('bUseIRE', false, this.oRecordConfig)) && (this._getValue('bKeepSysId', false, this.oRecordConfig)) && (this._getValue('sys_id', '', this.oRecordValues))) {
 					grRecord.setValue('sys_class_name', this.sTargetTable);
 					if (grRecord.isValidField('sys_class_path')) {
 						grRecord.setValue('sys_class_path', GlideDBObjectManager.get().getClassPath(this.sTargetTable));
@@ -378,6 +382,8 @@ GlobalToolsRecordWriteValidate.prototype = {
 						if (grRecordNewClass.get('sys_id', grRecord.getUniqueValue())) {
 							this.sRecordId = grRecordNewClass.getUniqueValue();
 							this.grRecord = grRecordNewClass;
+							this._moveAttachmentsOnClassChange();
+							this.bClassHasChanged = false; // Don't move again after the later IRE/write step
 						} else {
 							this._errorHandler('record', '500_012', 'Error selecting record during class switch', '', [grRecordNewClass.getLastErrorMessage()], false, true);
 						} // if new class record found
@@ -884,6 +890,15 @@ GlobalToolsRecordWriteValidate.prototype = {
 		} // if log
 		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_writeRecord'); }
 	}, // function _writeRecord
+
+	_moveAttachmentsOnClassChange: function () {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + '_moveAttachmentsOnClassChange'); }
+		if ((this.bClassHasChanged) && (this._getValue('bMoveAttachmentsOnClassChange', true, this.oRecordConfig)) && (this._canContinue()) && (this.sRecordId) && (this.sRecordId != '-1')) {
+			this._gtAttachment.moveAttachments(this.sRecordClassOld, this.sTargetTable, this.sRecordId);
+		} // if class actually changed, move enabled (default true, independent of bAllowClassChange), write committed and record identity unchanged
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + '_moveAttachmentsOnClassChange'); }
+	}, // function _moveAttachmentsOnClassChange
 
 	/***********************************************************************************************************
 	*	Second level functions
@@ -1895,14 +1910,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>856</sys_mod_count>
+        <sys_mod_count>858</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
-        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-25 10:12:43</sys_updated_on>
+        <sys_updated_on>2026-08-19 16:26:17</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>
