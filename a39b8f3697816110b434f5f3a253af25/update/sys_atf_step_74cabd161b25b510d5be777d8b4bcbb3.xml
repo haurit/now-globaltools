@@ -14,14 +14,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>74cabd161b25b510d5be777d8b4bcbb3</sys_id>
-        <sys_mod_count>404</sys_mod_count>
+        <sys_mod_count>405</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
-        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_74cabd161b25b510d5be777d8b4bcbb3</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-25 09:18:56</sys_updated_on>
+        <sys_updated_on>2026-08-19 16:32:33</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRecordWriteValidate Tests">a44784251b6db110d5be777d8b4bcb92</test>
         <timeout/>
@@ -34,1668 +34,1815 @@
         <order>200</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-07-25 09:56:18</sys_created_on>
+        <sys_created_on>2026-08-18 17:50:06</sys_created_on>
         <sys_id>56dabd161b25b510d5be777d8b4bcb3a</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>1</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-25 09:56:18</sys_updated_on>
-        <value>(function (outputs, steps, params, stepResult, assertEqual) {
-
-	var bLog = false;
-	var bRunSingleTest = false;
-	var _gtWriteValidate = new global.GlobalToolsRecordWriteValidate();
-	var _gt = new global.GlobalTools();
-	var _gtArray = new global.GlobalToolsArray();
-	var _gtObject = new global.GlobalToolsObject();
-
-	var _gtATF = new global.GlobalToolsATF('GlobalToolsRecordWriteValidate', _gtWriteValidate, bLog, outputs, steps, params, stepResult, assertEqual);
-	var grRecord;
-
-	var oRecordConfig = {};
-	var oRecordValues = {};
-	var oError = {};
-	var oIREPayloadExpected = {
-		'items': [{
-			'internal_id': '',
-			'lookup': [],
-			'values': {}
-		}]
-	};
-	var aErrorArray = [];
-	var aFunctions = ['validateAndWrite', 'validateAndReturnIREObject'];
-	var oExpectedResult = {};
-
-	/***********************************************************************************************************
-	*	Fatal Errors
-	************************************************************************************************************/
-	if (!bRunSingleTest) {
-		aFunctions.forEach(function (sFunction) {
-
-			oRecordConfig = {};
-			oRecordValues = {};
-			oExpectedResult = (sFunction == 'validateAndWrite') ? '-1' : undefined;
-
-			// 405_001 Missing record config object or sTargetTable property
-			oError = {};
-			_gtATF.runATF(sFunction, oExpectedResult);
-
-			// 405_001 Missing record config object or sTargetTable property
-			oError = {};
-			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			if ((!_gtArray.isValidArray(aErrorArray)) || (_gtObject.getValue('sCode', '', aErrorArray[0]) != '405_001')) {
-				_gtATF.addError(sFunction, 'Test 002 did not return error "405_001 - Missing or empty configuration object or target table".');
-			} // if error
-
-			// 400_001 Missing or empty record values object
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'sErrorReturnType': 'code',
-			}; // config
-			oError = {};
-			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_001'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 003 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-
-			// 400_033 Invalid key configuration in config object
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'sErrorReturnType': 'code',
-				'bUpdate': true,
-			}; // config
-			oRecordValues = {
-				'active': 'true',
-			}; // values
-			oError = {};
-			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_033'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 004 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-
-			// 405_003 Invalid action: empty
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'sErrorReturnType': 'code',
-			}; // config
-			oRecordValues = {
-				'sys_id': '-1',
-				'active': 'true',
-			}; // values
-			oError = {};
-			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['405_003'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 005 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-
-			// 404_001 Invalid action: record delete
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'sErrorReturnType': 'code',
-				'bDelete': true,
-			}; // config
-			oRecordValues = {
-				'sys_id': '-1',
-				'active': 'true',
-			}; // values
-			oError = {};
-			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['404_001'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 006 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-
-			// 405_002 Invalid action: conflict
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'sErrorReturnType': 'code',
-				'bDelete': true,
-				'bUpdate': true,
-			}; // config
-			oRecordValues = {
-				'sys_id': '-1',
-				'active': 'true',
-			}; // values
-			oError = {};
-			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['405_002'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 007 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-
-			// 404_003 Invalid action: record update
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'sErrorReturnType': 'code',
-				'bDelete': false,
-				'bUpdate': true,
-			}; // config
-			oRecordValues = {
-				'sys_id': '-1',
-				'active': 'true',
-			}; // values
-			oError = {};
-			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['404_003'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 008 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-
-			// 404_002 Invalid action: record insert
-			grRecord = _gtATF.getRecord('incident', 'active=true');
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'sErrorReturnType': 'code',
-				'aKeys': 'sys_id',
-				'bDelete': false,
-				'bUpdate': false,
-				'bInsert': true,
-			}; // config
-			oRecordValues = {
-				'sys_id': grRecord.getUniqueValue(),
-				'active': 'true',
-			}; // values
-			oError = {};
-			if (grRecord) {
-				oExpectedResult = (sFunction == 'validateAndWrite') ? grRecord.getUniqueValue() : undefined;
-				_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);
-				aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-				aErrorsExpected = ['404_002'];
-				if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-					oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-					_gtATF.addError('validateAndWrite', 'Test 009 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-				} // if same error
-			} else {
-				_gtATF.addError('validateAndWrite', 'Test 009 test data error (incident with query "active=true" did not return a valid record).');
-			} // if valid test data
-
-			// 400_102 Access denied: record write
-			grRecord = _gtATF.getRecord('incident', 'state=2^caller_id.name!=abraham.lincoln');
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'aKeys': ['number'],
-				'bUseGlideRecordSecure': true,
-				'sErrorReturnType': 'code',
-				'sImpersonateDefaultUser': 'abraham.lincoln',
-				'aMandatoryFields': ['caller_id'],
-				'sAction': 'update',
-			}; // config
-			oRecordValues = {
-				'number': grRecord.getDisplayValue(),
-				'short_description': 'sugus0',
-			}; // values
-			oError = {};
-			if (grRecord) {
-				oExpectedResult = (sFunction == 'validateAndWrite') ? '-1' : undefined;
-				_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-				aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-				aErrorsExpected = ['400_102'];
-				if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-					oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-					_gtATF.addError('validateAndWrite', 'Test 010 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-				} // if same error
-			} else {
-				_gtATF.addError('validateAndWrite', 'Test 010 test data error (incident with query "state=2^caller_id.name!=abraham.lincoln" did not return a valid record).');
-			} // if valid test data
-
-			grRecord = _gtATF.getRecord('incident', 'state=2^caller_id.name!=abraham.lincoln');
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'bUseGlideRecordSecure': true,
-				'aKeys': ['number'],
-				'sErrorReturnType': 'code',
-				'sImpersonateDefaultUser': 'abraham.lincoln',
-				'sAction': 'delete',
-			}; // config
-			oRecordValues = {
-				'number': grRecord.getDisplayValue(),
-			}; // values
-			oError = {};
-			if (grRecord) {
-				_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-				aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-				aErrorsExpected = ['400_103'];
-				if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-					oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-					_gtATF.addError('validateAndWrite', 'Test 011 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-				} // if same error
-			} else {
-				_gtATF.addError('validateAndWrite', 'Test 011 test data error (incident with query "state=2^caller_id.name!=abraham.lincoln" did not return a valid record).');
-			} // if valid test data
-
-		}, this); // each function
-
-		//500_003 Error inserting record
-		//500_004 Error updating record
-		//500_005 Error deleting record
-
-		/***********************************************************************************************************
-		*	Validation Errors
-		************************************************************************************************************/
-
-		oRecordConfig = {
-			'sTargetTable': 'sys_user',
-			'sAction': 'insert',
-			'aMandatoryFields': ['user_name', 'sugus10'],
-			'sErrorReturnType': 'code',
-			'sTemplateName': 'sugus11',
-			'bTemplateIsMandatory': true,
-			'aFields': ['sugus12', { 'aKeys': ['name'] }, 1],
-			'sImpersonateDefaultUser': 'sugus13',
-			'bImpersonateMandatory': true,
-			'bErrorOnAddlFieldsInValues': true,
-			'aUpdateBusinessLogicChecks': [{ 'sBeforeQuery': {} }],
-		}; // config
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'active': 'sugus0',
-			'last_login': 'sugus1',
-			'last_login_time': 'sugus2',
-			'failed_attempts': 'sugus3',
-			'email': 'sugus4',
-			'phone': 'sugus5',
-			'company': 'sugus6',
-			'notification': 'sugus8',
-			'sugus13': 'sugus9'
-		}; // values
-
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		var aErrorsExpected = ['400_005', '400_010', '400_011', '400_021', '400_024', '400_023', '400_026', '400_028', '400_029', '400_015', '400_019', '400_002', '400_003', '400_012', '400_013', '400_031', '403_001', '403_002', '400_032', '500_002'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			var oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			gs.info('tomtom: ' + JSON.stringify(oErrorDiff) + ' aErrorsExpected: ' + aErrorsExpected + ' aErrorArray: ' + aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 101 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		grUser = _gtATF.getRecord('sys_user', 'user_name=abraham.lincoln');
-
-		oRecordConfig = {
-			'sTargetTable': 'sys_user',
-			'sAction': 'insert',
-			'aMandatoryFields': ['user_name'],
-			'sErrorReturnType': 'code',
-			'aFields': [{ 'sField': 'manager', 'aKeys': ['user_name'] }],
-			'sImpersonateDefaultUser': grUser.getUniqueValue(),
-			'bImpersonateMandatory': true,
-		}; // config
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'active': 'true',
-			'last_login': '2023-12-31',
-			'last_login_time': '31.12.2022 17:00',
-			'failed_attempts': '10',
-			'email': 'tom@hauri.biz',
-			'phone': '+41787979787',
-			'company': '93d4ecfac0a8000b6294d71b733977fb', // ServiceNow
-			'manager': grUser.getValue('user_name'),
-			'notification': 1
-		};
-
-		oError = {};
-		if (grUser) {
-			_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_005'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 102 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 102 test data error (sys_user with query "user_name=abraham.lincoln" did not return a valid record).');
-		} // if valid test data
-
-
-		oRecordConfig = {
-			'sTargetTable': 'sys_holiday',
-			'aMandatoryFields': ['name'],
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-		}; // config
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'start_time1': 'sugus0',
-		}; // values
-
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_005', '400_025'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 103 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'start_time1': '22:59:59',
-		}; // values
-
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_005'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 104 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		grRecord = _gtATF.getRecord('core_company', 'vendor=false');
-
-		oRecordConfig = {
-			'sTargetTable': 'cmdb_ci_server',
-			'aMandatoryFields': ['name'],
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-		}; // config
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'ip_address': 'sugus0',
-			'vendor': grRecord.getUniqueValue(),
-		}; // values
-
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_005', '400_030', '400_017'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 105 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 105 test data error (core_company with query "vendor=false" did not return a valid record).');
-		} // if valid test data
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'ip_address': '192.168.0.1',
-			'vendor': '93d4ecfac0a8000b6294d71b733977fb', // ServiceNow is a vendor
-		}; // values
-
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_005'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 106 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aMandatoryFields': ['number'],
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-			'aFields': [{ 'sField': 'assignment_group', 'aKeys': ['name'] }, { 'sField': 'assigned_to', 'aKeys': ['user_name'] }],
-		}; // config
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'origin_id': 'sugus0',
-			'origin_table': 'sugus1',
-			'calendar_duration': 'sugus2',
-			'assignment_group': 'Hardware',
-			'assigned_to': 'luke.wilson'
-		}; // values
-
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_005', '400_020', '400_035', '400_036', '400_034'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 107 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		grRecord = _gtATF.getRecord('incident', 'active=true');
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'origin_id': grRecord.getUniqueValue(),
-			'origin_table': 'incident',
-			'calendar_duration': '1 23:59:59',
-			'assignment_group': 'Hardware',
-			'assigned_to': 'fred.luddy',
-			'close_code': 'Duplicate',
-			'close_notes': 'sugus6',
-		}; // values
-
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_005'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 108 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 108 test data error (incident with query "active=true" did not return a valid record).');
-		} // if valid test data
-
-		oRecordConfig = {
-			'sTargetTable': 'request_filter',
-			'aMandatoryFields': ['short_description'],
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-		}; // config
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'secondary_display': 'sugus0',
-		}; // values
-
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_005', '400_022'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 109 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		oRecordConfig = {
-			'sTargetTable': 'request_filter',
-			'aMandatoryFields': ['short_description'],
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-		}; // config
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'secondary_display': ['sugus0'],
-		}; // values
-
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_005'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 110 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		grRecord = _gtATF.getRecord('incident', 'active=true^stateNOT IN6,7');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aKeys': ['number'],
-			'bUseGlideRecordSecure': true,
-			'aMandatoryFields': ['number'],
-			'sErrorReturnType': 'code',
-			'bTemplateDeleteFieldValue': true,
-			'bStateFlowActionDeleteFieldValue': true,
-			'bImpersonateDeleteFieldValue': true,
-			'bStateFlowActionIsMandatory': true,
-			'sStateFlowActionValueField': 'test_action',
-			'oStateFlowAction': {
-				'sugus7': {
-					'sStateAction': 'sugus8'
-				}
-			},
-			'sImpersonateValueField': 'test_imp_user',
-			'sTemplateValueField': 'test_template',
-			'aIgnoreChoiceFields': [],
-			'bErrorOnAddlFieldsInValues': true,
-			'aKeysDefaultReferenceFields': 'name',
-			'sAction': 'update',
-			'aFields': ['company', { 'sField': 'short_description', 'sPrefix': 'PRE - ', 'sPostfix': ' - POST' }, { 'sField': 'assigned_to', 'sRefTable': 'sys_user', 'aKeys': 'user_name', 'sDefaultValue': 'fred.luddy' }, { 'sField': 'caller_id', 'sRefLookupScript': 'function (oParams) {if (oParams["sValue"] == "sugus4") {var grUser = new GlideRecord("sys_user");if(grUser.get("user_name", "beth.anglin")) {return grUser.getUniqueValue();}}}' }, 'assignment_group', 'needs_attention', 'impact', 'sys_id', 'sugus'],
-			'oTransformConfig': {
-				'oFieldMap': {
-					'impact': {
-						'oMap': {
-							'sugus5': '1'
-						}
-					}
-				},
-				'oTypeMap': {
-					'boolean': {
-						'oMap': {
-							'sugus6': true
-						}
-					},
-					'reference': {
-						'sys_user_group': {
-							'sRefLookupScript': 'function (oParams) {if (oParams["sValue"] == "sugus7") {var grGroup = new GlideRecord("sys_user_group");if(grGroup.get("name", "Hardware")) {return grGroup.getUniqueValue();}}}',
-						}
-					}
-				}
-			},
-			'aUpdateBusinessLogicChecks': {
-				'sBeforeQuery': 'activeISEMPTY',
-				'sAfterQuery': 'activeISEMPTY',
-				'sErrorMsg': 'raider1'
-			}
-		}; // config
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'number': grRecord.getDisplayValue(),
-			'company': 'ACME North America',
-			'test_template': 'sugus0',
-			'test_imp_user': 'sugus1',
-			'test_action': 'sugus2',
-			'short_description': 'sugus3',
-			'caller_id': 'sugus4',
-			'impact': 'sugus5',
-			'assignment_group': 'sugus6',
-		}; // values
-
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_003', '403_001', '400_011', '400_015', '400_020'];
-
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 111 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-				gs.error('oError: ' + JSON.stringify(oError));
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 111 test data error (incident with query "active=true^stateNOT IN6,7" did not return a valid record).');
-		} // if valid test data
-
-		grRecord = _gtATF.getRecord('incident', 'state=2');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aKeys': ['number'],
-			'bUseGlideRecordSecure': true,
-			'sErrorReturnType': 'code',
-			'sAction': 'update',
-		}; // config
-
-		oRecordValues = {
-			'number': grRecord.getDisplayValue(),
-			'state': 6,
-			'incident_state': 6,
-		}; // values
-
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_004'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 112 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 112 test data error (incident with query "state=2" did not return a valid record).');
-		} // if valid test data
-
-		grRecord = _gtATF.getRecord('incident', 'state=2');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aKeys': ['number'],
-			'sErrorReturnType': 'code',
-			'sAction': 'update',
-			'aMandatoryFields': ['caller_id'],
-			'aUpdateBusinessLogicChecks': [
-				{
-					'sBeforeQuery': 'state!=3',
-					'sAfterQuery': 'state!=3',
-					'sErrorMsg': 'raider1'
-				}
-			]
-		}; // config
-
-		oRecordValues = {
-			'number': grRecord.getDisplayValue(),
-			'state': 6,
-			'incident_state': 6,
-		}; // values
-
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_004', '400_005', '400_014'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 113 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 113 test data error (incident with query "state=2" did not return a valid record).');
-		} // if valid test data
-
-		grRecord = _gtATF.getRecord('incident', 'state=2');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aKeys': ['number'],
-			'sErrorReturnType': 'code',
-			'sAction': 'update',
-			'aMandatoryFields': ['caller_id'],
-			'aUpdateBusinessLogicChecks': [
-				{
-					'sBeforeQuery': 'state!=3',
-					'sAfterQuery': 'state!=3',
-					'sErrorMsg': 'raider1'
-				}
-			]
-		}; // config
-
-		oRecordValues = {
-			'number': grRecord.getDisplayValue(),
-			'state': 3,
-			'incident_state': 3,
-		}; // values
-
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_005'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 114 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 114 test data error (incident with query "state=2" did not return a valid record).');
-		} // if valid test data
-
-
-		oRecordConfig = {
-			'sTargetTable': 'interaction',
-			//'aKeys': ['number'],
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-			'aMandatoryFields': ['caller_id'],
-		}; // config
-
-		oRecordValues = {
-			//'number': grRecord.getDisplayValue(),
-			'short_description': 'sugus0',
-			'state_reason': 'sugus1',
-			'type': 'video',
-			'sys_mod_count': 1,
-		}; // values
-
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_004', '400_012', '400_105', '400_019'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 115 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'bUseGlideRecordSecure': true,
-			'sErrorReturnType': 'code',
-			'sImpersonateDefaultUser': 'abraham.lincoln',
-			'aFields': [{ 'sField': 'caller_id', 'aKeys': 'user_name' }],
-			'sAction': 'insert',
-		}; // config
-
-		oRecordValues = {
-			//'number': grRecord.getDisplayValue(),
-			'caller_id': 'abraham.lincoln',
-			'short_description': 'sugus0',
-		}; // values
-
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_106'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 116 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		grRecord = _gtATF.getRecord('cmn_location', 'nameISNOTEMPTY^companyISNOTEMPTY');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'sErrorReturnType': 'code',
-			'bKeysDefaultReferenceDisplayField': true,
-			'aMandatoryFields': ['caller_id'],
-			'sAction': 'insert',
-		}; // config
-
-		oRecordValues = {
-			'company': grRecord.getValue('company'),
-			'location': grRecord.getDisplayValue(),
-		}; // values
-
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_005'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 117 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 117 test data error (cmn_location with query "nameISNOTEMPTY^companyISNOTEMPTY" did not return a valid record).');
-		} // if valid test data
-
-		oRecordConfig = {
-			'sTargetTable': 'cmn_location',
-			'sErrorReturnType': 'code',
-			'aMandatoryFields': ['name'],
-			'sAction': 'insert',
-		}; // config
-
-		oRecordValues = {
-			'latitude': 'sugus1',
-		}; // values
-
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_005', '400_027'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 118 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		oRecordConfig = {
-			'sTargetTable': 'cmn_location',
-			'sErrorReturnType': 'code',
-			'aMandatoryFields': ['name'],
-			'sAction': 'insert',
-		}; // config
-
-		oRecordValues = {
-			'latitude': '1.0123',
-		}; // values
-
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_005'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 119 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		// 400_038 Input values check failed
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-			'aInputValueChecks': [
-				{
-					'sField': 'short_description',
-					'sRegExpPattern': '^[a-z0-9\\s]{6,}$',
-					'sRegExpFlags': 'gi',
-					'sErrorMessage': 'Title should not contain special characters and must be 6 characters long: {1}'
-				},
-				{
-					'sField': 'impact',
-					'sScript': 'var i="sValue";if((!Number.isNaN(i))&amp;&amp;(i&gt;=1)&amp;&amp;(i&lt;=3)){bValid = true;};',
-					'sErrorMessage': 'Impact must be a integer number from 1-3 (Field is: {0} Value is: {1})'
-				}
-			],
-		}; // config
-		oRecordValues = {
-			'active': 'true',
-			'short_description': 'sg!?_',
-			'impact': 99,
-		}; // values
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_019', '400_038'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 120 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		// 400_038 Input values check failed
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-			'aInputValueChecks': [
-				{
-					'sField': 'short_description',
-					'sRegExpPattern': '^[a-z0-9\\s]{6,}$',
-					'sRegExpFlags': 'gi',
-					'sErrorMessage': 'Title should not contain special characters and must be 6 characters long: {1}'
-				},
-				{
-					'sField': 'impact',
-					'sScript': 'var i="sValue";if((!Number.isNaN(i))&amp;&amp;(i&gt;=1)&amp;&amp;(i&lt;=3)){bValid = true;};',
-					'sErrorMessage': 'Impact must be a integer number from 1-3 (Field is: {0} Value is: {1})'
-				}
-			],
-			'aMandatoryFields': ['caller_id'],
-		}; // config
-		oRecordValues = {
-			'active': 'true',
-			'short_description': 'this is a valid title',
-			'impact': 2,
-		}; // values
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_005'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 121 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		grRecord = _gtATF.getRecord('incident', 'state=2');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aKeys': ['number'],
-			'sErrorReturnType': 'code',
-			'sAction': 'update',
-			'aDynamicFieldConfig': [
-				{
-					'sField': 'incident_state',
-					'sRegExpPattern': '^3$',
-					'sRegExpFlags': 'gi',
-					'aMandatoryFields': ['hold_reason', 'work_notes'], // impact is mandatory additionally 
-				}, // conditional field cfg
-			], // conditional field cfgs
-		}; // config
-		oRecordValues = {
-			'active': 'true',
-			'number': grRecord.getDisplayValue(),
-			'incident_state': 3,
-		}; // values
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_005'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 122 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 122 test data error (incident with query "state=2" did not return a valid record).');
-		} // if valid test data
-
-		grRecord = _gtATF.getRecord('incident', 'state=2');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aKeys': ['number'],
-			'sErrorReturnType': 'code',
-			'sAction': 'update',
-			'aDynamicFieldConfig': [
-				{
-					'sField': 'incident_state',
-					'sRegExpPattern': '^3$',
-					'sRegExpFlags': 'gi',
-					'aMandatoryFields': ['hold_reason', 'work_notes'], // impact is mandatory additionally 
-				}, // conditional field cfg
-			], // conditional field cfgs
-		}; // config
-		oRecordValues = {
-			'active': 'true',
-			'number': grRecord.getDisplayValue(),
-			'incident_state': 1,
-			'sugus0': 'sugus1',
-		}; // values
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_013'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 123 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 123 test data error (incident with query "state=2" did not return a valid record).');
-		} // if valid test data
-
-		oRecordConfig['bErrorOnInvalidFieldsInValues'] = false;
-		oRecordValues = {
-			'active': 'true',
-			'number': grRecord.getDisplayValue(),
-			'incident_state': 'sugus1',
-			'sugus0': 'sugus1',
-		}; // values
-		oError = {};
-		_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_019'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 124 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		grRecord = _gtATF.getRecord('incident', 'state=2');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aKeys': ['number'],
-			'sErrorReturnType': 'code',
-			'sAction': 'update',
-			'aDynamicFieldConfig': [
-				{
-					'sField': 'incident_state',
-					'sScript': 'bValid = ("sValue" == "3") ? true : false;',
-					'aMandatoryFields': ['hold_reason', 'work_notes'], // impact is mandatory additionally 
-				}, // conditional field cfg
-			], // conditional field cfgs
-		}; // config
-		oRecordValues = {
-			'active': 'true',
-			'number': grRecord.getDisplayValue(),
-			'incident_state': 3,
-		}; // values
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_005'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 125 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 125 test data error (incident with query "state=2" did not return a valid record).');
-		} // if valid test data
-
-		grRecord = _gtATF.getRecord('incident', 'state=2');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aKeys': ['number'],
-			'sErrorReturnType': 'code',
-			'sAction': 'update',
-			'aDynamicFieldConfig': [
-				{
-					'sField': 'incident_state',
-					'sScript': 'bValid = ("sValue" == "3") ? true : false;',
-					'aMandatoryFields': ['hold_reason', 'work_notes'], // impact is mandatory additionally 
-				}, // conditional field cfg
-			], // conditional field cfgs
-		}; // config
-		oRecordValues = {
-			'active': 'true',
-			'number': grRecord.getDisplayValue(),
-			'incident_state': 1,
-			'sugus0': 'sugus1',
-		}; // values
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_013'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 126 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 126 test data error (incident with query "state=2" did not return a valid record).');
-		} // if valid test data
-
-		grRecord = _gtATF.getRecord('incident', 'incident_state=1');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aKeys': ['number'],
-			'sErrorReturnType': 'code',
-			'bTemplateIsMandatory': true,
-			'sAction': 'update',
-			'bErrorOnAddlFieldsInValues': true,
-			'aFields': ['active', 'number'],
-			'aDynamicFieldConfig': [
-				{
-					'sQueryCondition': 'incident_state=1', // if query on old record returns true, use below config
-					'aFields': ['caller_id'], // caller must be provided
-				}, // conditional field cfg
-			], // conditional field cfgs
-		}; // config
-		oRecordValues = {
-			'active': 'true',
-			'number': grRecord.getDisplayValue(),
-			'caller_id': grRecord.getValue('caller_id'),
-		}; // values
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_002'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 127 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 127 test data error (incident with query "incident_state=1" did not return a valid record).');
-		} // if valid test data
-
-		grRecord = _gtATF.getRecord('incident', 'incident_state=1');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aKeys': ['number'],
-			'sErrorReturnType': 'code',
-			'bTemplateIsMandatory': true,
-			'sAction': 'update',
-			'bErrorOnAddlFieldsInValues': true,
-			'aFields': ['active', 'number', 'caller_id'],
-			'aDynamicFieldConfig': [
-				{
-					'sQueryCondition': 'incident_state=1', // if query on old record returns true, use below config
-					'aFieldsRemoval': ['caller_id'], // caller must be provided
-				}, // conditional field cfg
-			], // conditional field cfgs
-		}; // config
-		oRecordValues = {
-			'active': 'true',
-			'number': grRecord.getDisplayValue(),
-			'caller_id': grRecord.getValue('caller_id'),
-		}; // values
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_002', '400_010'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 128 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 128 test data error (incident with query "incident_state=1" did not return a valid record).');
-		} // if valid test data
-
-		grRecord = _gtATF.getRecord('incident', 'incident_state=2');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aKeys': ['number'],
-			'sErrorReturnType': 'code',
-			'bTemplateIsMandatory': true,
-			'sAction': 'update',
-			'aFields': ['active', 'number'],
-			'aMandatoryFields': ['caller_id'],
-			'aDynamicFieldConfig': [
-				{
-					'sQueryCondition': 'incident_state=1', // if query returns true, use below config
-					'aMandatoryFieldsRemoval': ['caller_id'], // caller must be provided
-				}, // conditional field cfg
-			], // conditional field cfgs
-		}; // config
-		oRecordValues = {
-			'active': 'true',
-			'number': grRecord.getDisplayValue(),
-		}; // values
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_002', '400_005'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 129 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 129 test data error (incident with query "incident_state=2" did not return a valid record).');
-		} // if valid test data
-
-		grRecord = _gtATF.getRecord('incident', 'incident_state=1');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aKeys': ['number'],
-			'sErrorReturnType': 'code',
-			'bTemplateIsMandatory': true,
-			'sAction': 'update',
-			'aFields': ['active', 'number'],
-			'aMandatoryFields': ['caller_id'],
-			'aDynamicFieldConfig': [
-				{
-					'sQueryCondition': 'incident_state=1', // if query returns true, use below config
-					'aMandatoryFieldsRemoval': ['caller_id'], // caller must not be provided
-				}, // conditional field cfg
-			], // conditional field cfgs
-		}; // config
-		oRecordValues = {
-			'active': 'true',
-			'number': grRecord.getDisplayValue(),
-		}; // values
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_002'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 130 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 130 test data error (incident with query "incident_state=1" did not return a valid record).');
-		} // if valid test data
-
-		// Test source field and mandatory field have errors
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-			'aFields': [
-				{
-					'sField': 'short_description',
-					'sSourceField': 'sugus1'
-				}, // field
-			], // fields
-			'aMandatoryFields': ['sugus0'],
-		}; // config
-		oRecordValues = {
-			'sugus1': 'sugus1',
-		}; // values
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_012'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 131 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		// Test dedicated choice tables
-		oRecordConfig = {
-			'sTargetTable': 'cmdb_ci_appl',
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-			'oErrorHandling': {
-				'oErrorCode': {
-					'404_003': 'ignore', // ignore errors for CIs that don't exist (sAction: update)
-				}, // by error code
-			} // error handling
-		}; // config
-		oRecordValues = {
-			'used_for': 'Production',
-			'impact': 99,
-		}; // values
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_013'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 132 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		// Error handling ignore_reject
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'sErrorReturnType': 'code',
-			'bDelete': false,
-			'bUpdate': true,
-			oErrorHandling: { // generically the following error handling options can be configure: reject (default), ignore, warn
-				oErrorCode: {
-					'404_003': 'ignore_reject', // ignore errors for CIs that don't exist (sAction: update)
-				}, // by error code
-			} // error handling
-		}; // config
-		oRecordValues = {
-			'sys_id': '-1',
-			'active': 'true',
-		}; // values
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = [];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 133 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		grRecord = _gtATF.getRecord('incident', 'state=2');
-
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aKeys': ['number'],
-			'sErrorReturnType': 'code',
-			'sAction': 'update',
-			//'bErrorOnInvalidFieldsInValues': false,
-			'bErrorOnAddlFieldsInValues': true,
-			'aFields': [
-				{ 'sField': 'short_description', 'sSourceField': 'u_title' },
-			], // fields
-		}; // config
-
-		oRecordValues = {
-			'number': grRecord.getDisplayValue(),
-			'u_title': 'sugus',
-			//'short_description': 'test1'
-		}; // values
-
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = [];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 134 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 134 test data error (incident with query "state=2" did not return a valid record).');
-		} // if valid test data
-
-		if (grRecord.getUniqueValue() == 'sugus') {
-			_gtATF.addError('validateAndWrite', 'Test 134 did not map value correctly from source field to field.');
-		} // if source field not applied to field correctly
-
-		// Test Dependent Field Ref Qualifier (Correct)
-		grRecord = _gtATF.getRecord('sys_user', 'companyISNOTEMPTY^company.customer=true');
-
-		var grCompany = _gtATF.getRecord('core_company', 'sys_id=' + grRecord.getValue('company'));
-
-		oRecordConfig = {
-			'sTargetTable': 'cmn_department',
-			'aMandatoryFields': ['name'],
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-		}; // config
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'company': grCompany.getUniqueValue(),
-			'primary_contact': grRecord.getUniqueValue(),
-		}; // values
-
-		oError = {};
-		if (grRecord) {
-			if (grCompany) {
-				_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-				aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-				aErrorsExpected = ['400_005'];
-				if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-					oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-					_gtATF.addError('validateAndWrite', 'Test 135 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-				} // if same error
-			} else {
-				_gtATF.addError('validateAndWrite', 'Test 135 test data error (core_company with query "sys_id!=' + grRecord.getValue('company') + '^customer=true" did not return a valid record).');
-			} // if valid test data
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 135 test data error (sys_user with query "companyISNOTEMPTY^company.customer=true" did not return a valid record).');
-		} // if valid test data
-
-		grCompany = _gtATF.getRecord('core_company', 'sys_id!=' + grRecord.getValue('company') + '^customer=true');
-
-		oRecordConfig = {
-			'sTargetTable': 'cmn_department',
-			'aMandatoryFields': ['name'],
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-		}; // config
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'company': grCompany.getUniqueValue(),
-			'primary_contact': grRecord.getUniqueValue(),
-		}; // values
-		oError = {};
-		if (grRecord) {
-			if (grCompany) {
-				_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-				aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-				aErrorsExpected = ['400_005', '400_017'];
-				if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-					oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-					_gtATF.addError('validateAndWrite', 'Test 136 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-				} // if same error
-			} else {
-				_gtATF.addError('validateAndWrite', 'Test 136 test data error (core_company with query "sys_id!=' + grRecord.getValue('company') + '^customer=true" did not return a valid record).');
-			} // if valid test data
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 136 test data error (sys_user with query "companyISNOTEMPTY^company.customer=true" did not return a valid record).');
-		} // if valid test data
-
-		// Test Dependent Field Ref Qualifier (No error on empty dependent field, same as UI behavior)
-		oRecordConfig = {
-			'sTargetTable': 'cmn_department',
-			'aMandatoryFields': ['name'],
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-		}; // config
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'company': '',
-			'primary_contact': grRecord.getUniqueValue(),
-		}; // values
-
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_005'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 137 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		// Test Dependent Field Ref Qualifier (No error when both are empty)
-		grRecord = _gtATF.getRecord('sys_user', 'companyISEMPTY');
-		oRecordConfig = {
-			'sTargetTable': 'cmn_department',
-			'aMandatoryFields': ['name'],
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-		}; // config
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'company': '',
-			'primary_contact': grRecord.getUniqueValue(),
-		}; // values
-
-		oError = {};
-		if (grRecord) {
-			_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = ['400_005'];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test 138 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test 138 test data error (sys_user with query "companyEMPTY" did not return a valid record).');
-		} // if valid test data
-
-		if (grRecord) {
-			gs.info('GlobalToolsRecordWriteValidate Tests record: ' + grRecord.getDisplayValue() + ' oError: ' + JSON.stringify(oError));
-		} else {
-			gs.info('GlobalToolsRecordWriteValidate Tests oError: ' + JSON.stringify(oError));
-		} // if record
-
-		/***********************************************************************************************************
-		*	Field manipulation
-		************************************************************************************************************/
-
-		grRecord = _gtATF.getRecord('incident', 'state=2');
-		var sTestId = '201';
-		if (grRecord) {
-			var sIncidentId = grRecord.getUniqueValue();
-
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'sErrorReturnType': 'code',
-				'sAction': 'update',
-				'aFields': [{ 'sField': 'short_description', 'sSourceField': 'test_sugus' }],
-			}; // config
-
-			oRecordValues = {
-				'sys_id': sIncidentId,
-				'test_sugus': 'Test Field Gugus',
-			}; // values
-
-			oError = {};
-			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);
-			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = [];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-			if (grRecord) {
-				var sShortDescription = grRecord.getValue('short_description');
-				if (sShortDescription != 'Test Field Gugus') {
-					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was not taken by source field.');
-				} // if invalid value
-			} else {
-				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);
-			} // if record
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');
-		}
-
-		grRecord = _gtATF.getRecord('incident', 'state=2');
-		sTestId = '202';
-		if (grRecord) {
-			sIncidentId = grRecord.getUniqueValue();
-
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'sErrorReturnType': 'code',
-				'sAction': 'update',
-				'aFields': [{ 'sField': 'short_description', 'sFixedValue': 'Fixed Gugus' }],
-			}; // config
-
-			oRecordValues = {
-				'sys_id': sIncidentId,
-			}; // values
-
-			oError = {};
-			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);
-			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = [];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-			if (grRecord) {
-				sShortDescription = grRecord.getValue('short_description');
-				if (sShortDescription != 'Fixed Gugus') {
-					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was not taken by fixed value.');
-				} // if invalid value
-			} else {
-				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);
-			} // if record
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');
-		}
-
-		grRecord = _gtATF.getRecord('incident', 'state=2');
-		sTestId = '203';
-		if (grRecord) {
-			sIncidentId = grRecord.getUniqueValue();
-
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'sErrorReturnType': 'code',
-				'sAction': 'update',
-				'aFields': [{ 'sField': 'short_description', 'sSourceProperty': 'instance_name' }],
-			}; // config
-
-			oRecordValues = {
-				'sys_id': sIncidentId,
-			}; // values
-
-			oError = {};
-			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);
-			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = [];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-			if (grRecord) {
-				sShortDescription = grRecord.getValue('short_description');
-				if (sShortDescription != gs.getProperty('instance_name')) {
-					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was not taken from sys property value.');
-				} // if invalid value
-			} else {
-				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);
-			} // if record
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');
-		}
-
-		grRecord = _gtATF.getRecord('incident', 'state=2');
-		sTestId = '204';
-		if (grRecord) {
-			sIncidentId = grRecord.getUniqueValue();
-
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'sErrorReturnType': 'code',
-				'sAction': 'update',
-				'aFields': [{ 'sField': 'short_description', 'sFieldAction': 'ignore' }],
-			}; // config
-
-			oRecordValues = {
-				'sys_id': sIncidentId,
-				'short_description': 'Sugus Gugus Ignore',
-			}; // values
-
-			oError = {};
-			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);
-			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = [];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-			if (grRecord) {
-				sShortDescription = grRecord.getValue('short_description');
-				if (sShortDescription == 'Sugus Gugus Ignore') {
-					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was taken dispite field action ignore.');
-				} // if invalid value
-			} else {
-				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);
-			} // if record
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');
-		}
-
-		grRecord = _gtATF.getRecord('incident', 'state=2');
-		sTestId = '205';
-		if (grRecord) {
-			sIncidentId = grRecord.getUniqueValue();
-
-			oRecordConfig = {
-				'sTargetTable': 'incident',
-				'sErrorReturnType': 'code',
-				'sAction': 'update',
-				'aFields': [{ 'sField': 'short_description', 'sFieldAction': 'ignore_update' }],
-			}; // config
-
-			oRecordValues = {
-				'sys_id': sIncidentId,
-				'short_description': 'Sugus Gugus Ignore Update',
-			}; // values
-
-			oError = {};
-			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);
-			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);
-			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-			aErrorsExpected = [];
-			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-			} // if same error
-			if (grRecord) {
-				sShortDescription = grRecord.getValue('short_description');
-				if (sShortDescription == 'Sugus Gugus Ignore Update') {
-					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was taken dispite field action ignore_update.');
-				} // if invalid value
-			} else {
-				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);
-			} // if record
-		} else {
-			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');
-		}
-
-		//_gt.sleep(5000);
-
-	} // if not add new test
-
-	/* TODO TESTS:
-
-	// In a baseline instance without CSM there is no state mgmt
-	400_006: Stateflow action is mandatory
-	400_007: Stateflow action is not valid
-	400_008: Stateflow action not found
-	400_009: Stateflow action worknotes are mandatory
-
-	// This is a mis-configuration that occurs only on wrongly customized instances, difficult to test
-	400_016: Invalid dependent reference field configuration
-	400_018: Invalid choice list configuration
-
-	400_101: Access denied: record create
-
-	// These failures are hard to tests against a working setup
-	403_003: Impersonating failed
-	403_004: Impersonating failed and is mandatory
-
-	500_001: Error processing stateflow action
-	500_002: Error processing business logic
-	500_003: Error inserting record
-	500_004: Error updating record
-	500_005: Error deleting record
-	500_006: Error getting reference field value
-
-	*/
-
-	/* Other tests that are missing
-
-		oErrorHandling (type, field)
-		
-		Other options to be compared to documentation
-	*/
-
-	if (bRunSingleTest) {
-
-		var sFunction = 'validateAndWrite'; // validateAndReturnIREObject
-		oExpectedResult = (sFunction == 'validateAndWrite') ? '-1' : undefined;
-
-		// Put single test here for debugging START
-		
-		oRecordConfig = {
-			'sTargetTable': 'incident',
-			'aMandatoryFields': ['number'],
-			'sErrorReturnType': 'code',
-			'sAction': 'insert',
-			'aFields': [{ 'sField': 'assignment_group', 'aKeys': ['name'] }, { 'sField': 'assigned_to', 'aKeys': ['user_name'] }],
-		}; // config
-
-		oRecordValues = {
-			'sys_id': '-1',
-			'origin_id': 'sugus0',
-			'origin_table': 'sugus1',
-			'calendar_duration': 'sugus2',
-			'assignment_group': 'Hardware',
-			'assigned_to': 'luke.wilson'
-		}; // values
-
-		oError = {};
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));
-		aErrorsExpected = ['400_005', '400_020', '400_035', '400_036', '400_034'];
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);
-			_gtATF.addError('validateAndWrite', 'Test 107 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');
-		} // if same error
-
-		// Put single test here for debugging END
-
-	} // if new test
-
-	return _gtATF.endATF();
-
+        <sys_updated_on>2026-08-19 16:32:33</sys_updated_on>
+        <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
+ &#13;
+	var bLog = false;&#13;
+	var bRunSingleTest = false;&#13;
+	var _gtWriteValidate = new global.GlobalToolsRecordWriteValidate();&#13;
+	var _gt = new global.GlobalTools();&#13;
+	var _gtArray = new global.GlobalToolsArray();&#13;
+	var _gtObject = new global.GlobalToolsObject();&#13;
+	var _gtTable = new global.GlobalToolsTable();&#13;
+	var _gtAttachment = new global.GlobalToolsAttachment();&#13;
+&#13;
+	var _gtATF = new global.GlobalToolsATF('GlobalToolsRecordWriteValidate', _gtWriteValidate, bLog, outputs, steps, params, stepResult, assertEqual);&#13;
+	var grRecord;&#13;
+&#13;
+	var oRecordConfig = {};&#13;
+	var oRecordValues = {};&#13;
+	var oError = {};&#13;
+	var oIREPayloadExpected = {&#13;
+		'items': [{&#13;
+			'internal_id': '',&#13;
+			'lookup': [],&#13;
+			'values': {}&#13;
+		}]&#13;
+	};&#13;
+	var aErrorArray = [];&#13;
+	var aFunctions = ['validateAndWrite', 'validateAndReturnIREObject'];&#13;
+	var oExpectedResult = {};&#13;
+&#13;
+	/***********************************************************************************************************&#13;
+	*	Fatal Errors&#13;
+	************************************************************************************************************/&#13;
+	if (!bRunSingleTest) {&#13;
+		aFunctions.forEach(function (sFunction) {&#13;
+&#13;
+			oRecordConfig = {};&#13;
+			oRecordValues = {};&#13;
+			oExpectedResult = (sFunction == 'validateAndWrite') ? '-1' : undefined;&#13;
+&#13;
+			// 405_001 Missing record config object or sTargetTable property&#13;
+			oError = {};&#13;
+			_gtATF.runATF(sFunction, oExpectedResult);&#13;
+&#13;
+			// 405_001 Missing record config object or sTargetTable property&#13;
+			oError = {};&#13;
+			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			if ((!_gtArray.isValidArray(aErrorArray)) || (_gtObject.getValue('sCode', '', aErrorArray[0]) != '405_001')) {&#13;
+				_gtATF.addError(sFunction, 'Test 002 did not return error "405_001 - Missing or empty configuration object or target table".');&#13;
+			} // if error&#13;
+&#13;
+			// 400_001 Missing or empty record values object&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+			}; // config&#13;
+			oError = {};&#13;
+			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_001'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 003 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+&#13;
+			// 400_033 Invalid key configuration in config object&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'bUpdate': true,&#13;
+			}; // config&#13;
+			oRecordValues = {&#13;
+				'active': 'true',&#13;
+			}; // values&#13;
+			oError = {};&#13;
+			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_033'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 004 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+&#13;
+			// 405_003 Invalid action: empty&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+			}; // config&#13;
+			oRecordValues = {&#13;
+				'sys_id': '-1',&#13;
+				'active': 'true',&#13;
+			}; // values&#13;
+			oError = {};&#13;
+			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['405_003'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 005 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+&#13;
+			// 404_001 Invalid action: record delete&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'bDelete': true,&#13;
+			}; // config&#13;
+			oRecordValues = {&#13;
+				'sys_id': '-1',&#13;
+				'active': 'true',&#13;
+			}; // values&#13;
+			oError = {};&#13;
+			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['404_001'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 006 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+&#13;
+			// 405_002 Invalid action: conflict&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'bDelete': true,&#13;
+				'bUpdate': true,&#13;
+			}; // config&#13;
+			oRecordValues = {&#13;
+				'sys_id': '-1',&#13;
+				'active': 'true',&#13;
+			}; // values&#13;
+			oError = {};&#13;
+			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['405_002'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 007 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+&#13;
+			// 404_003 Invalid action: record update&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'bDelete': false,&#13;
+				'bUpdate': true,&#13;
+			}; // config&#13;
+			oRecordValues = {&#13;
+				'sys_id': '-1',&#13;
+				'active': 'true',&#13;
+			}; // values&#13;
+			oError = {};&#13;
+			_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['404_003'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 008 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+&#13;
+			// 404_002 Invalid action: record insert&#13;
+			grRecord = _gtATF.getRecord('incident', 'active=true');&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'aKeys': 'sys_id',&#13;
+				'bDelete': false,&#13;
+				'bUpdate': false,&#13;
+				'bInsert': true,&#13;
+			}; // config&#13;
+			oRecordValues = {&#13;
+				'sys_id': grRecord.getUniqueValue(),&#13;
+				'active': 'true',&#13;
+			}; // values&#13;
+			oError = {};&#13;
+			if (grRecord) {&#13;
+				oExpectedResult = (sFunction == 'validateAndWrite') ? grRecord.getUniqueValue() : undefined;&#13;
+				_gtATF.runATF(sFunction, oExpectedResult, oRecordConfig, oRecordValues, oError);&#13;
+				aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+				aErrorsExpected = ['404_002'];&#13;
+				if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+					oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+					_gtATF.addError('validateAndWrite', 'Test 009 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+				} // if same error&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test 009 test data error (incident with query "active=true" did not return a valid record).');&#13;
+			} // if valid test data&#13;
+&#13;
+			// 400_102 Access denied: record write&#13;
+			grRecord = _gtATF.getRecord('incident', 'state=2^caller_id.name!=abraham.lincoln');&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'aKeys': ['number'],&#13;
+				'bUseGlideRecordSecure': true,&#13;
+				'sErrorReturnType': 'code',&#13;
+				'sImpersonateDefaultUser': 'abraham.lincoln',&#13;
+				'aMandatoryFields': ['caller_id'],&#13;
+				'sAction': 'update',&#13;
+			}; // config&#13;
+			oRecordValues = {&#13;
+				'number': grRecord.getDisplayValue(),&#13;
+				'short_description': 'sugus0',&#13;
+			}; // values&#13;
+			oError = {};&#13;
+			if (grRecord) {&#13;
+				oExpectedResult = (sFunction == 'validateAndWrite') ? '-1' : undefined;&#13;
+				_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+				aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+				aErrorsExpected = ['400_102'];&#13;
+				if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+					oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+					_gtATF.addError('validateAndWrite', 'Test 010 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+				} // if same error&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test 010 test data error (incident with query "state=2^caller_id.name!=abraham.lincoln" did not return a valid record).');&#13;
+			} // if valid test data&#13;
+&#13;
+			grRecord = _gtATF.getRecord('incident', 'state=2^caller_id.name!=abraham.lincoln');&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'bUseGlideRecordSecure': true,&#13;
+				'aKeys': ['number'],&#13;
+				'sErrorReturnType': 'code',&#13;
+				'sImpersonateDefaultUser': 'abraham.lincoln',&#13;
+				'sAction': 'delete',&#13;
+			}; // config&#13;
+			oRecordValues = {&#13;
+				'number': grRecord.getDisplayValue(),&#13;
+			}; // values&#13;
+			oError = {};&#13;
+			if (grRecord) {&#13;
+				_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+				aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+				aErrorsExpected = ['400_103'];&#13;
+				if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+					oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+					_gtATF.addError('validateAndWrite', 'Test 011 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+				} // if same error&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test 011 test data error (incident with query "state=2^caller_id.name!=abraham.lincoln" did not return a valid record).');&#13;
+			} // if valid test data&#13;
+&#13;
+		}, this); // each function&#13;
+&#13;
+		//500_003 Error inserting record&#13;
+		//500_004 Error updating record&#13;
+		//500_005 Error deleting record&#13;
+&#13;
+		/***********************************************************************************************************&#13;
+		*	Validation Errors&#13;
+		************************************************************************************************************/&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'sys_user',&#13;
+			'sAction': 'insert',&#13;
+			'aMandatoryFields': ['user_name', 'sugus10'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sTemplateName': 'sugus11',&#13;
+			'bTemplateIsMandatory': true,&#13;
+			'aFields': ['sugus12', { 'aKeys': ['name'] }, 1],&#13;
+			'sImpersonateDefaultUser': 'sugus13',&#13;
+			'bImpersonateMandatory': true,&#13;
+			'bErrorOnAddlFieldsInValues': true,&#13;
+			'aUpdateBusinessLogicChecks': [{ 'sBeforeQuery': {} }],&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'active': 'sugus0',&#13;
+			'last_login': 'sugus1',&#13;
+			'last_login_time': 'sugus2',&#13;
+			'failed_attempts': 'sugus3',&#13;
+			'email': 'sugus4',&#13;
+			'phone': 'sugus5',&#13;
+			'company': 'sugus6',&#13;
+			'notification': 'sugus8',&#13;
+			'sugus13': 'sugus9'&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		var aErrorsExpected = ['400_005', '400_010', '400_011', '400_021', '400_024', '400_023', '400_026', '400_028', '400_029', '400_015', '400_019', '400_002', '400_003', '400_012', '400_013', '400_031', '403_001', '403_002', '400_032', '500_002'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			var oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			gs.info('tomtom: ' + JSON.stringify(oErrorDiff) + ' aErrorsExpected: ' + aErrorsExpected + ' aErrorArray: ' + aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 101 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		grUser = _gtATF.getRecord('sys_user', 'user_name=abraham.lincoln');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'sys_user',&#13;
+			'sAction': 'insert',&#13;
+			'aMandatoryFields': ['user_name'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'aFields': [{ 'sField': 'manager', 'aKeys': ['user_name'] }],&#13;
+			'sImpersonateDefaultUser': grUser.getUniqueValue(),&#13;
+			'bImpersonateMandatory': true,&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'active': 'true',&#13;
+			'last_login': '2023-12-31',&#13;
+			'last_login_time': '31.12.2022 17:00',&#13;
+			'failed_attempts': '10',&#13;
+			'email': 'tom@hauri.biz',&#13;
+			'phone': '+41787979787',&#13;
+			'company': '93d4ecfac0a8000b6294d71b733977fb', // ServiceNow&#13;
+			'manager': grUser.getValue('user_name'),&#13;
+			'notification': 1&#13;
+		};&#13;
+&#13;
+		oError = {};&#13;
+		if (grUser) {&#13;
+			_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_005'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 102 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 102 test data error (sys_user with query "user_name=abraham.lincoln" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'sys_holiday',&#13;
+			'aMandatoryFields': ['name'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'start_time1': 'sugus0',&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_005', '400_025'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 103 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'start_time1': '22:59:59',&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_005'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 104 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		grRecord = _gtATF.getRecord('core_company', 'vendor=false');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'cmdb_ci_server',&#13;
+			'aMandatoryFields': ['name'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'ip_address': 'sugus0',&#13;
+			'vendor': grRecord.getUniqueValue(),&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_005', '400_030', '400_017'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 105 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 105 test data error (core_company with query "vendor=false" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'ip_address': '192.168.0.1',&#13;
+			'vendor': '93d4ecfac0a8000b6294d71b733977fb', // ServiceNow is a vendor&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_005'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 106 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aMandatoryFields': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+			'aFields': [{ 'sField': 'assignment_group', 'aKeys': ['name'] }, { 'sField': 'assigned_to', 'aKeys': ['user_name'] }],&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'origin_id': 'sugus0',&#13;
+			'origin_table': 'sugus1',&#13;
+			'calendar_duration': 'sugus2',&#13;
+			'assignment_group': 'Hardware',&#13;
+			'assigned_to': 'luke.wilson'&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_005', '400_020', '400_035', '400_036', '400_034'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 107 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'active=true');&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'origin_id': grRecord.getUniqueValue(),&#13;
+			'origin_table': 'incident',&#13;
+			'calendar_duration': '1 23:59:59',&#13;
+			'assignment_group': 'Hardware',&#13;
+			'assigned_to': 'fred.luddy',&#13;
+			'close_code': 'Duplicate',&#13;
+			'close_notes': 'sugus6',&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_005'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 108 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 108 test data error (incident with query "active=true" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'request_filter',&#13;
+			'aMandatoryFields': ['short_description'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'secondary_display': 'sugus0',&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_005', '400_022'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 109 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'request_filter',&#13;
+			'aMandatoryFields': ['short_description'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'secondary_display': ['sugus0'],&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_005'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 110 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'active=true^stateNOT IN6,7');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'bUseGlideRecordSecure': true,&#13;
+			'aMandatoryFields': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'bTemplateDeleteFieldValue': true,&#13;
+			'bStateFlowActionDeleteFieldValue': true,&#13;
+			'bImpersonateDeleteFieldValue': true,&#13;
+			'bStateFlowActionIsMandatory': true,&#13;
+			'sStateFlowActionValueField': 'test_action',&#13;
+			'oStateFlowAction': {&#13;
+				'sugus7': {&#13;
+					'sStateAction': 'sugus8'&#13;
+				}&#13;
+			},&#13;
+			'sImpersonateValueField': 'test_imp_user',&#13;
+			'sTemplateValueField': 'test_template',&#13;
+			'aIgnoreChoiceFields': [],&#13;
+			'bErrorOnAddlFieldsInValues': true,&#13;
+			'aKeysDefaultReferenceFields': 'name',&#13;
+			'sAction': 'update',&#13;
+			'aFields': ['company', { 'sField': 'short_description', 'sPrefix': 'PRE - ', 'sPostfix': ' - POST' }, { 'sField': 'assigned_to', 'sRefTable': 'sys_user', 'aKeys': 'user_name', 'sDefaultValue': 'fred.luddy' }, { 'sField': 'caller_id', 'sRefLookupScript': 'function (oParams) {if (oParams["sValue"] == "sugus4") {var grUser = new GlideRecord("sys_user");if(grUser.get("user_name", "beth.anglin")) {return grUser.getUniqueValue();}}}' }, 'assignment_group', 'needs_attention', 'impact', 'sys_id', 'sugus'],&#13;
+			'oTransformConfig': {&#13;
+				'oFieldMap': {&#13;
+					'impact': {&#13;
+						'oMap': {&#13;
+							'sugus5': '1'&#13;
+						}&#13;
+					}&#13;
+				},&#13;
+				'oTypeMap': {&#13;
+					'boolean': {&#13;
+						'oMap': {&#13;
+							'sugus6': true&#13;
+						}&#13;
+					},&#13;
+					'reference': {&#13;
+						'sys_user_group': {&#13;
+							'sRefLookupScript': 'function (oParams) {if (oParams["sValue"] == "sugus7") {var grGroup = new GlideRecord("sys_user_group");if(grGroup.get("name", "Hardware")) {return grGroup.getUniqueValue();}}}',&#13;
+						}&#13;
+					}&#13;
+				}&#13;
+			},&#13;
+			'aUpdateBusinessLogicChecks': {&#13;
+				'sBeforeQuery': 'activeISEMPTY',&#13;
+				'sAfterQuery': 'activeISEMPTY',&#13;
+				'sErrorMsg': 'raider1'&#13;
+			}&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+			'company': 'ACME North America',&#13;
+			'test_template': 'sugus0',&#13;
+			'test_imp_user': 'sugus1',&#13;
+			'test_action': 'sugus2',&#13;
+			'short_description': 'sugus3',&#13;
+			'caller_id': 'sugus4',&#13;
+			'impact': 'sugus5',&#13;
+			'assignment_group': 'sugus6',&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_003', '403_001', '400_011', '400_015', '400_020'];&#13;
+&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 111 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+				gs.error('oError: ' + JSON.stringify(oError));&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 111 test data error (incident with query "active=true^stateNOT IN6,7" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'bUseGlideRecordSecure': true,&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'update',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+			'state': 6,&#13;
+			'incident_state': 6,&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_004'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 112 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 112 test data error (incident with query "state=2" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'update',&#13;
+			'aMandatoryFields': ['caller_id'],&#13;
+			'aUpdateBusinessLogicChecks': [&#13;
+				{&#13;
+					'sBeforeQuery': 'state!=3',&#13;
+					'sAfterQuery': 'state!=3',&#13;
+					'sErrorMsg': 'raider1'&#13;
+				}&#13;
+			]&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+			'state': 6,&#13;
+			'incident_state': 6,&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_004', '400_005', '400_014'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 113 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 113 test data error (incident with query "state=2" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'update',&#13;
+			'aMandatoryFields': ['caller_id'],&#13;
+			'aUpdateBusinessLogicChecks': [&#13;
+				{&#13;
+					'sBeforeQuery': 'state!=3',&#13;
+					'sAfterQuery': 'state!=3',&#13;
+					'sErrorMsg': 'raider1'&#13;
+				}&#13;
+			]&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+			'state': 3,&#13;
+			'incident_state': 3,&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_005'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 114 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 114 test data error (incident with query "state=2" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'interaction',&#13;
+			//'aKeys': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+			'aMandatoryFields': ['caller_id'],&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			//'number': grRecord.getDisplayValue(),&#13;
+			'short_description': 'sugus0',&#13;
+			'state_reason': 'sugus1',&#13;
+			'type': 'video',&#13;
+			'sys_mod_count': 1,&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_004', '400_012', '400_105', '400_019'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 115 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'bUseGlideRecordSecure': true,&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sImpersonateDefaultUser': 'abraham.lincoln',&#13;
+			'aFields': [{ 'sField': 'caller_id', 'aKeys': 'user_name' }],&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			//'number': grRecord.getDisplayValue(),&#13;
+			'caller_id': 'abraham.lincoln',&#13;
+			'short_description': 'sugus0',&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_106'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 116 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		grRecord = _gtATF.getRecord('cmn_location', 'nameISNOTEMPTY^companyISNOTEMPTY');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'sErrorReturnType': 'code',&#13;
+			'bKeysDefaultReferenceDisplayField': true,&#13;
+			'aMandatoryFields': ['caller_id'],&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'company': grRecord.getValue('company'),&#13;
+			'location': grRecord.getDisplayValue(),&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_005'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 117 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 117 test data error (cmn_location with query "nameISNOTEMPTY^companyISNOTEMPTY" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'cmn_location',&#13;
+			'sErrorReturnType': 'code',&#13;
+			'aMandatoryFields': ['name'],&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'latitude': 'sugus1',&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_005', '400_027'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 118 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'cmn_location',&#13;
+			'sErrorReturnType': 'code',&#13;
+			'aMandatoryFields': ['name'],&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'latitude': '1.0123',&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_005'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 119 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		// 400_038 Input values check failed&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+			'aInputValueChecks': [&#13;
+				{&#13;
+					'sField': 'short_description',&#13;
+					'sRegExpPattern': '^[a-z0-9\\s]{6,}$',&#13;
+					'sRegExpFlags': 'gi',&#13;
+					'sErrorMessage': 'Title should not contain special characters and must be 6 characters long: {1}'&#13;
+				},&#13;
+				{&#13;
+					'sField': 'impact',&#13;
+					'sScript': 'var i="sValue";if((!Number.isNaN(i))&amp;&amp;(i&gt;=1)&amp;&amp;(i&lt;=3)){bValid = true;};',&#13;
+					'sErrorMessage': 'Impact must be a integer number from 1-3 (Field is: {0} Value is: {1})'&#13;
+				}&#13;
+			],&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'active': 'true',&#13;
+			'short_description': 'sg!?_',&#13;
+			'impact': 99,&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_019', '400_038'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 120 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		// 400_038 Input values check failed&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+			'aInputValueChecks': [&#13;
+				{&#13;
+					'sField': 'short_description',&#13;
+					'sRegExpPattern': '^[a-z0-9\\s]{6,}$',&#13;
+					'sRegExpFlags': 'gi',&#13;
+					'sErrorMessage': 'Title should not contain special characters and must be 6 characters long: {1}'&#13;
+				},&#13;
+				{&#13;
+					'sField': 'impact',&#13;
+					'sScript': 'var i="sValue";if((!Number.isNaN(i))&amp;&amp;(i&gt;=1)&amp;&amp;(i&lt;=3)){bValid = true;};',&#13;
+					'sErrorMessage': 'Impact must be a integer number from 1-3 (Field is: {0} Value is: {1})'&#13;
+				}&#13;
+			],&#13;
+			'aMandatoryFields': ['caller_id'],&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'active': 'true',&#13;
+			'short_description': 'this is a valid title',&#13;
+			'impact': 2,&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_005'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 121 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'update',&#13;
+			'aDynamicFieldConfig': [&#13;
+				{&#13;
+					'sField': 'incident_state',&#13;
+					'sRegExpPattern': '^3$',&#13;
+					'sRegExpFlags': 'gi',&#13;
+					'aMandatoryFields': ['hold_reason', 'work_notes'], // impact is mandatory additionally &#13;
+				}, // conditional field cfg&#13;
+			], // conditional field cfgs&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'active': 'true',&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+			'incident_state': 3,&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_005'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 122 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 122 test data error (incident with query "state=2" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'update',&#13;
+			'aDynamicFieldConfig': [&#13;
+				{&#13;
+					'sField': 'incident_state',&#13;
+					'sRegExpPattern': '^3$',&#13;
+					'sRegExpFlags': 'gi',&#13;
+					'aMandatoryFields': ['hold_reason', 'work_notes'], // impact is mandatory additionally &#13;
+				}, // conditional field cfg&#13;
+			], // conditional field cfgs&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'active': 'true',&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+			'incident_state': 1,&#13;
+			'sugus0': 'sugus1',&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_013'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 123 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 123 test data error (incident with query "state=2" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		oRecordConfig['bErrorOnInvalidFieldsInValues'] = false;&#13;
+		oRecordValues = {&#13;
+			'active': 'true',&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+			'incident_state': 'sugus1',&#13;
+			'sugus0': 'sugus1',&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_019'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 124 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'update',&#13;
+			'aDynamicFieldConfig': [&#13;
+				{&#13;
+					'sField': 'incident_state',&#13;
+					'sScript': 'bValid = ("sValue" == "3") ? true : false;',&#13;
+					'aMandatoryFields': ['hold_reason', 'work_notes'], // impact is mandatory additionally &#13;
+				}, // conditional field cfg&#13;
+			], // conditional field cfgs&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'active': 'true',&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+			'incident_state': 3,&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_005'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 125 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 125 test data error (incident with query "state=2" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'update',&#13;
+			'aDynamicFieldConfig': [&#13;
+				{&#13;
+					'sField': 'incident_state',&#13;
+					'sScript': 'bValid = ("sValue" == "3") ? true : false;',&#13;
+					'aMandatoryFields': ['hold_reason', 'work_notes'], // impact is mandatory additionally &#13;
+				}, // conditional field cfg&#13;
+			], // conditional field cfgs&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'active': 'true',&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+			'incident_state': 1,&#13;
+			'sugus0': 'sugus1',&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_013'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 126 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 126 test data error (incident with query "state=2" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'incident_state=1');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'bTemplateIsMandatory': true,&#13;
+			'sAction': 'update',&#13;
+			'bErrorOnAddlFieldsInValues': true,&#13;
+			'aFields': ['active', 'number'],&#13;
+			'aDynamicFieldConfig': [&#13;
+				{&#13;
+					'sQueryCondition': 'incident_state=1', // if query on old record returns true, use below config&#13;
+					'aFields': ['caller_id'], // caller must be provided&#13;
+				}, // conditional field cfg&#13;
+			], // conditional field cfgs&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'active': 'true',&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+			'caller_id': grRecord.getValue('caller_id'),&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_002'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 127 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 127 test data error (incident with query "incident_state=1" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'incident_state=1');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'bTemplateIsMandatory': true,&#13;
+			'sAction': 'update',&#13;
+			'bErrorOnAddlFieldsInValues': true,&#13;
+			'aFields': ['active', 'number', 'caller_id'],&#13;
+			'aDynamicFieldConfig': [&#13;
+				{&#13;
+					'sQueryCondition': 'incident_state=1', // if query on old record returns true, use below config&#13;
+					'aFieldsRemoval': ['caller_id'], // caller must be provided&#13;
+				}, // conditional field cfg&#13;
+			], // conditional field cfgs&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'active': 'true',&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+			'caller_id': grRecord.getValue('caller_id'),&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_002', '400_010'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 128 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 128 test data error (incident with query "incident_state=1" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'incident_state=2');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'bTemplateIsMandatory': true,&#13;
+			'sAction': 'update',&#13;
+			'aFields': ['active', 'number'],&#13;
+			'aMandatoryFields': ['caller_id'],&#13;
+			'aDynamicFieldConfig': [&#13;
+				{&#13;
+					'sQueryCondition': 'incident_state=1', // if query returns true, use below config&#13;
+					'aMandatoryFieldsRemoval': ['caller_id'], // caller must be provided&#13;
+				}, // conditional field cfg&#13;
+			], // conditional field cfgs&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'active': 'true',&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_002', '400_005'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 129 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 129 test data error (incident with query "incident_state=2" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'incident_state=1');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'bTemplateIsMandatory': true,&#13;
+			'sAction': 'update',&#13;
+			'aFields': ['active', 'number'],&#13;
+			'aMandatoryFields': ['caller_id'],&#13;
+			'aDynamicFieldConfig': [&#13;
+				{&#13;
+					'sQueryCondition': 'incident_state=1', // if query returns true, use below config&#13;
+					'aMandatoryFieldsRemoval': ['caller_id'], // caller must not be provided&#13;
+				}, // conditional field cfg&#13;
+			], // conditional field cfgs&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'active': 'true',&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_002'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 130 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 130 test data error (incident with query "incident_state=1" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		// Test source field and mandatory field have errors&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+			'aFields': [&#13;
+				{&#13;
+					'sField': 'short_description',&#13;
+					'sSourceField': 'sugus1'&#13;
+				}, // field&#13;
+			], // fields&#13;
+			'aMandatoryFields': ['sugus0'],&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'sugus1': 'sugus1',&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_012'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 131 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		// Test dedicated choice tables&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'cmdb_ci_appl',&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+			'oErrorHandling': {&#13;
+				'oErrorCode': {&#13;
+					'404_003': 'ignore', // ignore errors for CIs that don't exist (sAction: update)&#13;
+				}, // by error code&#13;
+			} // error handling&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'used_for': 'Production',&#13;
+			'impact': 99,&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_013'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 132 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		// Error handling ignore_reject&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'sErrorReturnType': 'code',&#13;
+			'bDelete': false,&#13;
+			'bUpdate': true,&#13;
+			oErrorHandling: { // generically the following error handling options can be configure: reject (default), ignore, warn&#13;
+				oErrorCode: {&#13;
+					'404_003': 'ignore_reject', // ignore errors for CIs that don't exist (sAction: update)&#13;
+				}, // by error code&#13;
+			} // error handling&#13;
+		}; // config&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'active': 'true',&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = [];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 133 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aKeys': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'update',&#13;
+			//'bErrorOnInvalidFieldsInValues': false,&#13;
+			'bErrorOnAddlFieldsInValues': true,&#13;
+			'aFields': [&#13;
+				{ 'sField': 'short_description', 'sSourceField': 'u_title' },&#13;
+			], // fields&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'number': grRecord.getDisplayValue(),&#13;
+			'u_title': 'sugus',&#13;
+			//'short_description': 'test1'&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', grRecord.getUniqueValue(), oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = [];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 134 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 134 test data error (incident with query "state=2" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		if (grRecord.getUniqueValue() == 'sugus') {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 134 did not map value correctly from source field to field.');&#13;
+		} // if source field not applied to field correctly&#13;
+&#13;
+		// Test Dependent Field Ref Qualifier (Correct)&#13;
+		grRecord = _gtATF.getRecord('sys_user', 'companyISNOTEMPTY^company.customer=true');&#13;
+&#13;
+		var grCompany = _gtATF.getRecord('core_company', 'sys_id=' + grRecord.getValue('company'));&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'cmn_department',&#13;
+			'aMandatoryFields': ['name'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'company': grCompany.getUniqueValue(),&#13;
+			'primary_contact': grRecord.getUniqueValue(),&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			if (grCompany) {&#13;
+				_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+				aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+				aErrorsExpected = ['400_005'];&#13;
+				if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+					oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+					_gtATF.addError('validateAndWrite', 'Test 135 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+				} // if same error&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test 135 test data error (core_company with query "sys_id!=' + grRecord.getValue('company') + '^customer=true" did not return a valid record).');&#13;
+			} // if valid test data&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 135 test data error (sys_user with query "companyISNOTEMPTY^company.customer=true" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		grCompany = _gtATF.getRecord('core_company', 'sys_id!=' + grRecord.getValue('company') + '^customer=true');&#13;
+&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'cmn_department',&#13;
+			'aMandatoryFields': ['name'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'company': grCompany.getUniqueValue(),&#13;
+			'primary_contact': grRecord.getUniqueValue(),&#13;
+		}; // values&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			if (grCompany) {&#13;
+				_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+				aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+				aErrorsExpected = ['400_005', '400_017'];&#13;
+				if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+					oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+					_gtATF.addError('validateAndWrite', 'Test 136 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+				} // if same error&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test 136 test data error (core_company with query "sys_id!=' + grRecord.getValue('company') + '^customer=true" did not return a valid record).');&#13;
+			} // if valid test data&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 136 test data error (sys_user with query "companyISNOTEMPTY^company.customer=true" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		// Test Dependent Field Ref Qualifier (No error on empty dependent field, same as UI behavior)&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'cmn_department',&#13;
+			'aMandatoryFields': ['name'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'company': '',&#13;
+			'primary_contact': grRecord.getUniqueValue(),&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_005'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 137 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		// Test Dependent Field Ref Qualifier (No error when both are empty)&#13;
+		grRecord = _gtATF.getRecord('sys_user', 'companyISEMPTY');&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'cmn_department',&#13;
+			'aMandatoryFields': ['name'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'company': '',&#13;
+			'primary_contact': grRecord.getUniqueValue(),&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		if (grRecord) {&#13;
+			_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = ['400_005'];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test 138 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test 138 test data error (sys_user with query "companyEMPTY" did not return a valid record).');&#13;
+		} // if valid test data&#13;
+&#13;
+		if (grRecord) {&#13;
+			gs.info('GlobalToolsRecordWriteValidate Tests record: ' + grRecord.getDisplayValue() + ' oError: ' + JSON.stringify(oError));&#13;
+		} else {&#13;
+			gs.info('GlobalToolsRecordWriteValidate Tests oError: ' + JSON.stringify(oError));&#13;
+		} // if record&#13;
+&#13;
+		/***********************************************************************************************************&#13;
+		*	Field manipulation&#13;
+		************************************************************************************************************/&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+		var sTestId = '201';&#13;
+		if (grRecord) {&#13;
+			var sIncidentId = grRecord.getUniqueValue();&#13;
+&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'sAction': 'update',&#13;
+				'aFields': [{ 'sField': 'short_description', 'sSourceField': 'test_sugus' }],&#13;
+			}; // config&#13;
+&#13;
+			oRecordValues = {&#13;
+				'sys_id': sIncidentId,&#13;
+				'test_sugus': 'Test Field Gugus',&#13;
+			}; // values&#13;
+&#13;
+			oError = {};&#13;
+			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);&#13;
+			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = [];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+			if (grRecord) {&#13;
+				var sShortDescription = grRecord.getValue('short_description');&#13;
+				if (sShortDescription != 'Test Field Gugus') {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was not taken by source field.');&#13;
+				} // if invalid value&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);&#13;
+			} // if record&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');&#13;
+		}&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+		sTestId = '202';&#13;
+		if (grRecord) {&#13;
+			sIncidentId = grRecord.getUniqueValue();&#13;
+&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'sAction': 'update',&#13;
+				'aFields': [{ 'sField': 'short_description', 'sFixedValue': 'Fixed Gugus' }],&#13;
+			}; // config&#13;
+&#13;
+			oRecordValues = {&#13;
+				'sys_id': sIncidentId,&#13;
+			}; // values&#13;
+&#13;
+			oError = {};&#13;
+			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);&#13;
+			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = [];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+			if (grRecord) {&#13;
+				sShortDescription = grRecord.getValue('short_description');&#13;
+				if (sShortDescription != 'Fixed Gugus') {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was not taken by fixed value.');&#13;
+				} // if invalid value&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);&#13;
+			} // if record&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');&#13;
+		}&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+		sTestId = '203';&#13;
+		if (grRecord) {&#13;
+			sIncidentId = grRecord.getUniqueValue();&#13;
+&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'sAction': 'update',&#13;
+				'aFields': [{ 'sField': 'short_description', 'sSourceProperty': 'instance_name' }],&#13;
+			}; // config&#13;
+&#13;
+			oRecordValues = {&#13;
+				'sys_id': sIncidentId,&#13;
+			}; // values&#13;
+&#13;
+			oError = {};&#13;
+			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);&#13;
+			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = [];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+			if (grRecord) {&#13;
+				sShortDescription = grRecord.getValue('short_description');&#13;
+				if (sShortDescription != gs.getProperty('instance_name')) {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was not taken from sys property value.');&#13;
+				} // if invalid value&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);&#13;
+			} // if record&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');&#13;
+		}&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+		sTestId = '204';&#13;
+		if (grRecord) {&#13;
+			sIncidentId = grRecord.getUniqueValue();&#13;
+&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'sAction': 'update',&#13;
+				'aFields': [{ 'sField': 'short_description', 'sFieldAction': 'ignore' }],&#13;
+			}; // config&#13;
+&#13;
+			oRecordValues = {&#13;
+				'sys_id': sIncidentId,&#13;
+				'short_description': 'Sugus Gugus Ignore',&#13;
+			}; // values&#13;
+&#13;
+			oError = {};&#13;
+			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);&#13;
+			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = [];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+			if (grRecord) {&#13;
+				sShortDescription = grRecord.getValue('short_description');&#13;
+				if (sShortDescription == 'Sugus Gugus Ignore') {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was taken dispite field action ignore.');&#13;
+				} // if invalid value&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);&#13;
+			} // if record&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');&#13;
+		}&#13;
+&#13;
+		grRecord = _gtATF.getRecord('incident', 'state=2');&#13;
+		sTestId = '205';&#13;
+		if (grRecord) {&#13;
+			sIncidentId = grRecord.getUniqueValue();&#13;
+&#13;
+			oRecordConfig = {&#13;
+				'sTargetTable': 'incident',&#13;
+				'sErrorReturnType': 'code',&#13;
+				'sAction': 'update',&#13;
+				'aFields': [{ 'sField': 'short_description', 'sFieldAction': 'ignore_update' }],&#13;
+			}; // config&#13;
+&#13;
+			oRecordValues = {&#13;
+				'sys_id': sIncidentId,&#13;
+				'short_description': 'Sugus Gugus Ignore Update',&#13;
+			}; // values&#13;
+&#13;
+			oError = {};&#13;
+			_gtATF.runATF('validateAndWrite', /\b[\w-]{32}\b/i, oRecordConfig, oRecordValues, oError);&#13;
+			grRecord = _gtATF.getRecord('incident', 'sys_id=' + sIncidentId);&#13;
+			aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+			aErrorsExpected = [];&#13;
+			if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+				oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+			} // if same error&#13;
+			if (grRecord) {&#13;
+				sShortDescription = grRecord.getValue('short_description');&#13;
+				if (sShortDescription == 'Sugus Gugus Ignore Update') {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' incident short description was taken dispite field action ignore_update.');&#13;
+				} // if invalid value&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' could not find incident: ' + sIncidentId);&#13;
+			} // if record&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test ' + sTestId + ' did not find incident.');&#13;
+		}&#13;
+&#13;
+		/***********************************************************************************************************&#13;
+		*	Class change and attachment move (bAllowClassChange / bMoveAttachmentsOnClassChange)&#13;
+		************************************************************************************************************/&#13;
+&#13;
+		var grCIDefault = new GlideRecord('cmdb_ci_computer');&#13;
+		grCIDefault.initialize();&#13;
+		grCIDefault.setValue('name', 'ATF ClassChange Test Default ' + gs.now());&#13;
+		var sCIDefaultId = grCIDefault.insert();&#13;
+&#13;
+		var grCIExplicitOff = new GlideRecord('cmdb_ci_computer');&#13;
+		grCIExplicitOff.initialize();&#13;
+		grCIExplicitOff.setValue('name', 'ATF ClassChange Test ExplicitOff ' + gs.now());&#13;
+		var sCIExplicitOffId = grCIExplicitOff.insert();&#13;
+&#13;
+		var grCINotAllowed = new GlideRecord('cmdb_ci_server');&#13;
+		grCINotAllowed.initialize();&#13;
+		grCINotAllowed.setValue('name', 'ATF ClassChange Test NotAllowed ' + gs.now());&#13;
+		var sCINotAllowedId = grCINotAllowed.insert();&#13;
+&#13;
+		if ((sCIDefaultId) &amp;&amp; (sCIExplicitOffId) &amp;&amp; (sCINotAllowedId)) {&#13;
+			var sAttachDefaultId = _gtAttachment.writeAttachmentByTableId('cmdb_ci_computer', sCIDefaultId, 'moveme.txt', 'move me please');&#13;
+			var sAttachExplicitOffId = _gtAttachment.writeAttachmentByTableId('cmdb_ci_computer', sCIExplicitOffId, 'staybehind.txt', 'stay behind please');&#13;
+			var sAttachNotAllowedId = _gtAttachment.writeAttachmentByTableId('cmdb_ci_server', sCINotAllowedId, 'staybehindtoo.txt', 'stay behind too please');&#13;
+&#13;
+			if ((sAttachDefaultId) &amp;&amp; (sAttachExplicitOffId) &amp;&amp; (sAttachNotAllowedId)) {&#13;
+&#13;
+				// bAllowClassChange: true, bMoveAttachmentsOnClassChange not set -- defaults to true, attachment must follow the record&#13;
+				oRecordConfig = {&#13;
+					'sTargetTable': 'cmdb_ci_server',&#13;
+					'aKeys': ['sys_id'],&#13;
+					'sAction': 'update',&#13;
+					'bAllowClassChange': true,&#13;
+					'sErrorReturnType': 'code',&#13;
+				}; // config&#13;
+				oRecordValues = {&#13;
+					'sys_id': sCIDefaultId,&#13;
+				}; // values&#13;
+				oError = {};&#13;
+				_gtATF.runATF('validateAndWrite', sCIDefaultId, oRecordConfig, oRecordValues, oError);&#13;
+				aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+				aErrorsExpected = [];&#13;
+				if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+					oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+					_gtATF.addError('validateAndWrite', 'Test ClassChangeDefault did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+				} // if same error&#13;
+&#13;
+				var grCIDefaultAfter = _gtATF.getRecord('cmdb_ci_server', 'sys_id=' + sCIDefaultId);&#13;
+				if ((!grCIDefaultAfter) || (_gtTable.getRecordClass(grCIDefaultAfter) != 'cmdb_ci_server')) {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ClassChangeDefault record was not reclassified to cmdb_ci_server.');&#13;
+				} // if not reclassified&#13;
+&#13;
+				if (_gtAttachment.getAttachments('cmdb_ci_computer', sCIDefaultId)) {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ClassChangeDefault attachment was left behind on cmdb_ci_computer (default should move it).');&#13;
+				} // if attachment left behind&#13;
+				if (!_gtAttachment.getAttachments('cmdb_ci_server', sCIDefaultId)) {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ClassChangeDefault attachment was not moved to cmdb_ci_server.');&#13;
+				} // if attachment not moved&#13;
+&#13;
+				// bAllowClassChange: true, bMoveAttachmentsOnClassChange: false -- explicit opt-out, attachment must stay behind&#13;
+				oRecordConfig = {&#13;
+					'sTargetTable': 'cmdb_ci_server',&#13;
+					'aKeys': ['sys_id'],&#13;
+					'sAction': 'update',&#13;
+					'bAllowClassChange': true,&#13;
+					'bMoveAttachmentsOnClassChange': false,&#13;
+					'sErrorReturnType': 'code',&#13;
+				}; // config&#13;
+				oRecordValues = {&#13;
+					'sys_id': sCIExplicitOffId,&#13;
+				}; // values&#13;
+				oError = {};&#13;
+				_gtATF.runATF('validateAndWrite', sCIExplicitOffId, oRecordConfig, oRecordValues, oError);&#13;
+				aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+				aErrorsExpected = [];&#13;
+				if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+					oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+					_gtATF.addError('validateAndWrite', 'Test ClassChangeExplicitOff did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+				} // if same error&#13;
+&#13;
+				var grCIExplicitOffAfter = _gtATF.getRecord('cmdb_ci_server', 'sys_id=' + sCIExplicitOffId);&#13;
+				if ((!grCIExplicitOffAfter) || (_gtTable.getRecordClass(grCIExplicitOffAfter) != 'cmdb_ci_server')) {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ClassChangeExplicitOff record was not reclassified to cmdb_ci_server.');&#13;
+				} // if not reclassified&#13;
+&#13;
+				if (!_gtAttachment.getAttachments('cmdb_ci_computer', sCIExplicitOffId)) {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ClassChangeExplicitOff attachment did not stay on cmdb_ci_computer despite bMoveAttachmentsOnClassChange: false.');&#13;
+				} // if attachment moved despite flag off&#13;
+				if (_gtAttachment.getAttachments('cmdb_ci_server', sCIExplicitOffId)) {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ClassChangeExplicitOff attachment unexpectedly present on cmdb_ci_server despite bMoveAttachmentsOnClassChange: false.');&#13;
+				} // if attachment present despite flag off&#13;
+&#13;
+				// bAllowClassChange not set -- move must still happen (default true, independent of bAllowClassChange)&#13;
+				oRecordConfig = {&#13;
+					'sTargetTable': 'cmdb_ci_computer',&#13;
+					'aKeys': ['sys_id'],&#13;
+					'sAction': 'update',&#13;
+					'sErrorReturnType': 'code',&#13;
+				}; // config&#13;
+				oRecordValues = {&#13;
+					'sys_id': sCINotAllowedId,&#13;
+				}; // values&#13;
+				oError = {};&#13;
+				_gtATF.runATF('validateAndWrite', sCINotAllowedId, oRecordConfig, oRecordValues, oError);&#13;
+				aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+				aErrorsExpected = [];&#13;
+				if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+					oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+					_gtATF.addError('validateAndWrite', 'Test ClassChangeNoAllowFlag did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+				} // if same error&#13;
+&#13;
+				var grCINotAllowedAfter = _gtATF.getRecord('cmdb_ci_computer', 'sys_id=' + sCINotAllowedId);&#13;
+				if ((!grCINotAllowedAfter) || (_gtTable.getRecordClass(grCINotAllowedAfter) != 'cmdb_ci_computer')) {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ClassChangeNoAllowFlag record was not reclassified to cmdb_ci_computer (test premise broken).');&#13;
+				} // if not reclassified&#13;
+&#13;
+				if (_gtAttachment.getAttachments('cmdb_ci_server', sCINotAllowedId)) {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ClassChangeNoAllowFlag attachment was left behind on cmdb_ci_server despite bAllowClassChange not being set (move must not depend on it).');&#13;
+				} // if attachment left behind&#13;
+				if (!_gtAttachment.getAttachments('cmdb_ci_computer', sCINotAllowedId)) {&#13;
+					_gtATF.addError('validateAndWrite', 'Test ClassChangeNoAllowFlag attachment was not moved to cmdb_ci_computer despite bAllowClassChange not being set.');&#13;
+				} // if attachment not moved&#13;
+&#13;
+				_gtAttachment.deleteAttachments('cmdb_ci_server', sCIDefaultId, '');&#13;
+				_gtAttachment.deleteAttachments('cmdb_ci_computer', sCIExplicitOffId, '');&#13;
+				_gtAttachment.deleteAttachments('cmdb_ci_computer', sCINotAllowedId, '');&#13;
+			} else {&#13;
+				_gtATF.addError('validateAndWrite', 'Test ClassChange test data error (could not create attachments on test CI records).');&#13;
+			} // if attachments created&#13;
+		} else {&#13;
+			_gtATF.addError('validateAndWrite', 'Test ClassChange test data error (could not create test CI records).');&#13;
+		} // if test records created&#13;
+&#13;
+		var grCICleanup = new GlideRecord('cmdb_ci');&#13;
+		if (grCICleanup.get(sCIDefaultId)) {&#13;
+			grCICleanup.deleteRecord();&#13;
+		} // if cleanup record default&#13;
+		grCICleanup = new GlideRecord('cmdb_ci');&#13;
+		if (grCICleanup.get(sCIExplicitOffId)) {&#13;
+			grCICleanup.deleteRecord();&#13;
+		} // if cleanup record explicit off&#13;
+		grCICleanup = new GlideRecord('cmdb_ci');&#13;
+		if (grCICleanup.get(sCINotAllowedId)) {&#13;
+			grCICleanup.deleteRecord();&#13;
+		} // if cleanup record not allowed&#13;
+&#13;
+		//_gt.sleep(5000);&#13;
+&#13;
+	} // if not add new test&#13;
+&#13;
+	/* TODO TESTS:&#13;
+&#13;
+	// In a baseline instance without CSM there is no state mgmt&#13;
+	400_006: Stateflow action is mandatory&#13;
+	400_007: Stateflow action is not valid&#13;
+	400_008: Stateflow action not found&#13;
+	400_009: Stateflow action worknotes are mandatory&#13;
+&#13;
+	// This is a mis-configuration that occurs only on wrongly customized instances, difficult to test&#13;
+	400_016: Invalid dependent reference field configuration&#13;
+	400_018: Invalid choice list configuration&#13;
+&#13;
+	400_101: Access denied: record create&#13;
+&#13;
+	// These failures are hard to tests against a working setup&#13;
+	403_003: Impersonating failed&#13;
+	403_004: Impersonating failed and is mandatory&#13;
+&#13;
+	500_001: Error processing stateflow action&#13;
+	500_002: Error processing business logic&#13;
+	500_003: Error inserting record&#13;
+	500_004: Error updating record&#13;
+	500_005: Error deleting record&#13;
+	500_006: Error getting reference field value&#13;
+&#13;
+	*/&#13;
+&#13;
+	/* Other tests that are missing&#13;
+&#13;
+		oErrorHandling (type, field)&#13;
+		&#13;
+		Other options to be compared to documentation&#13;
+	*/&#13;
+&#13;
+	if (bRunSingleTest) {&#13;
+&#13;
+		var sFunction = 'validateAndWrite'; // validateAndReturnIREObject&#13;
+		oExpectedResult = (sFunction == 'validateAndWrite') ? '-1' : undefined;&#13;
+&#13;
+		// Put single test here for debugging START&#13;
+		&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aMandatoryFields': ['number'],&#13;
+			'sErrorReturnType': 'code',&#13;
+			'sAction': 'insert',&#13;
+			'aFields': [{ 'sField': 'assignment_group', 'aKeys': ['name'] }, { 'sField': 'assigned_to', 'aKeys': ['user_name'] }],&#13;
+		}; // config&#13;
+&#13;
+		oRecordValues = {&#13;
+			'sys_id': '-1',&#13;
+			'origin_id': 'sugus0',&#13;
+			'origin_table': 'sugus1',&#13;
+			'calendar_duration': 'sugus2',&#13;
+			'assignment_group': 'Hardware',&#13;
+			'assigned_to': 'luke.wilson'&#13;
+		}; // values&#13;
+&#13;
+		oError = {};&#13;
+		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
+		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
+		aErrorsExpected = ['400_005', '400_020', '400_035', '400_036', '400_034'];&#13;
+		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
+			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
+			_gtATF.addError('validateAndWrite', 'Test 107 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
+		} // if same error&#13;
+&#13;
+		// Put single test here for debugging END&#13;
+&#13;
+	} // if new test&#13;
+&#13;
+	return _gtATF.endATF();&#13;
+&#13;
 })(outputs, steps, params, stepResult, assertEqual);</value>
         <variable display_value="Test script">989d9e235324220002c6435723dc3484</variable>
     </sys_variable_value>
@@ -1705,11 +1852,11 @@
         <order>100</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-07-25 09:56:18</sys_created_on>
+        <sys_created_on>2026-08-18 17:50:06</sys_created_on>
         <sys_id>92dabd161b25b510d5be777d8b4bcb3a</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-25 09:56:18</sys_updated_on>
+        <sys_updated_on>2026-08-18 17:50:06</sys_updated_on>
         <value>3.1</value>
         <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
     </sys_variable_value>
