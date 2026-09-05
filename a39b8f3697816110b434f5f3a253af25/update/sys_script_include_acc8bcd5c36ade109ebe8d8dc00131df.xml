@@ -10,7 +10,7 @@ Functions are only available for global scope and specific scopes defined in the
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsDateTime</name>
         <sandbox_callable>false</sandbox_callable>
-        <script><![CDATA[var GlobalToolsDateTime = Class.create();
+        <script><![CDATA[var GlobalToolsDateTime = Class.create(); 
 GlobalToolsDateTime.prototype = {
 	initialize: function (sClass, gtCache) {
 		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
@@ -263,14 +263,14 @@ GlobalToolsDateTime.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2024-12-17 08:37:47</sys_created_on>
         <sys_id>acc8bcd5c36ade109ebe8d8dc00131df</sys_id>
-        <sys_mod_count>71</sys_mod_count>
+        <sys_mod_count>72</sys_mod_count>
         <sys_name>GlobalToolsDateTime</sys_name>
-        <sys_package display_value="Global Tools" source="a39b8f3697816110b434f5f3a253af25">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_acc8bcd5c36ade109ebe8d8dc00131df</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-07-21 16:12:20</sys_updated_on>
+        <sys_updated_on>2026-09-05 14:52:17</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>acc8bcd5c36ade109ebe8d8dc00131df</id>
