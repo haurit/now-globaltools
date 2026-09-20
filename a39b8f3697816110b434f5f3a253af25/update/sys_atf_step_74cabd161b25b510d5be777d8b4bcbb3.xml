@@ -14,14 +14,14 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-30 06:33:46</sys_created_on>
         <sys_id>74cabd161b25b510d5be777d8b4bcbb3</sys_id>
-        <sys_mod_count>405</sys_mod_count>
+        <sys_mod_count>406</sys_mod_count>
         <sys_name>Run Server Side Script</sys_name>
         <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_atf_step_74cabd161b25b510d5be777d8b4bcbb3</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-08-19 16:32:33</sys_updated_on>
+        <sys_updated_on>2026-09-20 12:21:12</sys_updated_on>
         <table/>
         <test display_value="GlobalToolsRecordWriteValidate Tests">a44784251b6db110d5be777d8b4bcb92</test>
         <timeout/>
@@ -34,11 +34,11 @@
         <order>200</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-08-18 17:50:06</sys_created_on>
+        <sys_created_on>2026-09-19 16:06:55</sys_created_on>
         <sys_id>56dabd161b25b510d5be777d8b4bcb3a</sys_id>
         <sys_mod_count>1</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-08-19 16:32:33</sys_updated_on>
+        <sys_updated_on>2026-09-20 12:21:12</sys_updated_on>
         <value>(function (outputs, steps, params, stepResult, assertEqual) {&#13;
  &#13;
 	var bLog = false;&#13;
@@ -1768,6 +1768,26 @@
 &#13;
 		//_gt.sleep(5000);&#13;
 &#13;
+		// getSourceQueryFields returns the deduped source-side field names the config references&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+			'aFields': [&#13;
+				'short_description',&#13;
+				{ 'sField': 'assigned_to', 'sSourceField': 'assignee' },&#13;
+				{ 'sField': 'sys_class_name', 'sFieldAction': 'ignore' },&#13;
+				{ 'sField': 'company', 'aKeys': [{ 'sInputField': 'company_code' }] },&#13;
+				{ 'sField': 'location', 'aKeys': ['name'] }&#13;
+			],&#13;
+			'aKeys': ['number', { 'sInputField': 'correlation_id' }]&#13;
+		}; // config&#13;
+		_gtATF.runATF('getSourceQueryFields', ['short_description', 'assignee', 'company', 'location', 'company_code', 'number', 'correlation_id'], oRecordConfig);&#13;
+&#13;
+		// getSourceQueryFields returns an empty list when the config references no fields (caller owns sys_id and the fetch-all fallback)&#13;
+		oRecordConfig = {&#13;
+			'sTargetTable': 'incident',&#13;
+		}; // config&#13;
+		_gtATF.runATF('getSourceQueryFields', [], oRecordConfig);&#13;
+&#13;
 	} // if not add new test&#13;
 &#13;
 	/* TODO TESTS:&#13;
@@ -1811,31 +1831,7 @@
 &#13;
 		// Put single test here for debugging START&#13;
 		&#13;
-		oRecordConfig = {&#13;
-			'sTargetTable': 'incident',&#13;
-			'aMandatoryFields': ['number'],&#13;
-			'sErrorReturnType': 'code',&#13;
-			'sAction': 'insert',&#13;
-			'aFields': [{ 'sField': 'assignment_group', 'aKeys': ['name'] }, { 'sField': 'assigned_to', 'aKeys': ['user_name'] }],&#13;
-		}; // config&#13;
-&#13;
-		oRecordValues = {&#13;
-			'sys_id': '-1',&#13;
-			'origin_id': 'sugus0',&#13;
-			'origin_table': 'sugus1',&#13;
-			'calendar_duration': 'sugus2',&#13;
-			'assignment_group': 'Hardware',&#13;
-			'assigned_to': 'luke.wilson'&#13;
-		}; // values&#13;
-&#13;
-		oError = {};&#13;
-		_gtATF.runATF('validateAndWrite', '-1', oRecordConfig, oRecordValues, oError);&#13;
-		aErrorArray = _gtArray.unique(_gtObject.getValue('default/aErrorMessages', '', oError));&#13;
-		aErrorsExpected = ['400_005', '400_020', '400_035', '400_036', '400_034'];&#13;
-		if (!_gt.isEqual(aErrorArray, aErrorsExpected)) {&#13;
-			oErrorDiff = _gtArray.getAddRemoveFromArrays(aErrorsExpected, aErrorArray);&#13;
-			_gtATF.addError('validateAndWrite', 'Test 107 did not return error(s) "' + oErrorDiff['add'] + '" but had additional error(s) "' + oErrorDiff['remove'] + '".');&#13;
-		} // if same error&#13;
+	&#13;
 &#13;
 		// Put single test here for debugging END&#13;
 &#13;
@@ -1852,11 +1848,11 @@
         <order>100</order>
         <sys_class_name>sys_variable_value</sys_class_name>
         <sys_created_by>tom.hauri</sys_created_by>
-        <sys_created_on>2026-08-18 17:50:06</sys_created_on>
+        <sys_created_on>2026-09-19 16:06:55</sys_created_on>
         <sys_id>92dabd161b25b510d5be777d8b4bcb3a</sys_id>
         <sys_mod_count>0</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-08-18 17:50:06</sys_updated_on>
+        <sys_updated_on>2026-09-19 16:06:55</sys_updated_on>
         <value>3.1</value>
         <variable display_value="Jasmine version">42f2564b73031300440211d8faf6a777</variable>
     </sys_variable_value>

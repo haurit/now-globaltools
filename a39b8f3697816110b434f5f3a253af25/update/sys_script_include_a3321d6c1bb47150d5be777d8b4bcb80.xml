@@ -10,7 +10,7 @@ Functions are only available for global scope and specific scopes defined in the
         <mobile_callable>false</mobile_callable>
         <name>GlobalToolsRecordWriteValidate</name>
         <sandbox_callable>false</sandbox_callable>
-        <script><![CDATA[var GlobalToolsRecordWriteValidate = Class.create(); 
+        <script><![CDATA[var GlobalToolsRecordWriteValidate = Class.create();
 GlobalToolsRecordWriteValidate.prototype = {
 	initialize: function (gtCache, oTimer) {
 		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
@@ -152,6 +152,32 @@ GlobalToolsRecordWriteValidate.prototype = {
 		} // if timer
 		return this.oIREPayload;
 	}, // function validateAndReturnObject
+
+	getSourceQueryFields: function (oRecordConfig) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		this.aFieldsKeyFields = [];
+		this.aRecordKeyFields = [];
+		var aSourceFields = [];
+		this._getValue('aFields', [], oRecordConfig).forEach(function (oField) {
+			var sFieldType = this._gt.getType(oField);
+			if (sFieldType == 'string') {
+				aSourceFields.push(oField); // string entry, source equals target
+			} else if (this._gtObject.isObject(oField)) {
+				if (oField.hasOwnProperty('sField')) {
+					if ((oField.hasOwnProperty('sFieldAction')) && (oField['sFieldAction'] == 'ignore')) {
+						// ignored field, skip entry entirely with no field and no keys
+					} else {
+						aSourceFields.push((oField.hasOwnProperty('sSourceField')) ? oField['sSourceField'] : oField['sField']);
+						if (oField.hasOwnProperty('aKeys')) {
+							this._getFieldsFromKeyArrays(oField['aKeys'], 'field');
+						} // if keys
+					} // if field action ignore
+				} // if field
+			} // if valid field type
+		}, this); // each field
+		this._getFieldsFromKeyArrays(this._getValue('aKeys', [], oRecordConfig), 'record');
+		return this._unique([].concat(aSourceFields, this.aFieldsKeyFields, this.aRecordKeyFields), true);
+	}, // function getSourceQueryFields
 
 	/***********************************************************************************************************
 	*	First level functions
@@ -669,7 +695,7 @@ GlobalToolsRecordWriteValidate.prototype = {
 								} // if value is not nil
 								if ((!bFieldDone == true) && (sErrorHandling != 'ignore')) {
 									if (sInternalType == 'boolean') {
-										if (!(sValue == 0 || sValue == 1 || sValue == 'true' || sValue == 'false' || sValue == '0' || sValue == '1' || sValue == true || sValue == false || sValue == '') || (sValueType == 'boolean')) {
+										if ((sValueType != 'boolean') && (!(sValue == 0 || sValue == 1 || sValue == 'true' || sValue == 'false' || sValue == '0' || sValue == '1' || sValue == true || sValue == false || sValue == ''))) {
 											this._errorHandler('value', '400_021', 'Invalid boolean value', '', [sField, sValue], bNoActionError, false);
 										} // if value is not boolean
 									} // if type is bool
@@ -1834,9 +1860,12 @@ GlobalToolsRecordWriteValidate.prototype = {
 		sErrorCode = (sErrorCode) ? sErrorCode : -1;
 		aErrorMessageArgs = (this._isValidArray(aErrorMessageArgs)) ? aErrorMessageArgs : [];
 		aErrorDetailArgs = ((this._isValidArray(aErrorDetailArgs))) ? aErrorDetailArgs : [];
-		var sTranslatedErrorMessage = gs.getMessage('GlobalToolsRecordWriteValidate_' + sErrorCode + '_ErrorMessage', aErrorMessageArgs);
-		sTranslatedErrorMessage = (sTranslatedErrorMessage) ? sTranslatedErrorMessage : sErrorMessage;
-		var sTranslatedErrorDetail = gs.getMessage('GlobalToolsRecordWriteValidate_' + sErrorCode + '_ErrorDetail', aErrorDetailArgs);
+		var sErrorMessageKey = 'GlobalToolsRecordWriteValidate_' + sErrorCode + '_ErrorMessage';
+		var sErrorDetailKey = 'GlobalToolsRecordWriteValidate_' + sErrorCode + '_ErrorDetail';
+		var sTranslatedErrorMessage = gs.getMessage(sErrorMessageKey, aErrorMessageArgs);
+		sTranslatedErrorMessage = ((sTranslatedErrorMessage) && (sTranslatedErrorMessage != sErrorMessageKey)) ? sTranslatedErrorMessage : sErrorMessage;
+		var sTranslatedErrorDetail = gs.getMessage(sErrorDetailKey, aErrorDetailArgs);
+		sTranslatedErrorDetail = ((sTranslatedErrorDetail) && (sTranslatedErrorDetail != sErrorDetailKey)) ? sTranslatedErrorDetail : sErrorMessage;
 		if (this.sErrorReturnType == 'code') {
 			this.oError[this.sTableSequenceId]['aErrorMessages'].push(sErrorCode);
 		} else if (this.sErrorReturnType == 'message') {
@@ -1910,14 +1939,14 @@ GlobalToolsRecordWriteValidate.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-08-18 10:19:54</sys_created_on>
         <sys_id>a3321d6c1bb47150d5be777d8b4bcb80</sys_id>
-        <sys_mod_count>859</sys_mod_count>
+        <sys_mod_count>861</sys_mod_count>
         <sys_name>GlobalToolsRecordWriteValidate</sys_name>
         <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_a3321d6c1bb47150d5be777d8b4bcb80</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-09-05 14:51:22</sys_updated_on>
+        <sys_updated_on>2026-09-20 12:03:12</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>a3321d6c1bb47150d5be777d8b4bcb80</id>
