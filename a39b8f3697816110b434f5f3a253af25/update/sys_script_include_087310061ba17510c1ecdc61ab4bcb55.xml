@@ -69,7 +69,7 @@ GlobalToolsATF.prototype = {
 					var aMatchOperator = oExpectedResult.match(reOperator);
 					var aMatchCount = oExpectedResult.match(reCount);
 					if ((this._gtArray.isValidArray(aMatchOperator)) && (this._gtArray.isValidArray(aMatchCount))) {
-						sExpectedResultTypeComparison = aMatchOperator[0];
+						sExpectedResultTypeComparison = aMatchOperator[0].trim(); // the g-flag match includes the whitespace after the operator
 						oExpectedResult = (isNaN(aMatchCount[0])) ? '' : Number(aMatchCount[0]);
 					} // if valid comparison
 				} // is ops and count match is valid array
@@ -181,6 +181,84 @@ GlobalToolsATF.prototype = {
 		this._aErrors.push(this._sScriptIncludeName + '.' + sFunction + ' ' + sError);
 	}, // function addError
 
+	// Strict OpenAPI 3.0 subset (type, integer, nullable, enum, required, properties, additionalProperties, items, oneOf):
+	// a property the schema does not declare is an error unless additionalProperties allows it
+	validateSchema: function (oValue, oSchema) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var fnValidate = function (oNodeValue, oNodeSchema, sPath, aNodeErrors) {
+			if (!oNodeSchema) {
+				return aNodeErrors;
+			} // if no schema
+			if (Array.isArray(oNodeSchema['oneOf'])) {
+				var iMatches = oNodeSchema['oneOf'].filter(function (oOption) {
+					return (fnValidate(oNodeValue, oOption, sPath, []).length == 0);
+				}).length; // each option
+				if (iMatches == 0) {
+					aNodeErrors.push(sPath + ': no oneOf option matches ' + String(JSON.stringify(oNodeValue)).substring(0, 200));
+				} // if no option
+				return aNodeErrors;
+			} // if oneOf
+			if (oNodeValue === null) {
+				if (oNodeSchema['nullable'] !== true) {
+					aNodeErrors.push(sPath + ': null but not nullable');
+				} // if not nullable
+				return aNodeErrors;
+			} // if null
+			var sType = oNodeSchema['type'];
+			var sActualType = (Array.isArray(oNodeValue)) ? 'array' : typeof oNodeValue;
+			if ((sType == 'integer') && ((sActualType != 'number') || (Math.floor(oNodeValue) !== oNodeValue))) {
+				aNodeErrors.push(sPath + ': expected integer, got ' + sActualType + ' ' + String(JSON.stringify(oNodeValue)));
+				return aNodeErrors;
+			} else if ((sType) && (sType != 'integer') && (sType != sActualType)) {
+				aNodeErrors.push(sPath + ': expected ' + sType + ', got ' + sActualType + ' ' + String(JSON.stringify(oNodeValue)).substring(0, 200));
+				return aNodeErrors;
+			} // if type mismatch
+			if ((Array.isArray(oNodeSchema['enum'])) && (oNodeSchema['enum'].indexOf(oNodeValue) == -1)) {
+				aNodeErrors.push(sPath + ': value ' + String(JSON.stringify(oNodeValue)) + ' not in enum');
+			} // if enum
+			if (sActualType == 'object') {
+				var oProperties = oNodeSchema['properties'] || {};
+				(oNodeSchema['required'] || []).forEach(function (sRequired) {
+					if (!Object.prototype.hasOwnProperty.call(oNodeValue, sRequired)) {
+						aNodeErrors.push(sPath + ': missing required property ' + sRequired);
+					} // if missing
+				}); // each required
+				Object.keys(oNodeValue).forEach(function (sKey) {
+					if (Object.prototype.hasOwnProperty.call(oProperties, sKey)) {
+						fnValidate(oNodeValue[sKey], oProperties[sKey], sPath + '.' + sKey, aNodeErrors);
+					} else if ((oNodeSchema['additionalProperties']) && (typeof oNodeSchema['additionalProperties'] == 'object')) {
+						fnValidate(oNodeValue[sKey], oNodeSchema['additionalProperties'], sPath + '.' + sKey, aNodeErrors);
+					} else if ((oNodeSchema['additionalProperties'] !== true) && ((oNodeSchema['properties']) || (oNodeSchema['additionalProperties'] === false))) {
+						aNodeErrors.push(sPath + ': undeclared property ' + sKey);
+					} // if declared, allowed or undeclared
+				}); // each value key
+			} else if (sActualType == 'array') {
+				oNodeValue.forEach(function (oItem, iIndex) {
+					fnValidate(oItem, oNodeSchema['items'], sPath + '[' + iIndex + ']', aNodeErrors);
+				}); // each item
+			} // if object or array
+			return aNodeErrors;
+		}; // function fnValidate (closure recursion, this.validateSchema recursion would lose the error array)
+		return fnValidate(oValue, oSchema, '$', []);
+	}, // function validateSchema
+
+	// Without reExpectedError the value must match the schema; with it, one validation error must match (negative control)
+	checkSchema: function (sLabel, oValue, oSchema, reExpectedError) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (this._bContinue === false) { return; }
+		this._iTestCount++;
+		var aErrors = this.validateSchema(oValue, oSchema);
+		var bExpectError = (this._getType(reExpectedError) == 'regexp');
+		var bPassed = (bExpectError) ? (reExpectedError.test(aErrors.join('\n'))) : (aErrors.length == 0);
+		if (this._bLog) {
+			gs.info(this._sScriptIncludeName + '.checkSchema ' + sLabel + ' passed: ' + bPassed + ' errors: ' + JSON.stringify(aErrors));
+		} // if log
+		if (!bPassed) {
+			this._aErrors.push(this._sScriptIncludeName + '.checkSchema test counter ' + this._iTestCount + ' ' + sLabel + ((bExpectError) ? ' expected an error matching ' + reExpectedError.toString() : '') + ' errors: ' + JSON.stringify(aErrors.slice(0, 15)) + ' value: ' + String(JSON.stringify(oValue)).substring(0, 1500));
+		} // if failed
+		return bPassed;
+	}, // function checkSchema
+
 	endATF: function () {
 		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
 		if (this._aErrors.length > 0) {
@@ -192,7 +270,7 @@ GlobalToolsATF.prototype = {
 	}, // function endATF
 
 	type: 'GlobalToolsATF',
-	version: '2.1.4',
+	version: '2.1.5',
 	author: 'Tom Hauri',
 	email: 'tom@hauri.biz'
 };]]></script>
@@ -200,14 +278,14 @@ GlobalToolsATF.prototype = {
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-09-29 04:35:34</sys_created_on>
         <sys_id>087310061ba17510c1ecdc61ab4bcb55</sys_id>
-        <sys_mod_count>84</sys_mod_count>
+        <sys_mod_count>87</sys_mod_count>
         <sys_name>GlobalToolsATF</sys_name>
         <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
         <sys_policy/>
         <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
         <sys_update_name>sys_script_include_087310061ba17510c1ecdc61ab4bcb55</sys_update_name>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-09-05 14:52:22</sys_updated_on>
+        <sys_updated_on>2026-11-22 13:44:56</sys_updated_on>
     </sys_script_include>
     <sys_es_latest_script action="INSERT_OR_UPDATE">
         <id>087310061ba17510c1ecdc61ab4bcb55</id>
