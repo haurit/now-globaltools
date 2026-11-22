@@ -1,0 +1,1707 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>global.GlobalToolsScriptedRESTDoc</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description>Tools to support (scoped) app development&#13;
+Functions are only available for global scope and specific scopes defined in the system properties "now.globaltools.access_from_scope" or "now.globaltools.access_from_scope_custom" for security reasons.</description>
+        <mobile_callable>false</mobile_callable>
+        <name>GlobalToolsScriptedRESTDoc</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[var GlobalToolsScriptedRESTDoc = Class.create();
+GlobalToolsScriptedRESTDoc.prototype = {
+	initialize: function (gtCache, oTimer) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (gtCache instanceof GlobalToolsCache) {
+			this._gtCache = gtCache;
+		} else {
+			this._gtCache = new global.GlobalToolsCache();
+		} // if cache
+		this.bTimer = ((oTimer) && ((oTimer === true) || (oTimer instanceof GlobalToolsDateTime))) ? true : false;
+		if (this.bTimer) {
+			this._gtDateTime = (oTimer === true) ? new global.GlobalToolsDateTime('gtrd') : oTimer;
+			this._sTimerPrefix = (oTimer === true) ? '' : 'gtrd/';
+		} // if timer
+		this._gt = new global.GlobalTools();
+		this._gtObject = new global.GlobalToolsObject();
+		this._getValue = this._gtObject.getValue;
+		this._gtArray = new global.GlobalToolsArray();
+		this._gtTable = new global.GlobalToolsTable(this._gtCache, this._gtDateTime);
+		this.sMarker = '[gt-doc]';
+		this.sSchemaPrefix = 'gt_';
+		this.sErrorSchemaName = 'gt_GlobalToolsScriptedREST.error';
+		this.sOpenApiVersion = '3.0.1';
+		this.iQueryParameterNameMaxLength = 40;
+		this.iQueryParameterDescriptionMaxLength = 80;
+		this.aRequiredRoles = ['web_service_admin', 'admin'];
+		this.aReservedQueryParameters = ['encoded_query', 'history_walk', 'max_return_items', 'return_offset', 'requested_fields', 'orderby_fields', 'orderbydesc_fields'];
+		this.oOptionTypes = { 'oResourceConfigMap': 'object', 'aResourceIds': 'array', 'sVersion': 'string', 'sRecordScope': 'string', 'bDryRun': 'boolean', 'bRemoveStale': 'boolean', 'bOverwriteManual': 'boolean', 'bDocumentFieldFilters': 'boolean', 'bIncludeChoiceEnum': 'boolean' };
+		this.oOptionDefaults = { 'oResourceConfigMap': {}, 'aResourceIds': [], 'sVersion': '', 'sRecordScope': 'global', 'bDryRun': false, 'bRemoveStale': true, 'bOverwriteManual': false, 'bDocumentFieldFilters': false, 'bIncludeChoiceEnum': true };
+	}, // function initialize
+
+	_checkAccess: function (sCallerScope) {
+		if (this.oAllowedScopes) { return this.oAllowedScopes.hasOwnProperty(String(sCallerScope)); }
+		var aScopes = String(gs.getProperty('now.globaltools.access_from_scope')).split(',');
+		var aCustomScopes = String(gs.getProperty('now.globaltools.access_from_scope_custom')).split(',');
+		this.oAllowedScopes = Object.fromEntries([...aScopes, ...aCustomScopes].map(sItem => [sItem, true]));
+		this.oAllowedScopes['rhino.global'] = true;
+		return this.oAllowedScopes.hasOwnProperty(String(sCallerScope));
+	}, // function _checkAccess
+
+	/***********************************************************************************************************
+	*	Public entry points
+	************************************************************************************************************/
+
+	populateApiDocumentation: function (sApiIdentifier, oOptions) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (this.bTimer) { this._gtDateTime.startTimer(this._sTimerPrefix + 'populateApiDocumentation'); }
+		var oResult = { 'bIsOk': true, 'aCreated': [], 'aUpdated': [], 'aDeleted': [], 'aUnchanged': [], 'aSkipped': [], 'aConflicts': [], 'aWarnings': [], 'sErrorMessage': '' };
+		try {
+			this._populate(sApiIdentifier, oOptions, oResult);
+		} catch (oException) {
+			oResult['bIsOk'] = false;
+			oResult['sErrorMessage'] = 'Unexpected error: ' + String(oException);
+		} // try populate
+		if (this.bTimer) { this._gtDateTime.stopTimer(this._sTimerPrefix + 'populateApiDocumentation'); }
+		return oResult;
+	}, // function populateApiDocumentation
+
+	buildResourceDocumentation: function (oResolvedConfig, sEntryPoint, oOperationInfo) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oPlan = { 'bIsOk': true, 'sErrorMessage': '', 'aSchemas': [], 'oRequest': null, 'aResponses': [], 'aQueryParameters': [], 'aWarnings': [] };
+		if (!this.aRequiredRoles.some(sRole => gs.hasRole(sRole))) {
+			oPlan['bIsOk'] = false;
+			oPlan['sErrorMessage'] = 'Role ' + this.aRequiredRoles.join(' or ') + ' is required';
+			return oPlan;
+		} // if role missing
+		if (!this._gtObject.isObject(oResolvedConfig)) {
+			oPlan['bIsOk'] = false;
+			oPlan['sErrorMessage'] = 'Resolved configuration is not an object';
+			return oPlan;
+		} // if no config
+		if ((sEntryPoint != 'getData') && (sEntryPoint != 'setData')) {
+			oPlan['bIsOk'] = false;
+			oPlan['sErrorMessage'] = 'Entry point must be getData or setData, got: ' + String(sEntryPoint);
+			return oPlan;
+		} // if invalid entry point
+		var oInfo = (this._gtObject.isObject(oOperationInfo)) ? oOperationInfo : {};
+		var sResourceKey = this._sanitizeName(this._getValue('sResourceKey', this._getValue('sName', 'resource', oInfo), oInfo));
+		var sConfigName = String(this._getValue('sConfigName', '', oInfo));
+		var oOptions = this._getValue('oOptions', {}, oInfo);
+		var sSource = (sConfigName) ? ' from JSON Configuration ' + sConfigName : '';
+		if (sEntryPoint == 'getData') {
+			var sReadSchemaName = this.sSchemaPrefix + sResourceKey + '.read.response';
+			var oReadSchema = this._buildReadResponseSchema(oResolvedConfig, oOptions, oPlan);
+			oPlan['aSchemas'].push({ 'sName': sReadSchemaName, 'oSchema': oReadSchema, 'sDescription': 'Response of resource ' + sResourceKey + sSource });
+			oPlan['aQueryParameters'] = this._buildQueryParameters(oResolvedConfig, oOptions, oPlan);
+			oPlan['aResponses'].push({ 'iHttpStatus': 200, 'sSchemaName': sReadSchemaName, 'sDescription': this._buildReadSuccessDescription(oResolvedConfig) });
+		} else {
+			var sAction = String(this._getValue('sAction', '', oResolvedConfig));
+			var sRequestSchemaName = this.sSchemaPrefix + sResourceKey + '.' + this._sanitizeName(sAction || 'write') + '.request';
+			var sResponseSchemaName = this.sSchemaPrefix + sResourceKey + '.' + this._sanitizeName(sAction || 'write') + '.response';
+			oPlan['aSchemas'].push({ 'sName': sRequestSchemaName, 'oSchema': this._buildWriteRequestSchema(oResolvedConfig, oPlan), 'sDescription': 'Request body of resource ' + sResourceKey + sSource });
+			oPlan['aSchemas'].push({ 'sName': sResponseSchemaName, 'oSchema': this._buildWriteResponseSchema(oResolvedConfig), 'sDescription': 'Response of resource ' + sResourceKey + sSource });
+			oPlan['oRequest'] = { 'sSchemaName': sRequestSchemaName, 'sDescription': 'Request body for action ' + sAction + ' on ' + Object.keys(this._getValue('oTables', {}, oResolvedConfig)).join(', ') };
+			oPlan['aResponses'].push({ 'iHttpStatus': (sAction == 'insert') ? 201 : 200, 'sSchemaName': sResponseSchemaName, 'sDescription': 'Write result for action ' + sAction });
+		} // if read or write
+		oPlan['aSchemas'].push({ 'sName': this.sErrorSchemaName, 'oSchema': this._buildErrorSchema(), 'sDescription': 'Error body of GlobalToolsScriptedREST (sn_ws_err.ServiceError)', 'bShared': true });
+		this._buildErrorResponses(oResolvedConfig, sEntryPoint).forEach(function (oErrorResponse) {
+			oPlan['aResponses'].push(oErrorResponse);
+		}, this); // each error response
+		return oPlan;
+	}, // function buildResourceDocumentation
+
+	/***********************************************************************************************************
+	*	Orchestration
+	************************************************************************************************************/
+
+	_populate: function (sApiIdentifier, oOptions, oResult) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oValidOptions = this._validateOptions(oOptions, oResult);
+		if (!oResult['bIsOk']) {
+			return;
+		} // if invalid options
+		if (!this.aRequiredRoles.some(sRole => gs.hasRole(sRole))) {
+			oResult['bIsOk'] = false;
+			oResult['sErrorMessage'] = 'Role ' + this.aRequiredRoles.join(' or ') + ' is required';
+			return;
+		} // if role missing
+		var oApi = this._getApi(sApiIdentifier);
+		if (!oApi) {
+			oResult['bIsOk'] = false;
+			oResult['sErrorMessage'] = 'Unknown API: ' + String(sApiIdentifier);
+			return;
+		} // if unknown api
+		if (oApi['sScope'] != 'global') {
+			oResult['aWarnings'].push({ 'sTable': 'sys_ws_definition', 'sKey': oApi['sName'], 'sSysId': oApi['sSysId'], 'sReason': 'API is not in global scope; records are still written in global (unverified for scoped APIs, Q2)' });
+		} // if scoped api
+		var oScopeCheck = this._checkTargetScope();
+		if (!oScopeCheck['bIsOk']) {
+			if (oValidOptions['bDryRun']) {
+				oResult['aWarnings'].push({ 'sTable': 'sys_update_set', 'sKey': oScopeCheck['sUpdateSetName'], 'sSysId': oScopeCheck['sUpdateSetId'], 'sReason': oScopeCheck['sMessage'] });
+			} else {
+				oResult['bIsOk'] = false;
+				oResult['sErrorMessage'] = oScopeCheck['sMessage'];
+				return;
+			} // if dry run
+		} // if scope mismatch
+		var oApiPlan = this._planApi(oApi, oValidOptions, oResult);
+		if (!oResult['bIsOk']) {
+			return;
+		} // if planning failed
+		if (oApiPlan['aOperations'].length == 0) {
+			oResult['bIsOk'] = false;
+			oResult['sErrorMessage'] = 'API ' + oApi['sName'] + ' has no in-scope resource (GlobalToolsScriptedREST getData or setData with a JSON Configuration)';
+			return;
+		} // if nothing in scope
+		this._validatePlannedSchemas(oApi, oApiPlan, oResult);
+		if (!oResult['bIsOk']) {
+			return;
+		} // if invalid schema
+		var aActions = this._diffApiPlan(oApi, oApiPlan, oValidOptions, oResult);
+		if (oValidOptions['bDryRun']) {
+			this._reportActions(aActions, oResult);
+			return;
+		} // if dry run
+		this._executeActions(aActions, oResult);
+	}, // function _populate
+
+	_validateOptions: function (oOptions, oResult) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oValidOptions = JSON.parse(JSON.stringify(this.oOptionDefaults));
+		if ((oOptions === undefined) || (oOptions === null)) {
+			return oValidOptions;
+		} // if no options
+		if (!this._gtObject.isObject(oOptions)) {
+			oResult['bIsOk'] = false;
+			oResult['sErrorMessage'] = 'Invalid oOptions: expected an object';
+			return oValidOptions;
+		} // if not object
+		Object.keys(oOptions).some(function (sOption) {
+			if (!this.oOptionTypes.hasOwnProperty(sOption)) {
+				oResult['bIsOk'] = false;
+				oResult['sErrorMessage'] = 'Invalid option: ' + sOption;
+				return true;
+			} // if unknown option
+			var sExpectedType = this.oOptionTypes[sOption];
+			var sActualType = (Array.isArray(oOptions[sOption])) ? 'array' : typeof oOptions[sOption];
+			if (sActualType != sExpectedType) {
+				oResult['bIsOk'] = false;
+				oResult['sErrorMessage'] = 'Invalid option ' + sOption + ': expected ' + sExpectedType + ', got ' + sActualType;
+				return true;
+			} // if wrong type
+			oValidOptions[sOption] = oOptions[sOption];
+		}, this); // each option
+		if (!oResult['bIsOk']) {
+			return oValidOptions;
+		} // if invalid
+		if (oValidOptions['sRecordScope'] == 'api') {
+			oResult['bIsOk'] = false;
+			oResult['sErrorMessage'] = 'sRecordScope "api" is not supported in version 1 (open question Q2); nothing was written';
+		} else if (oValidOptions['sRecordScope'] != 'global') {
+			oResult['bIsOk'] = false;
+			oResult['sErrorMessage'] = 'Invalid option value sRecordScope: ' + oValidOptions['sRecordScope'] + ' (allowed: global, api)';
+		} // if record scope
+		return oValidOptions;
+	}, // function _validateOptions
+
+	_getApi: function (sApiIdentifier) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var sIdentifier = String(sApiIdentifier || '');
+		if ((!sIdentifier) || (sIdentifier.indexOf('^') != -1)) {
+			return null;
+		} // if empty or query metacharacter
+		var grDefinition = new GlideRecord('sys_ws_definition');
+		if (/^[0-9a-f]{32}$/.test(sIdentifier)) {
+			if (!grDefinition.get(sIdentifier)) {
+				return null;
+			} // if not found
+		} else if (sIdentifier.indexOf('/') != -1) {
+			var aIdentifierParts = sIdentifier.replace(/^\/?(api\/)?/, '').split('/');
+			grDefinition.addQuery('namespace', aIdentifierParts[0]);
+			grDefinition.addQuery('service_id', aIdentifierParts[1]);
+			grDefinition.setLimit(1);
+			grDefinition.query();
+			if (!grDefinition.next()) {
+				return null;
+			} // if not found
+		} else {
+			return null;
+		} // if sys_id or namespace/service_id
+		var sBaseUri = String(grDefinition.getValue('base_uri') || '');
+		return {
+			'sSysId': grDefinition.getUniqueValue(),
+			'sName': String(grDefinition.getValue('name')),
+			'sServiceId': String(grDefinition.getValue('service_id')),
+			'sNamespace': String(grDefinition.getValue('namespace')),
+			'sBaseUri': sBaseUri,
+			'sApiPath': sBaseUri.replace(/^\/api\//, ''),
+			'bIsVersioned': (String(grDefinition.getValue('is_versioned')) == '1'),
+			'sScope': String(grDefinition.getValue('sys_scope'))
+		}; // api info
+	}, // function _getApi
+
+	_checkTargetScope: function () {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oScopeCheck = { 'bIsOk': true, 'sMessage': '', 'sUpdateSetId': '', 'sUpdateSetName': '' };
+		var sCurrentApplicationId = String(gs.getCurrentApplicationId());
+		var _GlideUpdateSet = new GlideUpdateSet();
+		var sUpdateSetId = String(_GlideUpdateSet.get());
+		var grUpdateSet = new GlideRecord('sys_update_set');
+		var sUpdateSetScope = '';
+		if (grUpdateSet.get(sUpdateSetId)) {
+			sUpdateSetScope = String(grUpdateSet.getValue('application'));
+			oScopeCheck['sUpdateSetName'] = String(grUpdateSet.getValue('name'));
+		} // if update set
+		oScopeCheck['sUpdateSetId'] = sUpdateSetId;
+		if ((sCurrentApplicationId != 'global') || (sUpdateSetScope != 'global')) {
+			oScopeCheck['bIsOk'] = false;
+			oScopeCheck['sMessage'] = 'Target scope is global, but the current application is ' + sCurrentApplicationId + ' and the current update set (' + oScopeCheck['sUpdateSetName'] + ') belongs to ' + sUpdateSetScope + '; switch to global before writing';
+		} // if scope mismatch
+		return oScopeCheck;
+	}, // function _checkTargetScope
+
+	_planApi: function (oApi, oOptions, oResult) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oApiPlan = { 'aOperations': [], 'oSchemas': {}, 'aRequestSpecs': [], 'aResponseSpecs': [], 'oQueryParameters': {}, 'aParameterMaps': [], 'aResourceVersions': [] };
+		var oVersions = this._getVersions(oApi);
+		var aSelected = [];
+		var grOperation = new GlideRecord('sys_ws_operation');
+		grOperation.addQuery('web_service_definition', oApi['sSysId']);
+		grOperation.addQuery('active', true);
+		if (oOptions['aResourceIds'].length > 0) {
+			grOperation.addQuery('sys_id', 'IN', oOptions['aResourceIds'].join(','));
+		} // if resource filter
+		grOperation.orderBy('name');
+		grOperation.query();
+		while (grOperation.next()) {
+			var oOperationInfo = this._getOperationInfo(grOperation, oApi, oVersions, oOptions['sVersion']);
+			if (oOperationInfo['aVersions'].length == 0) {
+				oResult['aSkipped'].push({ 'sTable': 'sys_ws_operation', 'sKey': oOperationInfo['sName'], 'sSysId': oOperationInfo['sOperationId'], 'sReason': 'not part of the requested or an active API version' });
+				continue;
+			} // if no version
+			var oMapEntry = this._getValue(oOperationInfo['sOperationId'], '', oOptions['oResourceConfigMap']);
+			var oSelection = this._selectResource(String(grOperation.getValue('operation_script') || ''), oMapEntry, oOperationInfo['sHttpMethod']);
+			oSelection['aWarnings'].forEach(function (sWarning) {
+				oResult['aWarnings'].push({ 'sTable': 'sys_ws_operation', 'sKey': oOperationInfo['sName'], 'sSysId': oOperationInfo['sOperationId'], 'sReason': sWarning });
+			}, this); // each selection warning
+			if (!oSelection['bInScope']) {
+				oResult['aSkipped'].push({ 'sTable': 'sys_ws_operation', 'sKey': oOperationInfo['sName'], 'sSysId': oOperationInfo['sOperationId'], 'sReason': oSelection['sReason'] });
+				continue;
+			} // if not in scope
+			var oResolve = this._resolveConfig(oSelection['sConfig']);
+			if (!oResolve['oConfig']) {
+				oResult['aSkipped'].push({ 'sTable': 'sys_ws_operation', 'sKey': oOperationInfo['sName'], 'sSysId': oOperationInfo['sOperationId'], 'sReason': oResolve['sError'] });
+				oResult['aWarnings'].push({ 'sTable': 'sys_ws_operation', 'sKey': oOperationInfo['sName'], 'sSysId': oOperationInfo['sOperationId'], 'sReason': oResolve['sError'] });
+				continue;
+			} // if config not resolved
+			this._checkConsistency(oResolve['oConfig'], oSelection['sEntryPoint'], oOperationInfo['sHttpMethod']).forEach(function (sWarning) {
+				oResult['aWarnings'].push({ 'sTable': 'sys_ws_operation', 'sKey': oOperationInfo['sName'], 'sSysId': oOperationInfo['sOperationId'], 'sReason': sWarning });
+			}, this); // each consistency warning
+			oOperationInfo['sEntryPoint'] = oSelection['sEntryPoint'];
+			oOperationInfo['sConfigName'] = oSelection['sConfig'];
+			oOperationInfo['oConfig'] = oResolve['oConfig'];
+			oOperationInfo['oOptions'] = { 'bDocumentFieldFilters': oOptions['bDocumentFieldFilters'], 'bIncludeChoiceEnum': oOptions['bIncludeChoiceEnum'] };
+			aSelected.push(oOperationInfo);
+		} // while operation
+		this._assignResourceKeys(aSelected);
+		aSelected.some(function (oOperationInfo) {
+			var oResourcePlan = this.buildResourceDocumentation(oOperationInfo['oConfig'], oOperationInfo['sEntryPoint'], oOperationInfo);
+			if (!oResourcePlan['bIsOk']) {
+				oResult['bIsOk'] = false;
+				oResult['sErrorMessage'] = 'Resource ' + oOperationInfo['sName'] + ': ' + oResourcePlan['sErrorMessage'];
+				return true;
+			} // if build failed
+			oResourcePlan['aWarnings'].forEach(function (sWarning) {
+				oResult['aWarnings'].push({ 'sTable': 'sys_ws_operation', 'sKey': oOperationInfo['sName'], 'sSysId': oOperationInfo['sOperationId'], 'sReason': sWarning });
+			}, this); // each build warning
+			this._mergeResourcePlan(oApiPlan, oOperationInfo, oResourcePlan);
+		}, this); // each selected operation
+		this._finalizeQueryParameters(oApiPlan, oResult);
+		return oApiPlan;
+	}, // function _planApi
+
+	_getVersions: function (oApi) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oVersions = {};
+		var grVersion = new GlideRecord('sys_ws_version');
+		grVersion.addQuery('web_service_definition', oApi['sSysId']);
+		grVersion.query();
+		while (grVersion.next()) {
+			oVersions[grVersion.getUniqueValue()] = { 'sVersion': 'v' + String(grVersion.getValue('version')), 'bActive': (String(grVersion.getValue('active')) == '1') };
+		} // while version
+		return oVersions;
+	}, // function _getVersions
+
+	// The choice strings mirror what sn_ws.ServicesRetriever offers on the spec forms (verified in the phase 1 probe).
+	_getOperationInfo: function (grOperation, oApi, oVersions, sRequestedVersion) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var sOperationUri = String(grOperation.getValue('operation_uri') || '');
+		var sDefaultOperationUri = String(grOperation.getValue('default_operation_uri') || '');
+		var sVersionId = String(grOperation.getValue('web_service_version') || '');
+		var aVersions = [];
+		if ((!oApi['bIsVersioned']) || (!sVersionId) || (!oVersions.hasOwnProperty(sVersionId))) {
+			aVersions.push({ 'sVersion': 'latest', 'sApiResource': sOperationUri.replace(/^\/api/, '') });
+		} else {
+			if (oVersions[sVersionId]['bActive']) {
+				aVersions.push({ 'sVersion': oVersions[sVersionId]['sVersion'], 'sApiResource': sOperationUri.replace(/^\/api/, '') });
+			} // if active version
+			if (sDefaultOperationUri) {
+				aVersions.push({ 'sVersion': 'latest', 'sApiResource': sDefaultOperationUri.replace(/^\/api/, '') });
+			} // if default version alias
+		} // if versioned
+		if (sRequestedVersion) {
+			aVersions = aVersions.filter(function (oVersion) {
+				return (oVersion['sVersion'] == sRequestedVersion);
+			}); // only requested version
+		} // if version filter
+		return {
+			'sOperationId': grOperation.getUniqueValue(),
+			'sName': String(grOperation.getValue('name')),
+			'sHttpMethod': String(grOperation.getValue('http_method')).toUpperCase(),
+			'sRelativePath': String(grOperation.getValue('relative_path') || ''),
+			'aVersions': aVersions,
+			'sApiName': oApi['sName'],
+			'sApiPath': oApi['sApiPath']
+		}; // operation info
+	}, // function _getOperationInfo
+
+	_assignResourceKeys: function (aOperations) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oKeyCount = {};
+		aOperations.forEach(function (oOperationInfo) {
+			var sKey = this._sanitizeName(oOperationInfo['sName']);
+			oKeyCount[sKey] = (oKeyCount[sKey] || 0) + 1;
+		}, this); // count names
+		aOperations.forEach(function (oOperationInfo) {
+			var sKey = this._sanitizeName(oOperationInfo['sName']);
+			oOperationInfo['sResourceKey'] = (oKeyCount[sKey] > 1) ? sKey + '_' + oOperationInfo['sHttpMethod'].toLowerCase() + '_' + oOperationInfo['sOperationId'].substring(0, 6) : sKey;
+		}, this); // assign unique keys
+	}, // function _assignResourceKeys
+
+	_sanitizeName: function (sName) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var sSanitized = String(sName || '').replace(/[^A-Za-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '');
+		return (sSanitized) ? sSanitized : 'resource';
+	}, // function _sanitizeName
+
+	/***********************************************************************************************************
+	*	Resource selection and config linking (spec 4)
+	************************************************************************************************************/
+
+	_stripComments: function (sScript) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		return String(sScript).replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"\\])\/\/.*$/gm, '$1');
+	}, // function _stripComments
+
+	_selectResource: function (sScript, oMapEntry, sHttpMethod) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oSelection = { 'bInScope': false, 'sEntryPoint': '', 'sConfig': '', 'sReason': '', 'aWarnings': [] };
+		var sCode = this._stripComments(sScript);
+		var iGetDataCount = (sCode.match(/\.getData\s*\(/g) || []).length;
+		var iSetDataCount = (sCode.match(/\.setData\s*\(/g) || []).length;
+		if ((!/GlobalToolsScriptedREST/.test(sCode)) || ((iGetDataCount + iSetDataCount) == 0)) {
+			oSelection['sReason'] = 'does not call GlobalToolsScriptedREST.getData or setData';
+			return oSelection;
+		} // if not built on GlobalToolsScriptedREST
+		oSelection['sEntryPoint'] = (iGetDataCount > 0) ? 'getData' : 'setData';
+		if (oMapEntry) {
+			if ((iGetDataCount > 0) && (iSetDataCount > 0)) {
+				oSelection['sEntryPoint'] = (sHttpMethod == 'GET') ? 'getData' : 'setData';
+				oSelection['aWarnings'].push('calls both getData and setData; documented as ' + oSelection['sEntryPoint'] + ' because of oResourceConfigMap and the HTTP method');
+			} // if both entry points
+			oSelection['bInScope'] = true;
+			oSelection['sConfig'] = String(oMapEntry);
+			return oSelection;
+		} // if caller supplied config
+		if ((iGetDataCount > 0) && (iSetDataCount > 0)) {
+			oSelection['sReason'] = 'excluded: calls both getData and setData (no single request or response shape)';
+			return oSelection;
+		} // if both entry points
+		if ((iGetDataCount + iSetDataCount) > 1) {
+			oSelection['sReason'] = 'excluded: calls ' + oSelection['sEntryPoint'] + ' more than once (conditional call, no single shape)';
+			return oSelection;
+		} // if conditional calls
+		var aConfigNames = [];
+		var reConfigReference = /getCfg\s*\(\s*(['"])([^'"]+)\1\s*\)/g;
+		var aMatch = reConfigReference.exec(sCode);
+		while (aMatch) {
+			if (aConfigNames.indexOf(aMatch[2]) == -1) {
+				aConfigNames.push(aMatch[2]);
+			} // if new reference
+			aMatch = reConfigReference.exec(sCode);
+		} // while reference
+		if (aConfigNames.length > 1) {
+			oSelection['sReason'] = 'excluded: more than one JSON Configuration reference (' + aConfigNames.join(', ') + ')';
+			return oSelection;
+		} // if ambiguous
+		if (aConfigNames.length == 0) {
+			oSelection['sReason'] = (/getCfg\s*\(/.test(sCode)) ? 'config reference is not a string literal; pass it in oResourceConfigMap' : 'excluded: oConfig is built inline, not from a JSON Configuration';
+			return oSelection;
+		} // if no literal reference
+		if (this._isConfigMutated(sCode)) {
+			oSelection['sReason'] = 'excluded: the script changes the configuration after loading it';
+			return oSelection;
+		} // if config mutated
+		if (/\.getData\s*\((?:[^;()]|\([^;()]*\))*?,\s*true\s*(?:,(?:[^;()]|\([^;()]*\))*)?\)/.test(sCode)) {
+			oSelection['sReason'] = 'excluded: getData is called with bJSON = true, the result is post-processed';
+			return oSelection;
+		} // if json mode
+		oSelection['bInScope'] = true;
+		oSelection['sConfig'] = aConfigNames[0];
+		return oSelection;
+	}, // function _selectResource
+
+	_isConfigMutated: function (sCode) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if ((/\[\s*['"]oTables['"]\s*\][^;]*?[^=!<>]=(?!=)/.test(sCode)) || (/\.oTables\b[^;]*?[^=!<>]=(?!=)/.test(sCode))) {
+			return true;
+		} // if oTables written
+		var aVariables = [];
+		var reConfigVariable = /(\w+)\s*=\s*(?:new\s+(?:x_snc_json_cfg_mgr\.)?getCfg\s*\([^)]*\)|\w+)\s*\.\s*getConfig\s*\(\s*\)/g;
+		var aMatch = reConfigVariable.exec(sCode);
+		while (aMatch) {
+			aVariables.push(aMatch[1]);
+			aMatch = reConfigVariable.exec(sCode);
+		} // while config variable
+		return aVariables.some(function (sVariable) {
+			var reAssignment = new RegExp('\\b' + sVariable + '\\s*(?:\\[[^\\]]*\\]|\\.\\w+)+\\s*(?:[+\\-*/]?=(?!=))');
+			var reDelete = new RegExp('\\bdelete\\s+' + sVariable + '\\s*[\\[.]');
+			return ((reAssignment.test(sCode)) || (reDelete.test(sCode)));
+		}); // each config variable
+	}, // function _isConfigMutated
+
+	_resolveConfig: function (sConfig) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oResolve = { 'oConfig': null, 'sError': '' };
+		try {
+			var _getCfg = new x_snc_json_cfg_mgr.getCfg(String(sConfig));
+			var oConfig = _getCfg.getConfig();
+			if ((this._gtObject.isObject(oConfig)) && (Object.keys(oConfig).length > 0)) {
+				oResolve['oConfig'] = JSON.parse(JSON.stringify(oConfig));
+			} else {
+				oResolve['sError'] = 'JSON Configuration "' + sConfig + '" could not be resolved or evaluated to an empty object';
+			} // if resolved
+		} catch (oException) {
+			oResolve['sError'] = 'JSON Configuration "' + sConfig + '" could not be evaluated: ' + String(oException);
+		} // try resolve
+		return oResolve;
+	}, // function _resolveConfig
+
+	_checkConsistency: function (oConfig, sEntryPoint, sHttpMethod) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var aWarnings = [];
+		var sAction = String(this._getValue('sAction', '', oConfig));
+		var oPlausibleMethods = { 'read': ['GET'], 'insert': ['POST'], 'update': ['PUT', 'PATCH'], 'save': ['PUT', 'PATCH'], 'delete': ['DELETE'] };
+		if ((sEntryPoint == 'getData') && (sAction != 'read')) {
+			aWarnings.push('getData requires sAction read, the configuration has "' + sAction + '" (runtime answers 405_002)');
+		} else if ((sEntryPoint == 'setData') && (['insert', 'update', 'save', 'delete'].indexOf(sAction) == -1)) {
+			aWarnings.push('setData requires sAction insert, update, save or delete, the configuration has "' + sAction + '" (runtime answers 405_002)');
+		} // if action mismatch
+		if ((oPlausibleMethods.hasOwnProperty(sAction)) && (oPlausibleMethods[sAction].indexOf(sHttpMethod) == -1)) {
+			aWarnings.push('HTTP method ' + sHttpMethod + ' is unusual for sAction ' + sAction + ' (expected ' + oPlausibleMethods[sAction].join(' or ') + ')');
+		} // if method mismatch
+		if (Array.isArray(this._getValue('aMandatoryQueryParams', '', oConfig))) {
+			aWarnings.push('aMandatoryQueryParams is an array; GlobalToolsScriptedREST expects a comma-separated string at runtime');
+		} // if array instead of string
+		return aWarnings;
+	}, // function _checkConsistency
+
+	/***********************************************************************************************************
+	*	Builders: getData (spec 5.1, 5.2)
+	************************************************************************************************************/
+
+	_getReadFlags: function (oConfig, oTableConfig) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oFlags = {};
+		var oDefaults = { 'bUseFieldLabel': false, 'bUseFieldCamelCaseLabel': false, 'bUseFieldPascalCaseLabel': false, 'bUseTableLabel': false, 'bUseTableCamelCaseLabel': false, 'bUseTablePascalCaseLabel': false, 'bLegacyDisplayValue': false, 'sLegacyDisplayValuePostfix': '_dv', 'aDisplayValueTypes': [], 'sRefFieldConcatChar': '_', 'bNullifyEmptyValues': false };
+		Object.keys(oDefaults).forEach(function (sFlag) {
+			oFlags[sFlag] = this._getValue(sFlag, this._getValue(sFlag, oDefaults[sFlag], oConfig), oTableConfig);
+		}, this); // each engine flag (table value wins, as in GlobalToolsScriptedREST._applyReadLabelFlags)
+		oFlags['aDisplayValueTypes'] = (Array.isArray(oFlags['aDisplayValueTypes'])) ? oFlags['aDisplayValueTypes'] : [];
+		return oFlags;
+	}, // function _getReadFlags
+
+	_getRootTableLabel: function (sTableKey, oConfig) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var aTablePart = String(sTableKey).split('|');
+		var sTable = aTablePart[0];
+		var sIndexName = (aTablePart.length > 1) ? aTablePart[1] : '';
+		var sLabelOverride = this._getValue('oTables/' + sTableKey + '/sLabel', this._getValue('oTables/' + sTableKey + '/sTableName', '', oConfig), oConfig);
+		if (sLabelOverride) {
+			return sLabelOverride + sIndexName;
+		} // if override
+		if (this._getValue('bUseTableLabel', false, oConfig)) {
+			return this._gtTable.getTableLabel(sTable) + sIndexName;
+		} else if ((this._getValue('bUseTableCamelCaseLabel', false, oConfig)) && (sTable.indexOf('_') != -1)) {
+			return this._gt.convertUnderscoretoCamelCase(sTable) + sIndexName;
+		} else if ((this._getValue('bUseTablePascalCaseLabel', false, oConfig)) && (sTable.indexOf('_') != -1)) {
+			return this._gt.convertUnderscoretoPascalCase(sTable) + sIndexName;
+		} // if label style
+		return sTable + sIndexName;
+	}, // function _getRootTableLabel
+
+	_getEngineTableLabel: function (sTableKey, oFlags) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var aTablePart = String(sTableKey).split('|');
+		var sTable = aTablePart[0];
+		var sIndexName = (aTablePart.length > 1) ? aTablePart[1] : '';
+		if (oFlags['bUseTableLabel']) {
+			return this._gtTable.getTableLabel(sTable) + sIndexName;
+		} else if ((oFlags['bUseTableCamelCaseLabel']) && (sTable.indexOf('_') != -1)) {
+			return this._gt.convertUnderscoretoCamelCase(sTable) + sIndexName;
+		} else if ((oFlags['bUseTablePascalCaseLabel']) && (sTable.indexOf('_') != -1)) {
+			return this._gt.convertUnderscoretoPascalCase(sTable) + sIndexName;
+		} // if label style
+		return sTable + sIndexName;
+	}, // function _getEngineTableLabel
+
+	_buildReadResponseSchema: function (oConfig, oOptions, oPlan) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oRootProperties = {};
+		var oTables = this._getValue('oTables', {}, oConfig);
+		Object.keys(oTables).forEach(function (sTableKey) {
+			var sTable = String(sTableKey).split('|')[0];
+			var oTableConfig = (this._gtObject.isObject(oTables[sTableKey])) ? oTables[sTableKey] : {};
+			if (!this._gtTable.isValidTable(sTable)) {
+				oPlan['aWarnings'].push('table ' + sTable + ' does not exist; not documented');
+				return;
+			} // if invalid table
+			var oFlags = this._getReadFlags(oConfig, oTableConfig);
+			var oRecordSchema = this._buildRecordSchema(sTable, oTableConfig, oFlags, oOptions, oPlan, 0);
+			var sReturnType = this._getValue('sReturnType', 'array', oTableConfig);
+			var bSingleObject = ((sReturnType == 'first') || (sReturnType == 'object') || (sReturnType == 'reference'));
+			if ((bSingleObject) && (this._getValue('bMergeToParent', false, oTableConfig))) {
+				Object.keys(oRecordSchema['properties']).forEach(function (sProperty) {
+					oRootProperties[sProperty] = oRecordSchema['properties'][sProperty];
+				}); // each merged property
+			} else {
+				oRootProperties[this._getRootTableLabel(sTableKey, oConfig)] = (bSingleObject) ? oRecordSchema : { 'type': 'array', 'items': oRecordSchema };
+			} // if merged to root
+		}, this); // each table
+		if (this._getValue('bReturnNumberOfRecords', false, oConfig)) {
+			oRootProperties['iNumberOfRecordsReturned'] = { 'type': 'integer', 'description': 'Total number of matching records' };
+		} // if record count
+		var oBody = { 'type': 'object', 'properties': oRootProperties };
+		return (this._getValue('bBodyNoResult', false, oConfig)) ? oBody : { 'type': 'object', 'properties': { 'result': oBody } };
+	}, // function _buildReadResponseSchema
+
+	_buildRecordSchema: function (sTable, oTableConfig, oFlags, oOptions, oPlan, iDepth) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oProperties = {};
+		var oRecordSchema = { 'type': 'object', 'properties': oProperties };
+		if (iDepth > 10) {
+			oPlan['aWarnings'].push('related tables nested deeper than 10 levels are not documented');
+			return oRecordSchema;
+		} // if too deep
+		var grTable = new GlideRecord(sTable);
+		grTable.initialize();
+		var sReturnType = this._getValue('sReturnType', 'array', oTableConfig);
+		if (sReturnType != 'hidden') {
+			this._expandFields(sTable, this._getValue('aFields', [], oTableConfig)).forEach(function (oFieldDefinition) {
+				this._addFieldProperty(grTable, sTable, oProperties, oFieldDefinition, oFlags, false, oOptions, oPlan);
+			}, this); // each value field
+			this._expandFields(sTable, this._getValue('aDisplayFields', [], oTableConfig)).forEach(function (oFieldDefinition) {
+				this._addFieldProperty(grTable, sTable, oProperties, oFieldDefinition, oFlags, true, oOptions, oPlan);
+			}, this); // each display field
+			this._addJournalProperties(grTable, oProperties, this._getValue('oJournalFields', {}, oTableConfig));
+			this._addReferenceProperties(grTable, sTable, oProperties, this._getValue('oReferenceFields', {}, oTableConfig), oFlags, oPlan);
+			this._addAttributeProperties(sTable, oProperties, this._getValue('oAttributeTable', {}, oTableConfig));
+		} // if not hidden
+		if (this._getValue('bReturnAttachmentInfoObject', false, oTableConfig)) {
+			oProperties['attachments'] = { 'type': 'object', 'additionalProperties': { 'type': 'object' }, 'description': 'Attachment information keyed by file name' };
+		} else if (this._getValue('bReturnAttachmentInfoArray', false, oTableConfig)) {
+			oProperties['attachments'] = { 'type': 'array', 'items': { 'type': 'object' }, 'description': 'Attachment information' };
+		} // if attachment info
+		var oRelatedTables = this._getValue('oRelatedTables', {}, oTableConfig);
+		if (this._gtObject.isObject(oRelatedTables)) {
+			Object.keys(oRelatedTables).forEach(function (sRelatedTableKey) {
+				this._addRelatedTableProperties(oProperties, sRelatedTableKey, oRelatedTables[sRelatedTableKey], oFlags, oOptions, oPlan, iDepth);
+			}, this); // each related table
+		} // if related tables
+		return oRecordSchema;
+	}, // function _buildRecordSchema
+
+	_expandFields: function (sTable, aFields) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!Array.isArray(aFields)) || (aFields.length == 0)) {
+			return [];
+		} // if no fields
+		if (aFields[0] != 'allfields') {
+			return aFields;
+		} // if explicit list
+		var aExcludeFields = aFields.slice(1);
+		var aAllFields = this._gtTable.getFields(sTable);
+		aAllFields = (Array.isArray(aAllFields)) ? aAllFields : [];
+		return this._gtArray.unique(aAllFields.filter(function (sField) {
+			return (aExcludeFields.indexOf(sField) == -1);
+		})).sort(); // same expansion as GlobalToolsRecordReadComplex._getAllFields
+	}, // function _expandFields
+
+	_getFieldKey: function (grTable, sField, sLabelOverride, oFlags) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (sLabelOverride) {
+			return sLabelOverride;
+		} // if override
+		if (oFlags['bUseFieldCamelCaseLabel']) {
+			return this._gt.convertUnderscoretoCamelCase(sField);
+		} else if (oFlags['bUseFieldPascalCaseLabel']) {
+			return this._gt.convertUnderscoretoPascalCase(sField);
+		} else if (oFlags['bUseFieldLabel']) {
+			return (grTable.isValidField(sField)) ? String(grTable[sField].getLabel()) : sField;
+		} // if label style
+		return sField;
+	}, // function _getFieldKey
+
+	_getChoiceValues: function (sTable, sField) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var sChoice = String(this._gtTable.getDictOrOverrideValue(sTable, sField, 'choice') || '0');
+		if ((sChoice != '1') && (sChoice != '3')) {
+			return [];
+		} // if not a dropdown choice
+		var aChoices = this._gtTable.getFieldChoices(sTable, sField);
+		var aValues = ((Array.isArray(aChoices)) && (Array.isArray(aChoices[0]))) ? aChoices[0] : [];
+		return this._gtArray.unique([''].concat(aValues.map(function (sValue) { return String(sValue); })));
+	}, // function _getChoiceValues
+
+	_getValueSchema: function (sTable, sField, sDescription, oOptions) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oSchema = { 'type': 'string' };
+		if (sDescription) {
+			oSchema['description'] = sDescription;
+		} // if description
+		if (this._getValue('bIncludeChoiceEnum', true, oOptions) !== false) {
+			var aChoiceValues = this._getChoiceValues(sTable, sField);
+			if (aChoiceValues.length > 1) {
+				oSchema['enum'] = aChoiceValues;
+			} // if choices
+		} // if choice enum
+		return oSchema;
+	}, // function _getValueSchema
+
+	_getDisplayObjectSchema: function (oValueSchema) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		return { 'type': 'object', 'properties': { 'display_value': { 'type': 'string' }, 'value': oValueSchema } };
+	}, // function _getDisplayObjectSchema
+
+	_addFieldProperty: function (grTable, sTable, oProperties, oFieldDefinition, oFlags, bDisplay, oOptions, oPlan) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var bFieldObject = this._gtObject.isObject(oFieldDefinition);
+		var sField = String((bFieldObject) ? this._getValue('sField', '', oFieldDefinition) : oFieldDefinition);
+		var sLabelOverride = (bFieldObject) ? this._getValue('sLabel', '', oFieldDefinition) : '';
+		if ((!sField) || (!grTable.isValidField(sField))) {
+			oPlan['aWarnings'].push('field ' + sField + ' is not valid on table ' + sTable + '; the engine skips it, not documented');
+			return;
+		} // if invalid field
+		var sKey = this._getFieldKey(grTable, sField, sLabelOverride, oFlags);
+		var sLabel = String(grTable[sField].getLabel());
+		var sInternalType = String(this._gtTable.getInternalType(grTable, sField) || '');
+		var oValueSchema = this._getValueSchema(sTable, sField, '', oOptions);
+		var bAsDisplay = ((bDisplay) || ((sInternalType) && (oFlags['aDisplayValueTypes'].indexOf(sInternalType) != -1)));
+		if ((bAsDisplay) && (oFlags['bLegacyDisplayValue'])) {
+			oProperties[sKey + oFlags['sLegacyDisplayValuePostfix']] = { 'type': 'string', 'description': sLabel + ' (display value)' };
+		} else if (bAsDisplay) {
+			var oDisplaySchema = this._getDisplayObjectSchema(oValueSchema);
+			oDisplaySchema['description'] = sLabel;
+			oProperties[sKey] = oDisplaySchema;
+		} else {
+			oValueSchema['description'] = sLabel + ' (' + sInternalType + ')';
+			if ((oFlags['bNullifyEmptyValues']) || ((bFieldObject) && (this._getValue('bNullifyEmpty', false, oFieldDefinition) === true))) {
+				oValueSchema['nullable'] = true;
+			} // if nullable
+			oProperties[sKey] = oValueSchema;
+		} // if display or value
+	}, // function _addFieldProperty
+
+	_addJournalProperties: function (grTable, oProperties, oJournalFields) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._gtObject.isObject(oJournalFields)) {
+			return;
+		} // if no journal fields
+		Object.keys(oJournalFields).forEach(function (sField) {
+			if (!grTable.isValidField(sField)) {
+				return;
+			} // if invalid
+			var iNumber = Number(this._getValue('iNumber', 1, oJournalFields[sField]));
+			var sReturnType = this._getValue('sReturnType', 'string', oJournalFields[sField]);
+			if ((iNumber != 1) && (sReturnType == 'array')) {
+				oProperties[sField] = { 'type': 'array', 'items': { 'type': 'string' }, 'description': 'Journal entries' };
+			} else {
+				oProperties[sField] = { 'type': 'string', 'description': 'Journal entries' };
+			} // if array
+		}, this); // each journal field
+	}, // function _addJournalProperties
+
+	_addReferenceProperties: function (grTable, sTable, oProperties, oReferenceFields, oFlags, oPlan) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (!this._gtObject.isObject(oReferenceFields)) {
+			return;
+		} // if no reference fields
+		Object.keys(oReferenceFields).forEach(function (sReferenceField) {
+			var aFields = this._getValue('aFields', [], oReferenceFields[sReferenceField]);
+			var aDisplayFields = this._getValue('aDisplayFields', [], oReferenceFields[sReferenceField]);
+			aFields = (Array.isArray(aFields)) ? aFields : [];
+			aDisplayFields = (Array.isArray(aDisplayFields)) ? aDisplayFields : [];
+			if ((sReferenceField != 'variables') && (!grTable.isValidField(sReferenceField))) {
+				oPlan['aWarnings'].push('reference field ' + sReferenceField + ' is not valid on table ' + sTable + '; not documented');
+				return;
+			} // if invalid reference
+			if ((aFields[0] == 'allfields') || (aDisplayFields[0] == 'allfields')) {
+				oPlan['aWarnings'].push('oReferenceFields/' + sReferenceField + ' uses allfields; those keys are not enumerated');
+			} // if all fields
+			var sReferenceLabel = sReferenceField;
+			if (oFlags['bUseFieldCamelCaseLabel']) {
+				sReferenceLabel = this._gt.convertUnderscoretoCamelCase(sReferenceField);
+			} else if (oFlags['bUseFieldPascalCaseLabel']) {
+				sReferenceLabel = this._gt.convertUnderscoretoPascalCase(sReferenceField);
+			} else if ((sReferenceField == 'variables') && (oFlags['bUseFieldLabel'])) {
+				sReferenceLabel = String(gs.getMessage('Variables'));
+			} else if ((oFlags['bUseFieldLabel']) && (sReferenceField != 'variables')) {
+				sReferenceLabel = String(grTable[sReferenceField].getLabel());
+			} // if label style
+			var sReferenceTable = (sReferenceField != 'variables') ? String(this._gtTable.getRefTable(sTable, sReferenceField) || '') : '';
+			var grReference = ((sReferenceTable) && (this._gtTable.isValidTable(sReferenceTable))) ? new GlideRecord(sReferenceTable) : null;
+			var fnAddReference = function (oFieldDefinition, bDisplay) {
+				var bFieldObject = this._gtObject.isObject(oFieldDefinition);
+				var sField = String((bFieldObject) ? this._getValue('sField', '', oFieldDefinition) : oFieldDefinition);
+				var sLabelOverride = (bFieldObject) ? this._getValue('sLabel', '', oFieldDefinition) : '';
+				if ((!sField) || (sField == 'allfields')) {
+					return;
+				} // if nothing to add
+				var sKey = (sLabelOverride) ? sLabelOverride : sReferenceLabel + oFlags['sRefFieldConcatChar'] + this._getFieldKey(grTable, sField, '', oFlags);
+				var sInternalType = ((grReference) && (grReference.isValidField(sField))) ? String(this._gtTable.getInternalType(grReference, sField) || '') : '';
+				var bAsDisplay = ((bDisplay) || ((sInternalType) && (oFlags['aDisplayValueTypes'].indexOf(sInternalType) != -1)));
+				if ((bAsDisplay) && (oFlags['bLegacyDisplayValue'])) {
+					oProperties[sKey] = { 'type': 'string', 'description': sReferenceField + '.' + sField + ' (value when equal to the display value)' };
+					oProperties[sKey + oFlags['sLegacyDisplayValuePostfix']] = { 'type': 'string', 'description': sReferenceField + '.' + sField + ' (display value)' };
+				} else if (bAsDisplay) {
+					oProperties[sKey] = { 'oneOf': [{ 'type': 'string' }, this._getDisplayObjectSchema({ 'type': 'string' })], 'description': sReferenceField + '.' + sField + ' (string when value equals display value)' };
+				} else {
+					oProperties[sKey] = { 'type': 'string', 'description': sReferenceField + '.' + sField };
+				} // if display
+			}; // function fnAddReference
+			aFields.forEach(function (oFieldDefinition) { fnAddReference.call(this, oFieldDefinition, false); }, this); // each value reference field
+			aDisplayFields.forEach(function (oFieldDefinition) { fnAddReference.call(this, oFieldDefinition, true); }, this); // each display reference field
+		}, this); // each reference field
+	}, // function _addReferenceProperties
+
+	_addAttributeProperties: function (sTable, oProperties, oAttributeTable) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if ((!this._gtObject.isObject(oAttributeTable)) || (!this._getValue('sAttributeTableName', '', oAttributeTable))) {
+			return;
+		} // if no attribute table
+		if (this._getValue('sBaseTableName', '', oAttributeTable) != this._gtTable.getAbsoluteBase(sTable)) {
+			return;
+		} // if base table mismatch
+		var sFieldPrefix = this._getValue('sFieldPrefix', '', oAttributeTable);
+		var aAttributeNames = this._getValue('aCIAttributeNames', [], oAttributeTable);
+		aAttributeNames = (Array.isArray(aAttributeNames)) ? aAttributeNames : [];
+		aAttributeNames.forEach(function (sAttributeName) {
+			oProperties[sFieldPrefix + sAttributeName] = { 'type': 'string', 'description': 'Attribute ' + sAttributeName };
+		}); // each attribute
+	}, // function _addAttributeProperties
+
+	_allowEmptyString: function (oSchema) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (oSchema['type'] == 'string') {
+			return oSchema;
+		} // if already string
+		return { 'oneOf': [oSchema, { 'type': 'string' }] };
+	}, // function _allowEmptyString
+
+	_getMergeFieldLabels: function (oRelatedTable, oFlags) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var aLabels = [];
+		var aFields = this._getValue('aFields', [], oRelatedTable);
+		((Array.isArray(aFields)) ? aFields : []).forEach(function (oFieldDefinition) {
+			var bFieldObject = this._gtObject.isObject(oFieldDefinition);
+			var sField = (bFieldObject) ? this._getValue('sField', '', oFieldDefinition) : oFieldDefinition;
+			var sLabelOverride = (bFieldObject) ? this._getValue('sLabel', '', oFieldDefinition) : '';
+			aLabels.push(String(sLabelOverride || sField));
+		}, this); // each direct field
+		var oReferenceFields = this._getValue('oReferenceFields', {}, oRelatedTable);
+		Object.keys((this._gtObject.isObject(oReferenceFields)) ? oReferenceFields : {}).forEach(function (sReferenceField) {
+			var aReferenceFields = this._getValue('aFields', [], oReferenceFields[sReferenceField]);
+			((Array.isArray(aReferenceFields)) ? aReferenceFields : []).forEach(function (oFieldDefinition) {
+				var bFieldObject = this._gtObject.isObject(oFieldDefinition);
+				var sField = (bFieldObject) ? this._getValue('sField', '', oFieldDefinition) : oFieldDefinition;
+				var sLabelOverride = (bFieldObject) ? this._getValue('sLabel', '', oFieldDefinition) : '';
+				aLabels.push(String(sLabelOverride || (sReferenceField + oFlags['sRefFieldConcatChar'] + sField)));
+			}, this); // each reference field entry
+		}, this); // each reference field
+		var oNestedRelatedTables = this._getValue('oRelatedTables', {}, oRelatedTable);
+		Object.keys((this._gtObject.isObject(oNestedRelatedTables)) ? oNestedRelatedTables : {}).forEach(function (sNestedKey) {
+			if (this._getValue('bMergeToParent', false, oNestedRelatedTables[sNestedKey])) {
+				aLabels = aLabels.concat(this._getMergeFieldLabels(oNestedRelatedTables[sNestedKey], oFlags));
+			} // if nested merge
+		}, this); // each nested related table
+		return aLabels;
+	}, // function _getMergeFieldLabels
+
+	_mergeProperties: function (oProperties, oSourceProperties, oRelatedTable, oFlags) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		Object.keys(oSourceProperties).forEach(function (sProperty) {
+			oProperties[sProperty] = this._allowEmptyString(oSourceProperties[sProperty]);
+		}, this); // each merged property (an empty merge writes '' into every declared label)
+		this._getMergeFieldLabels(oRelatedTable, oFlags).forEach(function (sLabel) {
+			if (!oProperties.hasOwnProperty(sLabel)) {
+				oProperties[sLabel] = { 'type': 'string' };
+			} // if label not yet documented
+		}, this); // each merge label
+	}, // function _mergeProperties
+
+	_getHiddenItemSchema: function (oChildSchema) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oItemProperties = {};
+		Object.keys(oChildSchema['properties']).forEach(function (sChildKey) {
+			var oChildProperty = oChildSchema['properties'][sChildKey];
+			var oGrandchild = (oChildProperty['type'] == 'array') ? oChildProperty['items'] : oChildProperty;
+			if ((oGrandchild) && (oGrandchild['type'] == 'object') && (oGrandchild['properties'])) {
+				Object.keys(oGrandchild['properties']).forEach(function (sProperty) {
+					oItemProperties[sProperty] = oGrandchild['properties'][sProperty];
+				}); // each grandchild property
+			} // if object child
+		}); // each child key
+		return { 'type': 'object', 'properties': oItemProperties };
+	}, // function _getHiddenItemSchema
+
+	_addRelatedTableProperties: function (oProperties, sRelatedTableKey, oRelatedTable, oFlags, oOptions, oPlan, iDepth) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oRelatedConfig = (this._gtObject.isObject(oRelatedTable)) ? oRelatedTable : {};
+		var sRelatedTable = String(sRelatedTableKey).split('|')[0];
+		if (!this._gtTable.isValidTable(sRelatedTable)) {
+			oPlan['aWarnings'].push('related table ' + sRelatedTable + ' does not exist; not documented');
+			return;
+		} // if invalid table
+		var sTableLabel = this._getValue('sLabel', this._getValue('sTableName', '', oRelatedConfig), oRelatedConfig);
+		sTableLabel = (sTableLabel) ? sTableLabel : this._getEngineTableLabel(sRelatedTableKey, oFlags);
+		var sReturnType = this._getValue('sReturnType', '', oRelatedConfig);
+		var bMergeToParent = this._getValue('bMergeToParent', false, oRelatedConfig);
+		var oChildSchema = this._buildRecordSchema(sRelatedTable, oRelatedConfig, oFlags, oOptions, oPlan, iDepth + 1);
+		if (sReturnType == 'first') {
+			Object.keys(oChildSchema['properties']).forEach(function (sProperty) {
+				oProperties[sTableLabel + oFlags['sRefFieldConcatChar'] + sProperty] = oChildSchema['properties'][sProperty];
+			}); // each prefixed property
+		} else if (sReturnType == 'object') {
+			oProperties[sTableLabel] = oChildSchema;
+		} else if (sReturnType == 'reference') {
+			oProperties[this._getValue('sKeySourceField', sTableLabel, oRelatedConfig)] = oChildSchema;
+		} else if (sReturnType == 'hidden') {
+			var oItemSchema = this._getHiddenItemSchema(oChildSchema);
+			if ((bMergeToParent) && (!this._getValue('bMergeArray', false, oRelatedConfig))) {
+				this._mergeProperties(oProperties, oItemSchema['properties'], oRelatedConfig, oFlags);
+			} else {
+				oProperties[sTableLabel] = { 'type': 'array', 'items': oItemSchema };
+			} // if merge
+		} else if (bMergeToParent) {
+			if (this._getValue('bMergeArray', false, oRelatedConfig)) {
+				oProperties[sTableLabel] = { 'type': 'array', 'items': oChildSchema };
+			} else {
+				this._mergeProperties(oProperties, oChildSchema['properties'], oRelatedConfig, oFlags);
+			} // if merge array
+		} else {
+			oProperties[sTableLabel] = { 'type': 'array', 'items': oChildSchema };
+		} // if return type
+	}, // function _addRelatedTableProperties
+
+	_buildReadSuccessDescription: function (oConfig) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oTables = this._getValue('oTables', {}, oConfig);
+		var aTableKeys = Object.keys(oTables);
+		var sDescription = 'Records of ' + aTableKeys.join(', ') + '. Returns 204 without content when no record matches.';
+		var bAllPrevent = ((aTableKeys.length > 0) && (aTableKeys.every(function (sTableKey) {
+			return (this._getValue('bPreventQueryParams', false, oTables[sTableKey]) === true);
+		}, this)));
+		if (!bAllPrevent) {
+			sDescription += ' Any other query parameter is applied as a <field>=<value> filter (values containing ^ are ignored).';
+		} // if field filters accepted
+		return sDescription;
+	}, // function _buildReadSuccessDescription
+
+	_buildQueryParameters: function (oConfig, oOptions, oPlan) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oParameters = {};
+		var aOrder = [];
+		var aExclude = this._toList(this._getValue('aExcludeQueryParams', '', oConfig));
+		var aMandatory = this._toList(this._getValue('aMandatoryQueryParams', '', oConfig));
+		var oTables = this._getValue('oTables', {}, oConfig);
+		var aTableKeys = Object.keys(oTables);
+		var sFirstTable = (aTableKeys.length > 0) ? String(aTableKeys[0]).split('|')[0] : '';
+		var fnAdd = function (sName, sShortDescription, sExampleValue) {
+			if ((!sName) || (aExclude.indexOf(sName) != -1) || (oParameters.hasOwnProperty(sName))) {
+				return;
+			} // if excluded or known
+			oParameters[sName] = { 'sName': sName, 'sShortDescription': sShortDescription, 'sExampleValue': sExampleValue || '', 'bRequired': (aMandatory.indexOf(sName) != -1) };
+			aOrder.push(sName);
+		}; // function fnAdd
+		var oReserved = {
+			'encoded_query': ['Encoded query added to the record filter (string)', 'active=true'],
+			'history_walk': ['Return records as of this date-time (yyyy-MM-dd HH:mm:ss)', ''],
+			'max_return_items': ['Maximum number of records to return (integer)', '10'],
+			'return_offset': ['Page index; window starts at offset x max_return_items (integer)', '0'],
+			'requested_fields': ['Comma-separated list of fields to return', ''],
+			'orderby_fields': ['Comma-separated list of fields to sort ascending', ''],
+			'orderbydesc_fields': ['Comma-separated list of fields to sort descending', '']
+		}; // reserved parameters
+		this.aReservedQueryParameters.forEach(function (sName) {
+			fnAdd(sName, oReserved[sName][0], oReserved[sName][1]);
+		}, this); // each reserved parameter
+		aMandatory.forEach(function (sName) {
+			fnAdd(sName, 'Mandatory filter ' + sName + '=<value>', '');
+		}, this); // each mandatory parameter
+		var sCheckParameter = String(this._getValue('sCheckEncodedQueryParam', '', oConfig));
+		if (sCheckParameter) {
+			fnAdd(sCheckParameter, 'Encoded query validated against table ' + sFirstTable, '');
+		} // if checked encoded query
+		aTableKeys.forEach(function (sTableKey) {
+			var sParameterQuery = String(this._getValue('sParameterQuery', '', oTables[sTableKey]));
+			var aPlaceholders = sParameterQuery.match(/\[([^\]]+)\]/g) || [];
+			aPlaceholders.forEach(function (sPlaceholder) {
+				var sName = sPlaceholder.replace(/[\[\]]/g, '');
+				fnAdd(sName, 'Value for [' + sName + '] in the query of ' + String(sTableKey).split('|')[0], '');
+			}, this); // each placeholder
+		}, this); // each table
+		var bAllPrevent = ((aTableKeys.length > 0) && (aTableKeys.every(function (sTableKey) {
+			return (this._getValue('bPreventQueryParams', false, oTables[sTableKey]) === true);
+		}, this)));
+		if ((oOptions['bDocumentFieldFilters'] === true) && (!bAllPrevent) && (sFirstTable) && (this._gtTable.isValidTable(sFirstTable))) {
+			this._expandFields(sFirstTable, this._getValue('aFields', [], oTables[aTableKeys[0]])).forEach(function (oFieldDefinition) {
+				var sField = String((this._gtObject.isObject(oFieldDefinition)) ? this._getValue('sField', '', oFieldDefinition) : oFieldDefinition);
+				if (this.aReservedQueryParameters.indexOf(sField) == -1) {
+					fnAdd(sField, 'Filter ' + sField + '=<value> on ' + sFirstTable, '');
+				} // if not reserved
+			}, this); // each field filter
+		} // if field filters documented
+		return aOrder.map(function (sName) {
+			return oParameters[sName];
+		}).filter(function (oParameter) {
+			if (oParameter['sName'].length > this.iQueryParameterNameMaxLength) {
+				oPlan['aWarnings'].push('query parameter ' + oParameter['sName'] + ' is longer than ' + this.iQueryParameterNameMaxLength + ' characters and cannot be stored; not documented');
+				return false;
+			} // if too long
+			return true;
+		}, this); // each parameter
+	}, // function _buildQueryParameters
+
+	_toList: function (oValue) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		if (Array.isArray(oValue)) {
+			return oValue.map(function (sItem) { return String(sItem).trim(); }).filter(function (sItem) { return (sItem !== ''); });
+		} // if array
+		return String(oValue || '').replace(/[\n\s]+/g, '').split(',').filter(function (sItem) { return (sItem !== ''); });
+	}, // function _toList
+
+	/***********************************************************************************************************
+	*	Builders: setData (spec 5.3)
+	************************************************************************************************************/
+
+	_buildWriteRequestSchema: function (oConfig, oPlan) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oProperties = {};
+		var aRequired = [];
+		var oTables = this._getValue('oTables', {}, oConfig);
+		var sAction = String(this._getValue('sAction', '', oConfig));
+		Object.keys(oTables).forEach(function (sTableKey) {
+			aRequired.push(sTableKey);
+			var oRecordConfig = {};
+			this._gtObject.deepMerge(oRecordConfig, (this._gtObject.isObject(oTables[sTableKey])) ? oTables[sTableKey] : {});
+			['bCheckDictionaryMandatory', 'bErrorOnAddlFieldsInValues', 'bErrorOnAddlFieldsInBody'].forEach(function (sFlag) {
+				if ((this._gtObject.hasValue(sFlag, oConfig)) && (!this._gtObject.hasValue(sFlag, oRecordConfig))) {
+					oRecordConfig[sFlag] = oConfig[sFlag];
+				} // if global flag applies
+			}, this); // each global write flag (as in GlobalToolsScriptedREST._applyGlobalFlags)
+			oProperties[sTableKey] = this._buildWriteTableSchema(sTableKey, oRecordConfig, sAction, this._getValue('bImpersonatePerRecord', false, oConfig), oPlan);
+		}, this); // each table
+		oProperties['action'] = { 'type': 'string', 'description': 'Default state flow action for tables that do not send their own' };
+		oProperties['user'] = { 'type': 'string', 'description': 'Impersonate this user (user_name, sys_id or email) for the request' };
+		return { 'type': 'object', 'required': aRequired, 'properties': oProperties };
+	}, // function _buildWriteRequestSchema
+
+	_buildWriteTableSchema: function (sTable, oRecordConfig, sAction, bImpersonatePerRecord, oPlan) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oProperties = {};
+		var aRequired = [];
+		var oTableSchema = { 'type': 'object', 'properties': oProperties };
+		if (!this._gtTable.isValidTable(sTable)) {
+			oPlan['aWarnings'].push('write table ' + sTable + ' does not exist (a |index suffix is not supported by setData); fields not documented');
+			return oTableSchema;
+		} // if invalid table
+		var grTable = new GlideRecord(sTable);
+		grTable.initialize();
+		var fnAddField = function (sField, sDescription) {
+			if ((!sField) || (oProperties.hasOwnProperty(sField))) {
+				return;
+			} // if empty or known
+			var sLabel = (grTable.isValidField(sField)) ? String(grTable[sField].getLabel()) : '';
+			oProperties[sField] = { 'type': 'string', 'description': sDescription || sLabel };
+		}; // function fnAddField
+		var aFields = this._getValue('aFields', [], oRecordConfig);
+		((Array.isArray(aFields)) ? aFields : []).forEach(function (oField) {
+			if (typeof oField == 'string') {
+				fnAddField(oField);
+			} else if ((this._gtObject.isObject(oField)) && (oField['sField']) && (oField['sFieldAction'] != 'ignore')) {
+				fnAddField(oField['sField']);
+				this._getKeyInputFields(this._getValue('aKeys', [], oField)).forEach(function (sInputField) {
+					fnAddField(sInputField, 'Lookup value for reference field ' + oField['sField']);
+				}, this); // each reference key input
+				if (oField['sSourceField']) {
+					fnAddField(oField['sSourceField'], 'Source value for field ' + oField['sField']);
+				} // if source field
+			} // if field definition
+		}, this); // each configured field
+		var aDynamicFieldConfig = this._getValue('aDynamicFieldConfig', this._getValue('aFieldCfgCondition', [], oRecordConfig), oRecordConfig);
+		((Array.isArray(aDynamicFieldConfig)) ? aDynamicFieldConfig : []).forEach(function (oDynamicFieldConfig) {
+			var aDynamicFields = this._getValue('aFields', [], oDynamicFieldConfig);
+			((Array.isArray(aDynamicFields)) ? aDynamicFields : []).forEach(function (sField) {
+				fnAddField(String(sField), 'Accepted when the dynamic field condition matches');
+			}, this); // each dynamic field
+		}, this); // each dynamic field config
+		var aRecordKeys = this._getValue('aKeys', [], oRecordConfig);
+		var bDefaultKeys = ((!Array.isArray(aRecordKeys)) || (aRecordKeys.length == 0));
+		var aKeyFields = (bDefaultKeys) ? ['sys_id'] : this._getKeyInputFields(aRecordKeys);
+		if ((sAction != 'insert') || (!bDefaultKeys)) {
+			aKeyFields.forEach(function (sKeyField) {
+				fnAddField(sKeyField, 'Key to locate the target record (' + ((bDefaultKeys) ? 'default aKeys' : 'aKeys') + ')');
+			}, this); // each key field
+			if ((bDefaultKeys) && ((sAction == 'update') || (sAction == 'delete'))) {
+				aRequired.push('sys_id');
+			} // if sys_id is the only way to find the record
+		} // if record lookup
+		var aMandatoryFields = this._getValue('aMandatoryFields', [], oRecordConfig);
+		aMandatoryFields = (Array.isArray(aMandatoryFields)) ? aMandatoryFields : [];
+		if (aMandatoryFields[0] == 'allfields') {
+			aMandatoryFields = Object.keys(oProperties);
+		} // if all fields mandatory
+		if (this._getValue('bCheckDictionaryMandatory', true, oRecordConfig) !== false) {
+			aMandatoryFields = aMandatoryFields.concat(this._gtTable.getMandatoryFields(sTable) || []);
+		} // if dictionary mandatory (GlobalToolsRecordWriteValidate applies it on every action)
+		aMandatoryFields.forEach(function (sField) {
+			if (!grTable.isValidField(sField)) {
+				oPlan['aWarnings'].push('mandatory field ' + sField + ' is not valid on table ' + sTable + ' (runtime answers 400_012)');
+				return;
+			} // if invalid mandatory field
+			fnAddField(sField);
+			if (aRequired.indexOf(sField) == -1) {
+				aRequired.push(sField);
+			} // if not yet required
+		}, this); // each mandatory field
+		var oStateFlowActionConfig = this._getValue('oStateFlowActionConfig', '', oRecordConfig);
+		if (this._gtObject.isObject(oStateFlowActionConfig)) {
+			var sActionField = String(this._getValue('sStateFlowActionValueField', 'action', oRecordConfig));
+			if (sActionField) {
+				oProperties[sActionField] = { 'type': 'string', 'enum': Object.keys(oStateFlowActionConfig), 'description': 'State flow action' };
+				if ((this._getValue('bStateFlowActionIsMandatory', false, oRecordConfig)) && (aRequired.indexOf(sActionField) == -1)) {
+					aRequired.push(sActionField);
+				} // if action mandatory
+			} // if action field
+		} // if state flow
+		var sTemplateField = String(this._getValue('sTemplateValueField', '', oRecordConfig));
+		if (sTemplateField) {
+			fnAddField(sTemplateField, 'Name of the template to apply');
+		} // if template field
+		if (bImpersonatePerRecord) {
+			fnAddField(String(this._getValue('sImpersonateValueField', 'user', oRecordConfig)), 'Impersonate this user for the record');
+		} // if per record impersonation
+		if (aRequired.length > 0) {
+			oTableSchema['required'] = aRequired;
+		} // if required fields
+		if ((this._getValue('bErrorOnAddlFieldsInValues', this._getValue('bErrorOnAddlFieldsInBody', false, oRecordConfig), oRecordConfig)) === true) {
+			oTableSchema['additionalProperties'] = false;
+		} // if additional fields rejected
+		return oTableSchema;
+	}, // function _buildWriteTableSchema
+
+	_getKeyInputFields: function (aKeys) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var aInputFields = [];
+		((Array.isArray(aKeys)) ? aKeys : []).forEach(function (oKey) {
+			((Array.isArray(oKey)) ? oKey : [oKey]).forEach(function (oKeyPart) {
+				var sField = (this._gtObject.isObject(oKeyPart)) ? this._getValue('sInputField', '', oKeyPart) : oKeyPart;
+				if ((typeof sField == 'string') && (sField) && (aInputFields.indexOf(sField) == -1)) {
+					aInputFields.push(sField);
+				} // if new field
+			}, this); // each key part
+		}, this); // each key
+		return aInputFields;
+	}, // function _getKeyInputFields
+
+	_buildWriteResponseSchema: function (oConfig) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oItemProperties = { 'sys_id': { 'type': 'string' }, 'tablename': { 'type': 'string' }, 'action': { 'type': 'string' }, 'messages': { 'type': 'string' } };
+		if (this._getValue('bReturnDisplayName', true, oConfig) !== false) {
+			oItemProperties['displayname'] = { 'type': 'string' };
+		} // if display name
+		var oItem = { 'type': 'object', 'properties': oItemProperties };
+		var oBody = (Object.keys(this._getValue('oTables', {}, oConfig)).length > 1) ? { 'type': 'array', 'items': oItem } : oItem;
+		return (this._getValue('bBodyNoResult', false, oConfig)) ? oBody : { 'type': 'object', 'properties': { 'result': oBody } };
+	}, // function _buildWriteResponseSchema
+
+	/***********************************************************************************************************
+	*	Builders: status codes and shared error schema (spec 5.4)
+	************************************************************************************************************/
+
+	_buildErrorSchema: function () {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		return { 'type': 'object', 'properties': { 'error': { 'type': 'object', 'properties': { 'message': { 'type': 'string' }, 'detail': { 'type': 'string' } } }, 'status': { 'type': 'string' } } };
+	}, // function _buildErrorSchema
+
+	_getErrorText: function (sPrefix, sCode, sFallback) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var sKey = sPrefix + '_' + sCode + '_ErrorMessage';
+		var sMessage = String(gs.getMessage(sKey));
+		return sCode + ' ' + (((sMessage) && (sMessage != sKey)) ? sMessage : sFallback);
+	}, // function _getErrorText
+
+	_buildErrorResponses: function (oConfig, sEntryPoint) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oCodes = {};
+		var fnAdd = function (iStatus, sText) {
+			oCodes[iStatus] = (oCodes[iStatus] || []).concat([sText]);
+		}; // function fnAdd
+		var oTables = this._getValue('oTables', {}, oConfig);
+		var aTableKeys = Object.keys(oTables);
+		var fnAnyTable = function (sFlag) {
+			return aTableKeys.some(function (sTableKey) {
+				return (this._getValue(sFlag, false, oTables[sTableKey]) === true);
+			}, this);
+		}; // function fnAnyTable
+		if (sEntryPoint == 'getData') {
+			if (this._toList(this._getValue('aMandatoryQueryParams', '', oConfig)).length > 0) {
+				fnAdd(400, this._getErrorText('GlobalToolsScriptedREST', '400_001', 'mandatory query parameter missing'));
+			} // if mandatory params
+			if (this._getValue('sCheckEncodedQueryParam', '', oConfig)) {
+				fnAdd(400, this._getErrorText('GlobalToolsScriptedREST', '400_007', 'invalid encoded query'));
+			} // if checked query
+			if (this._getValue('sImpersonateUser', '', oConfig)) {
+				fnAdd(403, this._getErrorText('GlobalToolsScriptedREST', '403_001', 'impersonation failed'));
+			} // if impersonation
+			fnAdd(405, this._getErrorText('GlobalToolsScriptedREST', '405_003', 'invalid history_walk'));
+			if (fnAnyTable.call(this, 'bErrorMaxReturnCount')) {
+				fnAdd(413, this._getErrorText('GlobalToolsRecordReadComplex', '413_001', 'more records than the maximum return count'));
+			} // if max count error
+			if (fnAnyTable.call(this, 'bOnlyReturnOneRecord')) {
+				fnAdd(417, this._getErrorText('GlobalToolsRecordReadComplex', '417_001', 'more than one record'));
+			} // if only one record
+			fnAdd(500, this._getErrorText('GlobalToolsScriptedREST', '500_002', 'unexpected error'));
+		} else {
+			var sAction = String(this._getValue('sAction', '', oConfig));
+			fnAdd(400, this._getErrorText('GlobalToolsScriptedREST', '400_002', 'empty body'));
+			fnAdd(400, this._getErrorText('GlobalToolsScriptedREST', '400_005', 'body misses a table'));
+			fnAdd(400, this._getErrorText('GlobalToolsScriptedREST', '400_008', 'record validation failed (engine codes such as 400_010, 400_013)'));
+			fnAdd(403, this._getErrorText('GlobalToolsScriptedREST', '403_001', 'impersonation of the body user failed'));
+			if ((sAction == 'update') || (sAction == 'delete')) {
+				fnAdd(404, '400_008 record to ' + sAction + ' not found (engine 404_00x)');
+			} else if ((sAction == 'insert') && (aTableKeys.some(function (sTableKey) { return Array.isArray(this._getValue('aKeys', '', oTables[sTableKey])); }, this))) {
+				fnAdd(404, '400_008 record already exists (engine 404_002)');
+			} // if record lookup
+			fnAdd(500, this._getErrorText('GlobalToolsScriptedREST', '500_002', 'unexpected error'));
+			fnAdd(500, this._getErrorText('GlobalToolsScriptedREST', '500_005', 'record write failed'));
+		} // if read or write
+		return Object.keys(oCodes).map(function (sStatus) {
+			return { 'iHttpStatus': Number(sStatus), 'sSchemaName': this.sErrorSchemaName, 'sDescription': oCodes[sStatus].join('; ') };
+		}, this); // each status
+	}, // function _buildErrorResponses
+
+	/***********************************************************************************************************
+	*	API plan aggregation
+	************************************************************************************************************/
+
+	_mergeResourcePlan: function (oApiPlan, oOperationInfo, oResourcePlan) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		oApiPlan['aOperations'].push(oOperationInfo);
+		oResourcePlan['aSchemas'].forEach(function (oSchema) {
+			oApiPlan['oSchemas'][oSchema['sName']] = { 'sName': oSchema['sName'], 'sSchema': JSON.stringify(oSchema['oSchema'], null, 2), 'sDescription': oSchema['sDescription'], 'bShared': (oSchema['bShared'] === true) };
+		}, this); // each schema
+		oOperationInfo['aVersions'].forEach(function (oVersion) {
+			oApiPlan['aResourceVersions'].push({ 'sApiResource': oVersion['sApiResource'], 'sVersion': oVersion['sVersion'], 'sHttpMethod': oOperationInfo['sHttpMethod'] });
+			if (oResourcePlan['oRequest']) {
+				oApiPlan['aRequestSpecs'].push({ 'sApiResource': oVersion['sApiResource'], 'sVersion': oVersion['sVersion'], 'sHttpMethod': oOperationInfo['sHttpMethod'], 'sSchemaName': oResourcePlan['oRequest']['sSchemaName'], 'sDescription': oResourcePlan['oRequest']['sDescription'] });
+			} // if request body
+			oResourcePlan['aResponses'].forEach(function (oResponse) {
+				oApiPlan['aResponseSpecs'].push({ 'sApiResource': oVersion['sApiResource'], 'sVersion': oVersion['sVersion'], 'sHttpMethod': oOperationInfo['sHttpMethod'], 'iHttpStatus': oResponse['iHttpStatus'], 'sSchemaName': oResponse['sSchemaName'], 'sDescription': oResponse['sDescription'] });
+			}, this); // each response
+		}, this); // each version
+		oResourcePlan['aQueryParameters'].forEach(function (oParameter) {
+			if (!oApiPlan['oQueryParameters'].hasOwnProperty(oParameter['sName'])) {
+				oApiPlan['oQueryParameters'][oParameter['sName']] = { 'sName': oParameter['sName'], 'sShortDescription': oParameter['sShortDescription'], 'sExampleValue': oParameter['sExampleValue'], 'aRequiredBy': [], 'aOptionalFor': [] };
+			} // if new parameter
+			oApiPlan['oQueryParameters'][oParameter['sName']][(oParameter['bRequired']) ? 'aRequiredBy' : 'aOptionalFor'].push(oOperationInfo['sName']);
+			oApiPlan['aParameterMaps'].push({ 'sOperationId': oOperationInfo['sOperationId'], 'sOperationName': oOperationInfo['sName'], 'sParameterName': oParameter['sName'] });
+		}, this); // each query parameter
+	}, // function _mergeResourcePlan
+
+	_finalizeQueryParameters: function (oApiPlan, oResult) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		Object.keys(oApiPlan['oQueryParameters']).forEach(function (sName) {
+			var oParameter = oApiPlan['oQueryParameters'][sName];
+			var bConflict = ((oParameter['aRequiredBy'].length > 0) && (oParameter['aOptionalFor'].length > 0));
+			oParameter['bRequired'] = ((oParameter['aRequiredBy'].length > 0) && (!bConflict));
+			var sText = oParameter['sShortDescription'];
+			if (bConflict) {
+				sText = 'Required for ' + oParameter['aRequiredBy'].join(', ') + '. ' + sText;
+				oResult['aWarnings'].push({ 'sTable': 'sys_ws_query_parameter', 'sKey': sName, 'sReason': 'required by ' + oParameter['aRequiredBy'].join(', ') + ' but optional for ' + oParameter['aOptionalFor'].join(', ') + '; written as not required (API-wide flag, least restrictive wins)' });
+			} // if requirement conflict
+			oParameter['sShortDescription'] = this._withMarker(sText, this.iQueryParameterDescriptionMaxLength);
+		}, this); // each parameter
+	}, // function _finalizeQueryParameters
+
+	_withMarker: function (sText, iMaxLength) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var sSuffix = ' ' + this.sMarker;
+		var sBody = String(sText || '');
+		if ((iMaxLength) && ((sBody.length + sSuffix.length) > iMaxLength)) {
+			sBody = sBody.substring(0, iMaxLength - sSuffix.length - 3) + '...';
+		} // if too long (the marker must survive the column length)
+		return sBody + sSuffix;
+	}, // function _withMarker
+
+	_isGenerated: function (sText) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		return (String(sText || '').indexOf(this.sMarker) != -1);
+	}, // function _isGenerated
+
+	_validatePlannedSchemas: function (oApi, oApiPlan, oResult) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var _OpenAPISchemaValidator = new sn_ws.OpenAPISchemaValidator(this.sOpenApiVersion);
+		Object.keys(oApiPlan['oSchemas']).some(function (sName) {
+			var oValidation = _OpenAPISchemaValidator.validateSchema(oApiPlan['oSchemas'][sName]['sSchema'], oApi['sName'], oApi['sApiPath']);
+			if ((!oValidation.isValid) || (oValidation.errors.length > 0)) {
+				oResult['bIsOk'] = false;
+				oResult['sErrorMessage'] = 'Generated schema ' + sName + ' is not valid OpenAPI ' + this.sOpenApiVersion + ': ' + String(oValidation.errors) + '; nothing was written';
+				return true;
+			} // if invalid
+		}, this); // each schema
+	}, // function _validatePlannedSchemas
+
+	/***********************************************************************************************************
+	*	Diff against existing records (spec 6)
+	************************************************************************************************************/
+
+	_canonicalJson: function (sJson) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		try {
+			return JSON.stringify(JSON.parse(String(sJson)));
+		} catch (oException) {
+			return String(sJson);
+		} // try parse
+	}, // function _canonicalJson
+
+	_readRecords: function (sTable, sQuery, aFields) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var aRecords = [];
+		var grRecord = new GlideRecord(sTable);
+		grRecord.addEncodedQuery(sQuery);
+		grRecord.query();
+		while (grRecord.next()) {
+			var oRecord = { 'sys_id': grRecord.getUniqueValue(), 'sys_scope': String(grRecord.getValue('sys_scope')) };
+			aFields.forEach(function (sField) {
+				var sValue = grRecord.getValue(sField);
+				oRecord[sField] = ((sValue === null) || (sValue === undefined)) ? '' : String(sValue);
+			}); // each field
+			aRecords.push(oRecord);
+		} // while record
+		return aRecords;
+	}, // function _readRecords
+
+	_compareValues: function (oExisting, oValues, aJsonFields, aBooleanFields) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		return Object.keys(oValues).filter(function (sField) {
+			if ((aJsonFields) && (aJsonFields.indexOf(sField) != -1)) {
+				return (this._canonicalJson(oExisting[sField]) != this._canonicalJson(oValues[sField]));
+			} // if json field
+			if ((aBooleanFields) && (aBooleanFields.indexOf(sField) != -1)) {
+				return (this._normalizeBoolean(oExisting[sField]) != this._normalizeBoolean(oValues[sField]));
+			} // if boolean field
+			return (String(oExisting[sField]) != String(oValues[sField]));
+		}, this); // each differing field
+	}, // function _compareValues
+
+	_planRecord: function (aActions, oSpecification) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oExisting = oSpecification['oExisting'];
+		var oAction = { 'sTable': oSpecification['sTable'], 'sKey': oSpecification['sKey'], 'iOrder': oSpecification['iOrder'], 'oValues': oSpecification['oValues'], 'oReferences': oSpecification['oReferences'] || {}, 'sReferenceName': oSpecification['sReferenceName'] || '' };
+		if (!oExisting) {
+			oAction['sAction'] = 'create';
+		} else {
+			oAction['sSysId'] = oExisting['sys_id'];
+			var bGenerated = oSpecification['bGenerated'];
+			if ((!bGenerated) && (!oSpecification['bOverwriteManual'])) {
+				oAction['sAction'] = 'conflict';
+				oAction['sReason'] = 'record with the same key exists without the generator marker; use bOverwriteManual to replace it';
+			} else if ((bGenerated) && (oExisting['sys_scope'] != 'global')) {
+				oAction['sAction'] = 'warning';
+				oAction['sReason'] = 'generated record exists in scope ' + oExisting['sys_scope'] + ', target is global; left alone';
+			} else {
+				var aChanged = this._compareValues(oExisting, this._resolvedForCompare(oSpecification), oSpecification['aJsonFields'], oSpecification['aBooleanFields']);
+				oAction['sAction'] = (aChanged.length > 0) ? 'update' : 'unchanged';
+				oAction['aChangedFields'] = aChanged;
+				oAction['oPrevious'] = oExisting;
+			} // if conflict, foreign scope or ours
+		} // if exists
+		aActions.push(oAction);
+		return oAction;
+	}, // function _planRecord
+
+	_normalizeBoolean: function (oValue) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		return (['1', 'true'].indexOf(String(oValue)) != -1) ? 'true' : 'false';
+	}, // function _normalizeBoolean
+
+	_resolvedForCompare: function (oSpecification) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oValues = JSON.parse(JSON.stringify(oSpecification['oValues']));
+		var oReferences = oSpecification['oReferences'] || {};
+		Object.keys(oReferences).forEach(function (sField) {
+			oValues[sField] = oReferences[sField]['sKnownSysId'] || ('pending:' + oReferences[sField]['sName']);
+		}); // each reference resolved to a known sys_id
+		return oValues;
+	}, // function _resolvedForCompare
+
+	_diffApiPlan: function (oApi, oApiPlan, oOptions, oResult) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var aActions = [];
+		var bFiltered = ((oOptions['aResourceIds'].length > 0) || (oOptions['sVersion'] !== ''));
+		var oProcessedKeys = {};
+		oApiPlan['aOperations'].forEach(function (oOperationInfo) {
+			oProcessedKeys[oOperationInfo['sResourceKey']] = true;
+		}); // each processed resource key
+		var aExistingSchemas = this._readRecords('sys_ws_schema', 'api=' + oApi['sName'], ['name', 'api', 'api_path', 'schema', 'openapi_version', 'description']);
+		var oExistingSchemas = {};
+		aExistingSchemas.forEach(function (oSchema) {
+			oExistingSchemas[oSchema['name']] = oSchema;
+		}); // index schemas by name
+		var oSchemaActions = {};
+		Object.keys(oApiPlan['oSchemas']).forEach(function (sName) {
+			var oPlanned = oApiPlan['oSchemas'][sName];
+			var oExisting = oExistingSchemas[sName];
+			oSchemaActions[sName] = this._planRecord(aActions, {
+				'sTable': 'sys_ws_schema', 'sKey': oApi['sName'] + '|' + sName, 'iOrder': 10, 'oExisting': oExisting,
+				'bGenerated': ((oExisting) && (sName.indexOf(this.sSchemaPrefix) == 0) && (this._isGenerated(oExisting['description']))),
+				'bOverwriteManual': oOptions['bOverwriteManual'], 'aJsonFields': ['schema'],
+				'oValues': { 'api': oApi['sName'], 'api_path': oApi['sApiPath'], 'name': sName, 'schema': oPlanned['sSchema'], 'openapi_version': this.sOpenApiVersion, 'description': this._withMarker(oPlanned['sDescription']) },
+				'sReferenceName': sName
+			}); // planned schema
+		}, this); // each planned schema
+		var oSchemaIds = {};
+		aExistingSchemas.forEach(function (oSchema) {
+			oSchemaIds[oSchema['sys_id']] = oSchema['name'];
+		}); // index schema names by sys_id
+		var fnSchemaReference = function (sSchemaName) {
+			var oExisting = oExistingSchemas[sSchemaName];
+			return { 'sName': sSchemaName, 'sKnownSysId': (oExisting) ? oExisting['sys_id'] : '' };
+		}; // function fnSchemaReference
+		var aResources = this._gtArray.unique(oApiPlan['aResourceVersions'].map(function (oResourceVersion) { return oResourceVersion['sApiResource']; }));
+		var sResourceQuery = 'api_resourceIN' + aResources.join(',');
+		var aSpecTables = [{ 'sTable': 'sys_ws_request_spec', 'aPlanned': oApiPlan['aRequestSpecs'], 'iOrder': 30 }, { 'sTable': 'sys_ws_response_spec', 'aPlanned': oApiPlan['aResponseSpecs'], 'iOrder': 40 }];
+		var aRemainingSpecSchemaIds = [];
+		aSpecTables.forEach(function (oSpecTable) {
+			var bResponse = (oSpecTable['sTable'] == 'sys_ws_response_spec');
+			var aFields = ['api', 'api_path', 'api_resource', 'version', 'http_method', 'schema', 'description'].concat((bResponse) ? ['http_status'] : []);
+			var fnKey = function (oRecord) {
+				return [oRecord['api_resource'], oRecord['version'], String(oRecord['http_method']).toUpperCase()].concat((bResponse) ? [String(oRecord['http_status'])] : []).join('|');
+			}; // function fnKey
+			var oExistingSpecs = {};
+			var aExistingSpecs = (aResources.length > 0) ? this._readRecords(oSpecTable['sTable'], sResourceQuery, aFields) : [];
+			aExistingSpecs.forEach(function (oSpec) {
+				oExistingSpecs[fnKey(oSpec)] = oSpec;
+			}); // index specs by key
+			var oPlannedKeys = {};
+			oSpecTable['aPlanned'].forEach(function (oPlanned) {
+				var oValues = { 'api': oApi['sName'], 'api_path': oApi['sApiPath'], 'api_resource': oPlanned['sApiResource'], 'version': oPlanned['sVersion'], 'http_method': oPlanned['sHttpMethod'], 'description': this._withMarker(oPlanned['sDescription']) };
+				if (bResponse) {
+					oValues['http_status'] = String(oPlanned['iHttpStatus']);
+				} // if response
+				var sKey = fnKey(oValues);
+				oPlannedKeys[sKey] = true;
+				var oSchemaAction = oSchemaActions[oPlanned['sSchemaName']];
+				if ((oSchemaAction) && ((oSchemaAction['sAction'] == 'conflict') || (oSchemaAction['sAction'] == 'warning'))) {
+					aActions.push({ 'sTable': oSpecTable['sTable'], 'sKey': sKey, 'sAction': 'conflict', 'sReason': 'depends on schema ' + oPlanned['sSchemaName'] + ', which is not owned by the generator' });
+					return;
+				} // if schema not ours
+				var oExisting = oExistingSpecs[sKey];
+				this._planRecord(aActions, {
+					'sTable': oSpecTable['sTable'], 'sKey': sKey, 'iOrder': oSpecTable['iOrder'], 'oExisting': oExisting,
+					'bGenerated': ((oExisting) && (this._isGenerated(oExisting['description']))), 'bOverwriteManual': oOptions['bOverwriteManual'],
+					'oValues': oValues, 'oReferences': { 'schema': fnSchemaReference(oPlanned['sSchemaName']) }
+				}); // planned spec
+			}, this); // each planned spec
+			aExistingSpecs.forEach(function (oSpec) {
+				var sKey = fnKey(oSpec);
+				var bProcessed = oApiPlan['aResourceVersions'].some(function (oResourceVersion) {
+					return ((oResourceVersion['sApiResource'] == oSpec['api_resource']) && (oResourceVersion['sVersion'] == oSpec['version']) && (oResourceVersion['sHttpMethod'] == String(oSpec['http_method']).toUpperCase()));
+				}); // spec belongs to a processed resource version
+				if ((oPlannedKeys[sKey]) || (!bProcessed) || (!this._isGenerated(oSpec['description']))) {
+					if ((!oPlannedKeys[sKey]) && (oSpec['schema'])) {
+						aRemainingSpecSchemaIds.push(oSpec['schema']);
+					} // if spec stays and references a schema
+					return;
+				} // if planned, foreign or manual
+				this._planStale(aActions, oSpecTable['sTable'], sKey, oSpec, oOptions, oSpecTable['iOrder']);
+				if (oSpec['sys_scope'] != 'global') {
+					aRemainingSpecSchemaIds.push(oSpec['schema']);
+				} // if stale spec cannot be removed
+			}, this); // each existing spec
+		}, this); // each spec table
+		this._countSchemaUsageOutsidePlan(oApi, aResources, aRemainingSpecSchemaIds);
+		aExistingSchemas.forEach(function (oSchema) {
+			if ((oApiPlan['oSchemas'].hasOwnProperty(oSchema['name'])) || (oSchema['name'].indexOf(this.sSchemaPrefix) != 0) || (!this._isGenerated(oSchema['description']))) {
+				return;
+			} // if planned or manual
+			var bShared = (oSchema['name'] == this.sErrorSchemaName);
+			var sResourceKey = oSchema['name'].substring(this.sSchemaPrefix.length).split('.')[0];
+			if ((!bShared) && (!oProcessedKeys[sResourceKey])) {
+				return;
+			} // if schema of a resource not processed in this run
+			if ((bShared) && ((bFiltered) || (aRemainingSpecSchemaIds.indexOf(oSchema['sys_id']) != -1))) {
+				return;
+			} // if shared schema may still be used
+			if (aRemainingSpecSchemaIds.indexOf(oSchema['sys_id']) != -1) {
+				oResult['aWarnings'].push({ 'sTable': 'sys_ws_schema', 'sKey': oApi['sName'] + '|' + oSchema['name'], 'sSysId': oSchema['sys_id'], 'sReason': 'stale schema is still referenced by a spec that is not generated; left alone' });
+				return;
+			} // if referenced elsewhere
+			this._planStale(aActions, 'sys_ws_schema', oApi['sName'] + '|' + oSchema['name'], oSchema, oOptions, 10);
+		}, this); // each existing schema
+		this._diffQueryParameters(oApi, oApiPlan, oOptions, bFiltered, aActions);
+		return aActions;
+	}, // function _diffApiPlan
+
+	// Specs of other resources may reference a generated schema; those references keep the schema alive.
+	_countSchemaUsageOutsidePlan: function (oApi, aResources, aRemainingSpecSchemaIds) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		['sys_ws_request_spec', 'sys_ws_response_spec'].forEach(function (sTable) {
+			var sQuery = 'api=' + oApi['sName'] + ((aResources.length > 0) ? '^api_resourceNOT IN' + aResources.join(',') : '') + '^schemaISNOTEMPTY';
+			this._readRecords(sTable, sQuery, ['schema']).forEach(function (oSpec) {
+				aRemainingSpecSchemaIds.push(oSpec['schema']);
+			}); // each spec outside the plan
+		}, this); // each spec table
+	}, // function _countSchemaUsageOutsidePlan
+
+	_planStale: function (aActions, sTable, sKey, oExisting, oOptions, iOrder) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oAction = { 'sTable': sTable, 'sKey': sKey, 'sSysId': oExisting['sys_id'], 'iOrder': iOrder };
+		if (oExisting['sys_scope'] != 'global') {
+			oAction['sAction'] = 'warning';
+			oAction['sReason'] = 'stale generated record in scope ' + oExisting['sys_scope'] + '; left alone';
+		} else if (oOptions['bRemoveStale']) {
+			oAction['sAction'] = 'delete';
+			oAction['sReason'] = 'no longer produced by the configuration';
+		} else {
+			oAction['sAction'] = 'warning';
+			oAction['sReason'] = 'stale: no longer produced by the configuration (bRemoveStale is false)';
+		} // if removable
+		aActions.push(oAction);
+	}, // function _planStale
+
+	_diffQueryParameters: function (oApi, oApiPlan, oOptions, bFiltered, aActions) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var aExistingParameters = this._readRecords('sys_ws_query_parameter', 'web_service_definition=' + oApi['sSysId'], ['web_service_definition', 'name', 'short_description', 'example_value', 'required']);
+		var oExistingParameters = {};
+		var oParameterNamesById = {};
+		aExistingParameters.forEach(function (oParameter) {
+			oExistingParameters[oParameter['name']] = oParameter;
+			oParameterNamesById[oParameter['sys_id']] = oParameter;
+		}); // index parameters
+		var oParameterActions = {};
+		Object.keys(oApiPlan['oQueryParameters']).forEach(function (sName) {
+			var oPlanned = oApiPlan['oQueryParameters'][sName];
+			var oExisting = oExistingParameters[sName];
+			oParameterActions[sName] = this._planRecord(aActions, {
+				'sTable': 'sys_ws_query_parameter', 'sKey': oApi['sName'] + '|' + sName, 'iOrder': 20, 'oExisting': oExisting,
+				'bGenerated': ((oExisting) && (this._isGenerated(oExisting['short_description']))), 'bOverwriteManual': oOptions['bOverwriteManual'], 'aBooleanFields': ['required'],
+				'oValues': { 'web_service_definition': oApi['sSysId'], 'name': sName, 'short_description': oPlanned['sShortDescription'], 'example_value': oPlanned['sExampleValue'], 'required': (oPlanned['bRequired']) ? 'true' : 'false' },
+				'sReferenceName': sName
+			}); // planned parameter
+		}, this); // each planned parameter
+		var aOperationIds = oApiPlan['aOperations'].map(function (oOperationInfo) { return oOperationInfo['sOperationId']; });
+		var aExistingMaps = this._readRecords('sys_ws_query_parameter_map', 'web_service_operationIN' + aOperationIds.join(','), ['web_service_operation', 'web_service_query_parameter']);
+		var oExistingMaps = {};
+		aExistingMaps.forEach(function (oMap) {
+			var oParameter = oParameterNamesById[oMap['web_service_query_parameter']];
+			oExistingMaps[oMap['web_service_operation'] + '|' + ((oParameter) ? oParameter['name'] : oMap['web_service_query_parameter'])] = oMap;
+		}); // index maps by operation and parameter name
+		var oPlannedMaps = {};
+		oApiPlan['aParameterMaps'].forEach(function (oPlannedMap) {
+			var sKey = oPlannedMap['sOperationId'] + '|' + oPlannedMap['sParameterName'];
+			oPlannedMaps[sKey] = true;
+			var oParameterAction = oParameterActions[oPlannedMap['sParameterName']];
+			if ((oParameterAction) && ((oParameterAction['sAction'] == 'conflict') || (oParameterAction['sAction'] == 'warning'))) {
+				aActions.push({ 'sTable': 'sys_ws_query_parameter_map', 'sKey': oPlannedMap['sOperationName'] + '|' + oPlannedMap['sParameterName'], 'sAction': 'conflict', 'sReason': 'depends on query parameter ' + oPlannedMap['sParameterName'] + ', which is not owned by the generator' });
+				return;
+			} // if parameter not ours
+			var oExisting = oExistingMaps[sKey];
+			var oExistingParameter = oExistingParameters[oPlannedMap['sParameterName']];
+			aActions.push({
+				'sTable': 'sys_ws_query_parameter_map', 'sKey': oPlannedMap['sOperationName'] + '|' + oPlannedMap['sParameterName'], 'iOrder': 50,
+				'sAction': (oExisting) ? 'unchanged' : 'create', 'sSysId': (oExisting) ? oExisting['sys_id'] : '',
+				'oValues': { 'web_service_operation': oPlannedMap['sOperationId'] },
+				'oReferences': { 'web_service_query_parameter': { 'sName': oPlannedMap['sParameterName'], 'sKnownSysId': (oExistingParameter) ? oExistingParameter['sys_id'] : '' } }
+			}); // planned map (ownership derives from the parameter, the table has no description)
+		}, this); // each planned map
+		var oParametersInUse = {};
+		aExistingMaps.forEach(function (oMap) {
+			var oParameter = oParameterNamesById[oMap['web_service_query_parameter']];
+			var sKey = oMap['web_service_operation'] + '|' + ((oParameter) ? oParameter['name'] : '');
+			if ((oPlannedMaps[sKey]) || (!oParameter) || (!this._isGenerated(oParameter['short_description']))) {
+				return;
+			} // if planned or manual
+			this._planStale(aActions, 'sys_ws_query_parameter_map', sKey, oMap, oOptions, 50);
+		}, this); // each existing map of a processed resource
+		this._readRecords('sys_ws_query_parameter_map', 'web_service_query_parameter.web_service_definition=' + oApi['sSysId'] + '^web_service_operationNOT IN' + aOperationIds.join(','), ['web_service_query_parameter']).forEach(function (oMap) {
+			oParametersInUse[oMap['web_service_query_parameter']] = true;
+		}); // parameters still mapped to resources outside this run
+		aExistingParameters.forEach(function (oParameter) {
+			if ((oApiPlan['oQueryParameters'].hasOwnProperty(oParameter['name'])) || (!this._isGenerated(oParameter['short_description']))) {
+				return;
+			} // if planned or manual
+			if ((bFiltered) || (oParametersInUse[oParameter['sys_id']])) {
+				return;
+			} // if another resource may still use it
+			this._planStale(aActions, 'sys_ws_query_parameter', oApi['sName'] + '|' + oParameter['name'], oParameter, oOptions, 20);
+		}, this); // each existing parameter
+	}, // function _diffQueryParameters
+
+	/***********************************************************************************************************
+	*	Reporting and writing
+	************************************************************************************************************/
+
+	_reportActions: function (aActions, oResult) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oTargets = { 'create': 'aCreated', 'update': 'aUpdated', 'delete': 'aDeleted', 'unchanged': 'aUnchanged', 'conflict': 'aConflicts', 'warning': 'aWarnings' };
+		aActions.forEach(function (oAction) {
+			var sReason = oAction['sReason'] || '';
+			if ((oAction['sAction'] == 'update') && (oAction['aChangedFields'])) {
+				sReason = 'changed: ' + oAction['aChangedFields'].join(', ');
+			} // if update
+			var oEntry = { 'sTable': oAction['sTable'], 'sKey': oAction['sKey'] };
+			if (oAction['sSysId']) {
+				oEntry['sSysId'] = oAction['sSysId'];
+			} // if sys id
+			if (sReason) {
+				oEntry['sReason'] = sReason;
+			} // if reason
+			oResult[oTargets[oAction['sAction']]].push(oEntry);
+		}, this); // each action
+	}, // function _reportActions
+
+	_executeActions: function (aActions, oResult) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		var oCreatedIds = { 'sys_ws_schema': {}, 'sys_ws_query_parameter': {} };
+		var aUndo = [];
+		var aWrites = aActions.filter(function (oAction) {
+			return ((oAction['sAction'] == 'create') || (oAction['sAction'] == 'update'));
+		}).sort(function (oFirst, oSecond) {
+			return oFirst['iOrder'] - oSecond['iOrder'];
+		}); // creates and updates, referenced tables first
+		var aDeletes = aActions.filter(function (oAction) {
+			return (oAction['sAction'] == 'delete');
+		}).sort(function (oFirst, oSecond) {
+			return oSecond['iOrder'] - oFirst['iOrder'];
+		}); // deletes, referencing tables first
+		var bFailed = aWrites.some(function (oAction) {
+			var oValues = JSON.parse(JSON.stringify(oAction['oValues']));
+			var bResolved = Object.keys(oAction['oReferences'] || {}).every(function (sField) {
+				var oReference = oAction['oReferences'][sField];
+				var sTargetTable = (sField == 'schema') ? 'sys_ws_schema' : 'sys_ws_query_parameter';
+				oValues[sField] = oReference['sKnownSysId'] || oCreatedIds[sTargetTable][oReference['sName']] || '';
+				return (oValues[sField] !== '');
+			}); // each reference
+			if (!bResolved) {
+				oResult['bIsOk'] = false;
+				oResult['sErrorMessage'] = 'Write failed for ' + oAction['sTable'] + ' ' + oAction['sKey'] + ': referenced record was not written';
+				return true;
+			} // if reference missing
+			var grRecord = new GlideRecord(oAction['sTable']);
+			var sSysId = '';
+			if (oAction['sAction'] == 'create') {
+				grRecord.initialize();
+				Object.keys(oValues).forEach(function (sField) { grRecord.setValue(sField, oValues[sField]); });
+				sSysId = String(grRecord.insert() || '');
+				if (sSysId) {
+					aUndo.push({ 'sAction': 'delete', 'sTable': oAction['sTable'], 'sSysId': sSysId });
+				} // if inserted
+			} else if (grRecord.get(oAction['sSysId'])) {
+				var oPrevious = {};
+				Object.keys(oValues).forEach(function (sField) {
+					oPrevious[sField] = grRecord.getValue(sField);
+					grRecord.setValue(sField, oValues[sField]);
+				}); // each value
+				sSysId = String(grRecord.update() || '');
+				if (sSysId) {
+					aUndo.push({ 'sAction': 'restore', 'sTable': oAction['sTable'], 'sSysId': sSysId, 'oValues': oPrevious });
+				} // if updated
+			} // if create or update
+			if (!sSysId) {
+				oResult['bIsOk'] = false;
+				oResult['sErrorMessage'] = 'Write failed for ' + oAction['sTable'] + ' ' + oAction['sKey'] + ': ' + String(grRecord.getLastErrorMessage() || 'aborted by a business rule or data policy');
+				return true;
+			} // if write failed
+			if ((oAction['sReferenceName']) && (oCreatedIds.hasOwnProperty(oAction['sTable']))) {
+				oCreatedIds[oAction['sTable']][oAction['sReferenceName']] = sSysId;
+			} // if referenced later
+			oAction['sSysId'] = sSysId;
+		}, this); // each write
+		if (bFailed) {
+			this._undo(aUndo);
+			oResult['sErrorMessage'] += '; the changes of this run were reverted';
+			return;
+		} // if a write failed
+		aDeletes.forEach(function (oAction) {
+			var grRecord = new GlideRecord(oAction['sTable']);
+			if ((grRecord.get(oAction['sSysId'])) && (!grRecord.deleteRecord())) {
+				oAction['sAction'] = 'warning';
+				oAction['sReason'] = 'stale record could not be deleted';
+			} // if delete failed
+		}, this); // each delete
+		this._reportActions(aActions, oResult);
+	}, // function _executeActions
+
+	_undo: function (aUndo) {
+		if (!this._checkAccess(gs.getCallerScopeName())) { return; }
+		aUndo.reverse().forEach(function (oUndo) {
+			var grRecord = new GlideRecord(oUndo['sTable']);
+			if (!grRecord.get(oUndo['sSysId'])) {
+				return;
+			} // if gone
+			if (oUndo['sAction'] == 'delete') {
+				grRecord.deleteRecord();
+			} else {
+				Object.keys(oUndo['oValues']).forEach(function (sField) { grRecord.setValue(sField, oUndo['oValues'][sField]); });
+				grRecord.update();
+			} // if delete or restore
+		}); // each undo step
+	}, // function _undo
+
+	type: 'GlobalToolsScriptedRESTDoc',
+	version: '2.1.5',
+	author: 'Tom Hauri',
+	email: 'tom@hauri.biz'
+
+};
+]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2026-11-17 11:43:18</sys_created_on>
+        <sys_id>3e4b6355b6bb49c9a359ce0b238001bd</sys_id>
+        <sys_mod_count>3</sys_mod_count>
+        <sys_name>GlobalToolsScriptedRESTDoc</sys_name>
+        <sys_package display_value="Global Tools" source="global">a39b8f3697816110b434f5f3a253af25</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Global Tools">a39b8f3697816110b434f5f3a253af25</sys_scope>
+        <sys_update_name>sys_script_include_3e4b6355b6bb49c9a359ce0b238001bd</sys_update_name>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2026-11-22 13:45:01</sys_updated_on>
+    </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>3e4b6355b6bb49c9a359ce0b238001bd</id>
+        <sys_created_by>tom.hauri</sys_created_by>
+        <sys_created_on>2026-11-17 11:43:18</sys_created_on>
+        <sys_id>d310303a57464943b8d90e85250baf56</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>tom.hauri</sys_updated_by>
+        <sys_updated_on>2026-11-17 11:43:18</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
+</record_update>
