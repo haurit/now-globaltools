@@ -16,7 +16,7 @@
         <logo/>
         <menu/>
         <name>Global Tools</name>
-        <package_json display_value="/global/global_tools/2.1.3/package.json" path="/global/global_tools/2.1.3/package.json">/global/global_tools/2.1.3/package.json</package_json>
+        <package_json display_value="/global/gt215/2.1.4/package.json" path="/global/gt215/2.1.4/package.json">/global/gt215/2.1.4/package.json</package_json>
         <package_resolver_version>2.0.0</package_resolver_version>
         <private>false</private>
         <restrict_table_access>false</restrict_table_access>
@@ -34,9 +34,9 @@
         <sys_created_by>tom.hauri</sys_created_by>
         <sys_created_on>2023-02-20 09:01:05</sys_created_on>
         <sys_id>a39b8f3697816110b434f5f3a253af25</sys_id>
-        <sys_mod_count>36</sys_mod_count>
+        <sys_mod_count>37</sys_mod_count>
         <sys_updated_by>tom.hauri</sys_updated_by>
-        <sys_updated_on>2026-09-20 13:38:07</sys_updated_on>
+        <sys_updated_on>2026-11-23 19:24:05</sys_updated_on>
         <template/>
         <trackable>true</trackable>
         <uninstall_blocked>false</uninstall_blocked>
